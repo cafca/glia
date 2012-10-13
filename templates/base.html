@@ -1,8 +1,22 @@
 <!doctype html>
 <head>
     <title>{%block title %}khemia{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css" />
 </head>
 <body>
+    <h1>khemia</h1>
+    {% for message in get_flashed_messages() %}
+        <div class='flash'>{{message}}</div>
+    {% endfor %}
+
+    <div id='nav'>
+        <ul>
+            <li><a href="{{ url_for('universe') }}">Starry Sky</a></li>
+            {% for persona in personas %}
+            <li><a href="{{ url_for('persona', persona_id=persona[0]) }}">Persona: {{persona[0]}}</a></li>
+            {% endfor %}
+            <li><a href="{{ url_for('create_persona') }}">Create Persona</a></li>
+        </ul>
+    </div>
+
     {% block content %}{% endblock %}
 </body>

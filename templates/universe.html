@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>The Universe!</p>
-{% endblock}
+<p>The Universe! Inhabitant:</p>
+<ol>
+    {% for persona in personas %}
+    <li><p>{{persona}}</p></li>
+    {% endfor %}
+</ol>
+{% endblock %}
