@@ -3,7 +3,7 @@
 """Provide crypto functionality"""
 
 import os
-import models
+import ark
 import yaml
 import logging
 
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     # Load existing Keybook
-    keybook_location = os.path.join(models.create_path('misc', 'keybook'), 'keybook.yaml')
+    keybook_location = os.path.join(ark.create_path('misc', 'keybook'), 'keybook.yaml')
 
     with touchopen(keybook_location, 'r') as f:
         kb = KeyBook.load_from(f)
@@ -277,7 +277,7 @@ if __name__ == "__main__":
     quit()
 
     # Get an Identity object (which is an Ark object)
-    pv = models.Identity('pv')
+    pv = ark.Identity('pv')
     print "pv", pv
 
     # Put it into an ArkCrypt container

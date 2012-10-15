@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create new star</h2>
+<p>Posting as '{{creator[0]}}'.</p>
+<form method="POST" action="{{url_for('create_star')}}">
+    {{ form.text.label}} {{ form.text(size=20) }}
+    {% if form.text.errors %}
+        <ul class="errors">{% for error in form.text.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    {{ form.csrf_token }}
+    <input type="submit" value="Create">
+</form>
+{% endblock %}

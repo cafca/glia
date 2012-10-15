@@ -8,7 +8,6 @@ models.py
 import os
 import yaml
 
-from twisted.python import log
 from git import Repo, NoSuchPathError
 from collections import OrderedDict
 
@@ -269,7 +268,7 @@ class Identity(Ark):
 
     """
 
-    def __init__(self, name):
+    def __init__(self, name, email=''):
         super(Identity, self).__init__('identity', name)
 
         #: starmap contains the set of Stars which are pinned to this Identity
@@ -278,6 +277,7 @@ class Identity(Ark):
 
         # Add Identity specific meta attributes
         self._meta_attributes.add('starmap')
+        self._meta_attributes.add('email')
         self.store_metafile('Add starmap to Identity')
 
     def pin(self, star):

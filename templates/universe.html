@@ -4,7 +4,10 @@
 <p>The Universe! Inhabitant:</p>
 <ol>
     {% for persona in personas %}
-    <li><p>{{persona}}</p></li>
+    <li>{% for attr in persona %}
+        <p>{{attr|string|truncate}}</p>
+        {% endfor %}
+    </li>
     {% endfor %}
 </ol>
 {% endblock %}
