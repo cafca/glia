@@ -9,7 +9,7 @@ DATABASE = '/tmp/khemia.db'
 DEBUG = True
 # TODO: Generate after installation, keep secret.
 SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1fOBi\x13'
-PASSWORD = None
+PASSWORD_HASH = None
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -46,7 +46,7 @@ def get_active_persona():
 def before_request():
     g.db = connect_db()
     session['active_persona'] = get_active_persona()
-    if app.config['PASSWORD'] == None and request.base_url != 'http://localhost:5000/setup':
+    if app.config['PASSWORD_HASH'] == None and request.base_url != 'http://localhost:5000/setup':
         return redirect(url_for('setup'))
     if request.base_url != 'http://localhost:5000/login' and not session.get('logged_in'):
         return redirect(url_for('login'))
@@ -69,6 +69,7 @@ def login():
         # TODO: Is this a good idea?
         salt = app.config['SECRET_KEY']
         pw_submitted = PBKDF2(request.form['password'], salt)
+        session['password'] = pw_submitted
 
         if sha256(pw_submitted) != app.config['PASSWORD_HASH']:
             error = 'Invalid password'
@@ -82,6 +83,7 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
+    session.pop('password', None)
     flash('You were logged out')
     return redirect(url_for('login'))
 
@@ -109,7 +111,6 @@ def universe():
     """ Render the landing page """
     # Redirect to >new persona< if no persona is found
     personas = g.db.execute('SELECT * FROM personas').fetchall()
-    app.logger.info("Currently {} personas.".format(len(personas)))
     if session['active_persona'] == '0':
         return redirect(url_for('create_persona'))
 
@@ -181,8 +182,8 @@ def create_persona():
 
         # Encrypt private key before saving to DB/disk
         # TODO: replace password from app config with something else
-        key_private = encrypt_symmetric(key.exportKey(), app.config['PASSWORD'])
-        key_public = encrypt_symmetric(key.publickey().exportKey(), app.config['PASSWORD'])
+        key_private = encrypt_symmetric(key.exportKey(), session['password'])
+        key_public = encrypt_symmetric(key.publickey().exportKey(), session['password'])
 
         g.db.execute('INSERT INTO personas (id, name, email, private, public) VALUES (?, ?, ?, ?, ?)',
             [uuid,
