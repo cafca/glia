@@ -28,11 +28,10 @@ def init_db():
         db.commit()
 
 def get_active_persona():
-    """ Return the currently active persona or 0 if there is no persona. """
+    """ Return the currently active persona or 0 if there is no controlled persona. """
     controlled_personas = g.db.execute(
         "SELECT id, active FROM personas WHERE private is not null ORDER BY active DESC").fetchall()
-    if len(controlled_personas) == 0:
-        # Ghost mode means that the currently active user controls no persona.
+    if len(controlled_personas) == 0:        
         return "0"
     else:
         # Personas are ordered by active-ness so the first attr of the first persona
@@ -48,7 +47,7 @@ def before_request():
     g.db = connect_db()
     session['active_persona'] = get_active_persona()
     if app.config['PASSWORD'] == None and request.base_url != 'http://localhost:5000/setup':
-            return redirect(url_for('setup'))
+        return redirect(url_for('setup'))
     if request.base_url != 'http://localhost:5000/login' and not session.get('logged_in'):
         return redirect(url_for('login'))
 
@@ -63,6 +62,7 @@ def teardown_request(exception):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     from Crypto.Protocol.KDF import PBKDF2
+    from hashlib import sha256
 
     error = None
     if request.method == 'POST':
@@ -70,7 +70,7 @@ def login():
         salt = app.config['SECRET_KEY']
         pw_submitted = PBKDF2(request.form['password'], salt)
 
-        if pw_submitted != app.config['PASSWORD']:
+        if sha256(pw_submitted) != app.config['PASSWORD_HASH']:
             error = 'Invalid password'
         else:
             session['logged_in'] = True
@@ -84,6 +84,24 @@ def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect(url_for('login'))
+
+
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    from Crypto.Protocol.KDF import PBKDF2
+    from hashlib import sha256
+
+    error = None
+    if request.method == 'POST':
+        if request.form['password'] is None:
+            error = 'Please enter a password'
+        else:
+            salt = app.config['SECRET_KEY']
+            password = PBKDF2(request.form['password'], salt)
+            app.config['PASSWORD_HASH'] = sha256(password)
+            session['logged_in'] = True
+            return redirect(url_for('create_persona'))
+    return render_template('setup.html', error=error)
 
 
 @app.route('/')
@@ -103,27 +121,13 @@ def persona(id):
     """ Render home of a persona """
     persona = g.db.execute("SELECT id,name,email FROM personas WHERE id=?",
         [id,]).fetchone()
+    if persona is None:
+        abort(404)
 
     starmap = g.db.execute("SELECT id,text FROM stars WHERE creator=?",
         [id, ]).fetchall()
 
     return render_template('persona.html', persona=persona, starmap=starmap)
-
-
-@app.route('/setup', methods=['GET', 'POST'])
-def setup():
-    from Crypto.Protocol.KDF import PBKDF2
-
-    error = None
-    if request.method == 'POST':
-        if request.form['password'] is None:
-            error = 'Please enter a password'
-        else:
-            salt = app.config['SECRET_KEY']
-            app.config['PASSWORD'] = PBKDF2(request.form['password'], salt)
-            session['logged_in'] = True
-            return redirect(url_for('create_persona'))
-    return render_template('setup.html', error=error)
 
 
 class Create_persona_form(Form):
@@ -158,7 +162,6 @@ def decrypt_symmetric(data, password):
     data = decoder.decrypt(data[16:])
 
     return remove_padding(data)
-    #
 
 
 @app.route('/p/create', methods=['GET', 'POST'])
