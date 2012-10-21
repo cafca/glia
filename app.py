@@ -10,53 +10,93 @@ DEBUG = True
 # TODO: Generate after installation, keep secret.
 SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1fOBi\x13'
 PASSWORD_HASH = None
+SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/khemia.db'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
+db = SQLAlchemy(app)
+
 
 """ DB code """
 
 
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
-
-
 def init_db():
-    with closing(connect_db()) as db:
-        with app.open_resource('schema.sql') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
+    if Persona.query.filter_by(username='cievent').first() == None:
+        db.create_all()
+        pv = Persona('247a1ca474b04a248c751d0eebf9738f', True, 'cievent', 'nichte@gmail.com',
+'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')
+        db.session.add(pv)
+        db.session.commit()
+
 
 def get_active_persona():
     """ Return the currently active persona or 0 if there is no controlled persona. """
-    controlled_personas = g.db.execute(
-        "SELECT id, active FROM personas WHERE private is not null ORDER BY active DESC").fetchall()
-    if len(controlled_personas) == 0:        
+    controlled_personas = Persona.query.filter('private != ""')
+
+    if controlled_personas.first() == None:
         return "0"
     else:
-        # Personas are ordered by active-ness so the first attr of the first persona
-        # is the active persona's ID (controlled_personas[0][0])
-        if controlled_personas[0][0] != "1":
-            g.db.execute("UPDATE personas SET active=1 WHERE id=?", [controlled_personas[0][0],])
-            g.db.commit()
-        return controlled_personas[0][0]
+        active = controlled_personas.filter_by(active=True).first()
+        if active:
+            return active
+        else:
+            active = controlled_personas.first()
+            active.active = True
+            return active
 
 
 @app.before_request
 def before_request():
-    g.db = connect_db()
+    # TODO: serve favicon.ico
+    if request.base_url[-3:] == "ico":
+        abort(404)
+    logged_in()
+
     session['active_persona'] = get_active_persona()
     if app.config['PASSWORD_HASH'] == None and request.base_url != 'http://localhost:5000/setup':
+        app.logger.info('redirect to setup')
         return redirect(url_for('setup'))
-    if request.base_url != 'http://localhost:5000/login' and not session.get('logged_in'):
+    if request.base_url not in ['http://localhost:5000/{}'.format(f) for f in ['setup', 'login']] and not session.get('logged_in'):
+        app.logger.info('redirect to login ({url})'.format(url=request.base_url))
         return redirect(url_for('login'))
 
 
 @app.teardown_request
 def teardown_request(exception):
-    g.db.close()
+    pass
+
+""" Models """
+
+
+class Persona(db.Model):
+    id = db.Column(db.String(32), primary_key=True)
+    active = db.Column(db.Boolean, default=False)
+    username = db.Column(db.String(80), unique=True)
+    email = db.Column(db.String(120), unique=True)
+    private = db.Column(db.Text)
+    public = db.Column(db.Text)
+
+    def __init__(self, id, active, username, email, private, public):
+        self.id = id
+        self.active = active
+        self.username = username
+        self.email = email
+        self.private = private
+        self.public = public
+
+    def __repr__(self):
+        return '<Persona {!r}>'.format(self.username)
+
 
 """ Views """
+
+
+def logged_in():
+    if session.get('logged-in'):
+        app.logger.info("Logged in. ({})".format(session.get('logged-in')))
+    else:
+        app.logger.info("Not logged in. ({})".format(session.get('logged-in')))
 
 
 @app.route('/login', methods=['GET', 'POST'])
