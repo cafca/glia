@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>{{star[2]}}</p>
-<p><em>by <a href="{{url_for('persona', id=creator[0])}}">{{creator[1]}}</a></p>
+<p>{{star.text}}</p>
+<p><em>by <a href="{{url_for('persona', id=creator.id)}}">{{creator.username}}</a></p>
 {% endblock %}

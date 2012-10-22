@@ -13,13 +13,14 @@
             <li><a href="{{ url_for('universe') }}">Starry Sky</a></li>
             {% for persona in personas %}
             <li>
-                <a href="{{ url_for('persona', id=persona[0]) }}">
-                    Persona: {{persona[2]}}
-                    {% if persona[1] %}(active){% endif %}
+                <a href="{{ url_for('persona', id=persona.id) }}">
+                    Persona: {{persona.username}}
+                    {% if persona.active %}(active){% endif %}
                 </a></li>
             {% endfor %}
             <li><a href="{{ url_for('create_persona') }}">Create Persona</a></li>
             <li><a href="{{url_for('create_star')}}">Create Star</a></li>
+            <li><a href="{{url_for('logout')}}">Logout</a></li>
         </ul>
     </div>
 

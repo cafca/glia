@@ -13,7 +13,7 @@ DEBUG = True
 SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1fOBi\x13'
 PASSWORD_HASH = None
 SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/khemia.db'
-SERVER_NAME = 'app.local:5000'
+SERVER_NAME = 'app.soma:5000'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -51,6 +51,13 @@ def get_active_persona():
             return active
 
 
+def logged_in():
+    if hasattr(g, 'password'):
+        if g.password is not None:
+            return True
+    return False
+
+
 @app.before_request
 def before_request():
     # TODO: serve favicon.ico
@@ -63,10 +70,10 @@ def before_request():
     session['active_persona'] = get_active_persona()
 
     if app.config['PASSWORD_HASH'] == None and request.base_url != setup_url:
-        return redirect(url_for('setup'))
+        return redirect(url_for('setup', _external=True))
 
-    if request.base_url not in [setup_url, login_url] and not session.get('logged_in'):
-        return redirect(url_for('login'))
+    if request.base_url not in [setup_url, login_url] and logged_in():
+        return redirect(url_for('login', _external=True))
 
 
 @app.teardown_request
@@ -114,10 +121,6 @@ class Star(db.Model):
 """ Views """
 
 
-def logged_in():
-    app.logger.info("Session\n"+"\n".join([str(k+": "+str(session[k])) for k in session]))
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     from Crypto.Protocol.KDF import PBKDF2
@@ -133,7 +136,8 @@ def login():
             error = 'Invalid password'
         else:
             session['password'] = pw_submitted
-            session['logged_in'] = "Blue cookies"
+            session['logged_in'] = True
+            g.password = pw_submitted
             flash('You are now logged in')
             return redirect(url_for('universe'))
     return render_template('login.html', error=error)
@@ -143,6 +147,7 @@ def login():
 def logout():
     session.pop('logged_in', None)
     session.pop('password', None)
+    g.password = None
     flash('You were logged out')
     return redirect(url_for('login'))
 
@@ -162,6 +167,7 @@ def setup():
             password = PBKDF2(request.form['password'], salt)
             app.config['PASSWORD_HASH'] = sha256(password)
             session['logged_in'] = True
+            g.password = password
             return redirect(url_for('create_persona'))
     return render_template('setup.html', error=error)
 
@@ -182,7 +188,7 @@ def persona(id):
     """ Render home of a persona """
     persona = Persona.query.filter_by(id=id).first_or_404()
 
-    return render_template('persona.html', persona=persona, starmap=starmap)
+    return render_template('persona.html', persona=persona)
 
 
 class Create_persona_form(Form):
@@ -238,13 +244,10 @@ def create_persona():
         key_private = encrypt_symmetric(key.exportKey(), session['password'])
         key_public = encrypt_symmetric(key.publickey().exportKey(), session['password'])
 
-        g.db.execute('INSERT INTO personas (id, name, email, private, public) VALUES (?, ?, ?, ?, ?)',
-            [uuid,
-            request.form['name'],
-            request.form['email'],
-            b64encode(key_private),
-            b64encode(key_public)])
-        g.db.commit()
+        # Save persona to DB
+        p = Persona(uuid, False, request.form['name'], request.form['email'], b64encode(key_private), b64encode(key_public))
+        db.session.add(p)
+        db.session.commit()
 
         flash("New persona {} created!".format(request.form['name']))
         return redirect(url_for('persona', id=uuid))
@@ -297,7 +300,7 @@ if __name__ == '__main__':
 
     # flask development server
     init_db()
-    app.run(SERVER_NAME[:-5], 5000)
+    app.run()
 
     # gevent server
     #local_server = WSGIServer(('', 12345), app)

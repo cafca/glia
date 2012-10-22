@@ -2,7 +2,7 @@
 
 {% block content %}
 <h2>Create new star</h2>
-<p>Posting as '{{creator[0]}}'.</p>
+<p>Posting as '{{creator.username}}'.</p>
 <form method="POST" action="{{url_for('create_star')}}">
     {{ form.text.label}} {{ form.text(size=20) }}
     {% if form.text.errors %}

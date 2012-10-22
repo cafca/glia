@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{persona[1]}}</h2>
-<p>Email: {{persona[2]}}</p>
+<h2>{{persona.username}}</h2>
+<p>Email: {{persona.email}}</p>
 <ul>
-{% for star in starmap %}
-    <li><a href="{{ url_for('star', id=star[0]) }}">{{star[1]}}</a></li>
+{% for star in persona.starmap %}
+    <li><a href="{{ url_for('star', id=star.id) }}">{{star.text}}</a></li>
 {% endfor %}
 </ul>
 {% endblock %}
