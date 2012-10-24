@@ -123,6 +123,7 @@ class Star(db.Model):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Display a login form and create a session if the correct pw is submitted"""
     from Crypto.Protocol.KDF import PBKDF2
     from hashlib import sha256
 
@@ -132,11 +133,9 @@ def login():
         salt = app.config['SECRET_KEY']
         pw_submitted = PBKDF2(request.form['password'], salt)
 
-        if sha256(pw_submitted) != app.config['PASSWORD_HASH']:
+        if sha256(pw_submitted).hexdigest() != app.config['PASSWORD_HASH']:
             error = 'Invalid password'
         else:
-            session['password'] = pw_submitted
-            session['logged_in'] = True
             g.password = pw_submitted
             flash('You are now logged in')
             return redirect(url_for('universe'))
@@ -145,8 +144,6 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
-    session.pop('password', None)
     g.password = None
     flash('You were logged out')
     return redirect(url_for('login'))
@@ -165,8 +162,7 @@ def setup():
         else:
             salt = app.config['SECRET_KEY']
             password = PBKDF2(request.form['password'], salt)
-            app.config['PASSWORD_HASH'] = sha256(password)
-            session['logged_in'] = True
+            app.config['PASSWORD_HASH'] = sha256(password).hexdigest()
             g.password = password
             return redirect(url_for('create_persona'))
     return render_template('setup.html', error=error)
@@ -241,8 +237,8 @@ def create_persona():
         key = RSA.generate(2048)
 
         # Encrypt private key before saving to DB/disk
-        key_private = encrypt_symmetric(key.exportKey(), session['password'])
-        key_public = encrypt_symmetric(key.publickey().exportKey(), session['password'])
+        key_private = encrypt_symmetric(key.exportKey(), g.password)
+        key_public = encrypt_symmetric(key.publickey().exportKey(), g.password)
 
         # Save persona to DB
         p = Persona(uuid, False, request.form['name'], request.form['email'], b64encode(key_private), b64encode(key_public))
