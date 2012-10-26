@@ -90,6 +90,7 @@ class Persona(db.Model):
     email = db.Column(db.String(120), unique=True)
     private = db.Column(db.Text)
     public = db.Column(db.Text)
+    starmap = db.relationship('Star', backref=db.backref('creator'))
 
     def __init__(self, id, active, username, email, private, public):
         self.id = id
@@ -107,7 +108,6 @@ class Star(db.Model):
     id = db.Column(db.String(32), primary_key=True)
     text = db.Column(db.Text)
     creator_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
-    creator = db.relationship('Persona', backref=db.backref('starmap', lazy='dynamic'))
 
     def __init__(self, id, text, creator):
         self.id = id
@@ -263,16 +263,19 @@ def create_star():
     from uuid import uuid4
     """ Create a new star """
 
-    creator = g.db.execute("SELECT name FROM personas WHERE id=?",
-        [session['active_persona']]).fetchone()
+    # TODO: Allow selection of author persona
+    creator = session['active_persona']
 
     form = Create_star_form()
+    if request.method == 'POST':
+        raise
     if form.validate_on_submit():
+        app.logger.info('Creating new star')
         uuid = uuid4().hex
 
-        g.db.execute("INSERT INTO stars (id, creator, text) VALUES (?, ?, ?)",
-            [uuid, session['active_persona'], request.form['text']])
-        g.db.commit()
+        new_star = Star(uuid, request.form['text'], creator)
+        db.session.add(new_star)
+        db.session.commit()
 
         flash('New star created!')
         return redirect(url_for('star', id=uuid))
@@ -282,14 +285,9 @@ def create_star():
 @app.route('/s/<id>/', methods=['GET'])
 def star(id):
     """ Display a single star """
-    star = g.db.execute("SELECT id,creator,text FROM stars WHERE id=?",
-        [id, ]).fetchone()
-    if star is None:
-        abort(404)
-    creator = g.db.execute("SELECT id,name FROM personas WHERE id=?",
-        [star[1], ]).fetchone()
+    star = Star.query.filter_by(id=id).first_or_404()
 
-    return render_template('star.html', star=star, creator=creator)
+    return render_template('star.html', star=star)
 
 
 if __name__ == '__main__':
