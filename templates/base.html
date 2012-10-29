@@ -11,11 +11,11 @@
     <div id='nav'>
         <ul>
             <li><a href="{{ url_for('universe') }}">Starry Sky</a></li>
-            {% for persona in personas %}
+            {% for persona in controlled_personas %}
             <li>
-                <a href="{{ url_for('persona', id=persona.id) }}">
-                    Persona: {{persona.username}}
-                    {% if persona.active %}(active){% endif %}
+                <a href="{{ url_for('persona', id=persona.value._id) }}">
+                    Persona: {{persona.key}}
+                    {% if persona.value._id == session.active_persona %}(active){% endif %}
                 </a></li>
             {% endfor %}
             <li><a href="{{ url_for('create_persona') }}">Create Persona</a></li>
