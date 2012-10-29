@@ -2,5 +2,5 @@
 
 {% block content %}
 <p>{{star.text}}</p>
-<p><em>by <a href="{{url_for('persona', id=star.creator_id)}}">{{star.creator_id}}</a></p>
+<p><em>by <a href="{{url_for('persona', id=creator._id)}}">{{creator.username}}</a></p>
 {% endblock %}

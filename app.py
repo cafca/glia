@@ -1,7 +1,7 @@
 from flask import abort, Flask, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, Required, Email
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.couchdb import BooleanField, CouchDBManager, DateTimeField, Document, TextField, ViewDefinition
+from flask.ext.couchdb import BooleanField, CouchDBManager, DateTimeField, Document, TextField, ViewDefinition, ViewField
 from gevent.wsgi import WSGIServer
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
@@ -48,11 +48,19 @@ class Star(Document):
 controlled_personas_view = ViewDefinition('personas', 'controlled', '''\
         function (doc) {
             if (doc.doc_type == 'persona' && doc.private != "") {
-                emit(doc.username, doc)
+                emit(doc.username, doc);
             }
         }
     ''')
 manager.add_viewdef(controlled_personas_view)
+
+starmap_view = ViewDefinition('personas', 'starmap', '''\
+    function (doc) {
+        if (doc.doc_type == 'star') {
+            emit(doc.creator_id, doc)
+        }
+    }''')
+manager.add_viewdef(starmap_view)
 
 manager.setup(app)
 
@@ -81,7 +89,6 @@ def get_active_persona():
 
 
 def logged_in():
-    app.logger.info("Password: %s" % cache.get('password'))
     return cache.get('password') is not None
 
 
@@ -181,7 +188,9 @@ def persona(id):
     if persona is None:
         abort(404)
 
-    return render_template('persona.html', persona=persona)
+    starmap = starmap_view[id].rows
+
+    return render_template('persona.html', persona=persona, starmap=starmap)
 
 
 class Create_persona_form(Form):
@@ -287,8 +296,9 @@ def create_star():
 def star(id):
     """ Display a single star """
     star = Star.load(id)
+    creator = Persona.load(star.creator_id)
 
-    return render_template('star.html', star=star)
+    return render_template('star.html', star=star, creator=creator)
 
 
 if __name__ == '__main__':
