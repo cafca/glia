@@ -2,4 +2,11 @@
 
 {% block content %}
 <p>The Universe!</p>
+
+<ul>
+{% for star in sternenhimmel %}
+    <li><p>{{star.value.text}} <br><a href="{{ url_for('persona', id=star.value.creator_id) }}">creator</a></p></li>
+{% endfor %}
+</ul>
+
 {% endblock %}

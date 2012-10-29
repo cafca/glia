@@ -1,3 +1,5 @@
+import datetime
+
 from flask import abort, Flask, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, Required, Email
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -35,6 +37,7 @@ class Persona(Document):
     email = TextField()
     private = TextField()
     public = TextField()
+    created = DateTimeField(default=datetime.datetime.now)
 
 
 class Star(Document):
@@ -42,10 +45,11 @@ class Star(Document):
 
     text = TextField()
     creator_id = TextField()
+    created = DateTimeField(default=datetime.datetime.now)
 
 
 # Setup View Definitions
-controlled_personas_view = ViewDefinition('personas', 'controlled', '''\
+controlled_personas_view = ViewDefinition('soma', 'controlled_personas', '''\
         function (doc) {
             if (doc.doc_type == 'persona' && doc.private != "") {
                 emit(doc.username, doc);
@@ -54,13 +58,21 @@ controlled_personas_view = ViewDefinition('personas', 'controlled', '''\
     ''')
 manager.add_viewdef(controlled_personas_view)
 
-starmap_view = ViewDefinition('personas', 'starmap', '''\
+starmap_view = ViewDefinition('soma', 'starmap', '''\
     function (doc) {
         if (doc.doc_type == 'star') {
-            emit(doc.creator_id, doc)
+            emit(doc.creator_id, doc);
         }
     }''')
 manager.add_viewdef(starmap_view)
+
+sternenhimmel_view = ViewDefinition('soma', 'sternenhimmel', '''\
+    function (doc) {
+        if (doc.doc_type == 'star') {
+            emit(doc.created, doc);
+        }
+    }''')
+manager.add_viewdef(sternenhimmel_view)
 
 manager.setup(app)
 
@@ -167,7 +179,7 @@ def setup():
             password = PBKDF2(request.form['password'], salt)
             app.config['PASSWORD_HASH'] = sha256(password).hexdigest()
             cache.set('password', password)
-            return redirect(url_for('create_persona'))
+            return redirect(url_for('universe'))
     return render_template('setup.html', error=error)
 
 
@@ -178,7 +190,9 @@ def universe():
     if session['active_persona'] == '0':
         return redirect(url_for('create_persona'))
 
-    return render_template('universe.html')
+    sternenhimmel = sternenhimmel_view().rows
+
+    return render_template('universe.html', sternenhimmel=sternenhimmel)
 
 
 @app.route('/p/<id>/')
