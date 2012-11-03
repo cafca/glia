@@ -12,8 +12,8 @@
 @font-size: 16;         // Your base font-size in pixels
 @em: @font-size*1em;    // Shorthand for outputting ems, e.g. "12/@em"
 
-@column: 48;    // The column-width of your grid in pixels
-@gutter: 24;    // The gutter-width of your grid in pixels
+@column: 60;    // The column-width of your grid in pixels
+@gutter: 20;    // The gutter-width of your grid in pixels
 
 
 //
@@ -191,3 +191,54 @@ body {
         font-size: (@font-size + 2)/16*1em;
     }
 }
+
+.w1 { width: @1cols; }
+.w2 { width: @2cols; }
+.w3 { width: @3cols; }
+.w4 { width: @4cols; }
+.w5 { width: @5cols; }
+.w6 { width: @6cols; }
+.w7 { width: @7cols; }
+.w8 { width: @8cols; }
+.w9 { width: @9cols; }
+.w10 { width: @10cols; }
+.w11 { width: @11cols; }
+.w12 { width: @12cols; }
+
+.h1 { height: @1cols; }
+.h2 { height: @2cols; }
+.h3 { height: @3cols; }
+.h4 { height: @4cols; }
+.h5 { height: @5cols; }
+.h6 { height: @6cols; }
+.h7 { height: @7cols; }
+.h8 { height: @8cols; }
+.h9 { height: @9cols; }
+.h10 { height: @10cols; }
+.h11 { height: @11cols; }
+.h12 { height: @12cols; }
+
+.col0 { left: 0; }
+.col1 { left: @1cols; }
+.col2 { left: @2cols; }
+.col3 { left: @3cols; }
+.col4 { left: @4cols; }
+.col5 { left: @5cols; }
+.col6 { left: @6cols; }
+.col7 { left: @7cols; }
+.col8 { left: @8cols; }
+.col9 { left: @9cols; }
+.col10 { left: @10cols; }
+.col11 { left: @11cols; }
+.col12 { left: @12cols; }
+
+.row0 { top: 0;}
+.row1 { top: @1cols}
+.row2 { top: @2cols}
+.row3 { top: @3cols}
+.row4 { top: @4cols}
+.row5 { top: @5cols}
+.row6 { top: @6cols}
+.row7 { top: @7cols}
+.row8 { top: @8cols}
+.row9 { top: @9cols}

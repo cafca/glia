@@ -3,7 +3,7 @@
 {% block content %}
 
 {% for star in sternenhimmel %}
-<section class={% if loop.first %}"wide"{% else %}"normal"{% endif %}>
+<section class="{{ vizier.get_class(loop.index) }}">
     <a href="{{ url_for('star', id=star.id) }}">
         <span class="content">
             <p>{{star.text}}</p>
