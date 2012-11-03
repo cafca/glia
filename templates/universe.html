@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>The Universe!</p>
 
-<ul>
 {% for star in sternenhimmel %}
-    <li><p>{{star.value.text}} <br><a href="{{ url_for('persona', id=star.value.creator_id) }}">creator</a></p></li>
+<section class={% if loop.first %}"wide"{% else %}"normal"{% endif %}>
+    <a href="{{ url_for('star', id=star.id) }}">
+        <span class="content">
+            <p>{{star.text}}</p>
+        </span>
+    </a>
+    <span class="meta">
+        <span>posted by <a href="{{ url_for('persona', id=star.creator_id) }}">{{ star.creator_name }}</a></span>
+    </span>
+</section>
 {% endfor %}
-</ul>
 
 {% endblock %}

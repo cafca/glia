@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>{{star.text}}</p>
-<p><em>by <a href="{{url_for('persona', id=creator._id)}}">{{creator.username}}</a></p>
+<section class="wide">
+    <span class="content">
+        <p>{{star.text}}</p>
+    </span>
+    <span class="meta">
+        <span><em>by <a href="{{url_for('persona', id=creator._id)}}">{{creator.username}}</a></span>
+    </span>
 {% endblock %}

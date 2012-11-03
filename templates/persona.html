@@ -3,9 +3,7 @@
 {% block content %}
 <h2>{{persona.username}}</h2>
 <p>Email: {{persona.email}}</p>
-<ul>
 {% for star in starmap %}
-    <li><a href="{{ url_for('star', id=star.value._id) }}">{{star.value.text}}</a></li>
+    <section><a href="{{ url_for('star', id=star._id) }}">{{star.text}}</a></section>
 {% endfor %}
-</ul>
 {% endblock %}

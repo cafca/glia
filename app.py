@@ -3,7 +3,7 @@ import datetime
 from flask import abort, Flask, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, Required, Email
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.couchdb import BooleanField, CouchDBManager, DateTimeField, Document, TextField, ViewDefinition, ViewField
+from flask.ext.couchdb import CouchDBManager, DateTimeField, Document, TextField, ViewDefinition, ViewField
 from gevent.wsgi import WSGIServer
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
@@ -11,9 +11,11 @@ from werkzeug.contrib.cache import SimpleCache
 """ Config """
 DATABASE = '/tmp/khemia.db'
 DEBUG = True
+SEND_FILE_MAX_AGE_DEFAULT = 1
 # TODO: Generate after installation, keep secret.
 SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1fOBi\x13'
-PASSWORD_HASH = None
+#pw: jodat
+PASSWORD_HASH = '8302a8fbf9f9a6f590d6d435e397044ae4c8fa22fdd82dc023bcc37d63c8018c'
 SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/khemia.db'
 SERVER_NAME = 'app.soma:5000'
 
@@ -45,7 +47,24 @@ class Star(Document):
 
     text = TextField()
     creator_id = TextField()
+    creator_name = TextField()
     created = DateTimeField(default=datetime.datetime.now)
+
+    by_date = ViewField('soma', '''\
+    function (doc) {
+        if (doc.doc_type == 'star') {
+            emit(doc.created, doc);
+        }
+    }''')
+
+    by_creator = ViewField('soma', '''\
+    function (doc) {
+        if (doc.doc_type == 'star') {
+            emit(doc.creator_id, doc);
+        }
+    }
+    ''')
+manager.add_viewdef([Star.by_date, Star.by_creator])
 
 
 # Setup View Definitions
@@ -57,22 +76,6 @@ controlled_personas_view = ViewDefinition('soma', 'controlled_personas', '''\
         }
     ''')
 manager.add_viewdef(controlled_personas_view)
-
-starmap_view = ViewDefinition('soma', 'starmap', '''\
-    function (doc) {
-        if (doc.doc_type == 'star') {
-            emit(doc.creator_id, doc);
-        }
-    }''')
-manager.add_viewdef(starmap_view)
-
-sternenhimmel_view = ViewDefinition('soma', 'sternenhimmel', '''\
-    function (doc) {
-        if (doc.doc_type == 'star') {
-            emit(doc.created, doc);
-        }
-    }''')
-manager.add_viewdef(sternenhimmel_view)
 
 manager.setup(app)
 
@@ -89,11 +92,11 @@ cache = SimpleCache()
 def get_active_persona():
     """ Return the currently active persona or 0 if there is no controlled persona. """
 
-    if session['active_persona'] is None:
+    if 'active persona' not in session or session['active_persona'] is None:
         controlled_personas = controlled_personas_view()
 
         if len(controlled_personas) == 0:
-            return "0"
+            return False
         else:
             session['active_persona'] = controlled_personas.rows[0].value['_id']
 
@@ -151,7 +154,7 @@ def login():
         if sha256(pw_submitted).hexdigest() != app.config['PASSWORD_HASH']:
             error = 'Invalid password'
         else:
-            cache.set('password', pw_submitted)
+            cache.set('password', pw_submitted, 3600)
             flash('You are now logged in')
             return redirect(url_for('universe'))
     return render_template('login.html', error=error)
@@ -178,7 +181,7 @@ def setup():
             salt = app.config['SECRET_KEY']
             password = PBKDF2(request.form['password'], salt)
             app.config['PASSWORD_HASH'] = sha256(password).hexdigest()
-            cache.set('password', password)
+            cache.set('password', password, 3600)
             return redirect(url_for('universe'))
     return render_template('setup.html', error=error)
 
@@ -186,11 +189,8 @@ def setup():
 @app.route('/')
 def universe():
     """ Render the landing page """
-    # Redirect to >new persona< if no persona is found
-    if session['active_persona'] == '0':
-        return redirect(url_for('create_persona'))
 
-    sternenhimmel = sternenhimmel_view().rows
+    sternenhimmel = Star.by_date().rows
 
     return render_template('universe.html', sternenhimmel=sternenhimmel)
 
@@ -202,7 +202,7 @@ def persona(id):
     if persona is None:
         abort(404)
 
-    starmap = starmap_view[id].rows
+    starmap = Star.by_creator()[id].rows
 
     return render_template('persona.html', persona=persona, starmap=starmap)
 
@@ -298,7 +298,11 @@ def create_star():
         app.logger.info('Creating new star')
         uuid = uuid4().hex
 
-        new_star = Star(id=uuid, text=request.form['text'], creator_id=creator.id)
+        new_star = Star(
+            id=uuid,
+            text=request.form['text'],
+            creator_id=creator.id,
+            creator_name=creator.username)
         new_star.store()
 
         flash('New star created!')
