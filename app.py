@@ -127,9 +127,9 @@ def before_request():
         app.logger.info("Redirecting to Setup")
         return redirect(url_for('setup', _external=True))
 
-    if request.base_url not in [setup_url, login_url] and not logged_in():
-        app.logger.info("Redirecting to Login")
-        #return redirect(url_for('login', _external=True))
+    #if request.base_url not in [setup_url, login_url] and not logged_in():
+    #    app.logger.info("Redirecting to Login")
+    #    return redirect(url_for('login', _external=True))
 
 
 @app.teardown_request
@@ -189,13 +189,27 @@ def setup():
 @app.route('/p/<id>/')
 def persona(id):
     """ Render home of a persona """
+    contents = list()
+
     persona = Persona.load(id)
     if persona is None:
         abort(404)
 
     starmap = Star.by_creator()[id].rows
 
-    return render_template('persona.html', persona=persona, starmap=starmap)
+    contents.append(starmap[0])
+    contents.append(persona)
+    for star in starmap[1:4]:
+        contents.append(star)
+
+    vizier = Vizier([
+        [1, 1, 6, 4],
+        [1, 5, 6, 1],
+        [7, 1, 2, 2],
+        [7, 3, 2, 2],
+        [7, 5, 2, 2]])
+
+    return render_template('persona.html', persona=persona, contents=contents, vizier=vizier)
 
 
 class Create_persona_form(Form):
@@ -308,10 +322,10 @@ def universe():
     sternenhimmel = Star.by_date().rows
 
     vizier = Vizier([
-        [0, 0, 6, 2],
-        [0, 5, 3, 2],
-        [3, 5, 3, 2],
-        [6, 5, 2, 2]
+        [1, 1, 6, 4],
+        [1, 5, 4, 2],
+        [5, 5, 2, 2],
+        [7, 1, 2, 5]
     ])
 
     return render_template('universe.html', sternenhimmel=sternenhimmel, vizier=vizier)
@@ -328,91 +342,38 @@ def star(id):
 
 class Vizier():
     def __init__(self, elements):
-        self.elements = elements
-        self.filler = self._create_filler(elements)
-
-    def get_class(self, i, kind="element"):
-        """Return size of element i-1 as 'AxB'"""
-        if kind != "element":
-            elem = self.filler[i - 1]
-        else:
-            elem = self.elements[i - 1]
-
-        try:
-            return "col{c} row{r} w{width} h{height}".format(c=elem[0], r=elem[1], width=elem[2], height=elem[3])
-        except IndexError:
-            raise ValueError("Not enough layout cells provided for content.")
-
-    def _create_filler(self, elements):
-        """Takes a list of elements with their positions and returns a list of neccessary fillers.
-
-        Coordinates are:
-        +===========> x
-        | 0,0 1,0 2,0
-        | 0,1 1,1 2,1
-        | 0,2 1,2 2,2
-        v
-        y
-
-        List element: [x_pos, y_pos, x-size, y-size]
-
-        Example:
-
-        elements = [
-            [0, 0, 2, 1],
-            [1, 2, 1, 1],
-            [2, 2, 1, 1]]
-
-        filler = [1, 2, 3]  (height 3 at (1,2))
-
-        results in
-
-        +============>
-        | <--E--> |F|
-        | --- |F| |:|
-        | --- <E> <E>
-        v
-
-
-        """
         from collections import defaultdict
 
         cells = defaultdict(list)
-        x_max = 0
-        y_max = 0
-
         for e in elements:
             x_pos = e[0]
             y_pos = e[1]
             x_size = e[2]
             y_size = e[3]
 
-            # Find max values
-            if (x_pos + x_size) > x_max:
-                x_max = (x_pos + x_size)
-            if (y_pos + y_size) > y_max:
-                y_max = (y_pos + y_size)
-
-            # Mark non-empty cells
             for col in xrange(x_pos, x_pos + x_size):
                 for row in xrange(y_pos, y_pos + y_size):
                     if col in cells and row in cells[col]:
-                        raise ValueError("Double binding of cell ({x},{y})".format(x=col, y=row))
-                    cells[col].append(row)
+                        app.logger.info("Double binding of cell ({x},{y})".format(x=col, y=row))
+                    else:
+                        cells[col].append(row)
 
-        filler = list()
-        start = 0
+        self.elements = elements
+        self.index = 0
 
-        # Create a filler stretching over all consecutively empty fields in a column
-        for col in xrange(0, x_max):
-            for row in xrange(0, y_max):
-                if col in cells and row in cells[col]:
-                    if (row - start) > 0:
-                        filler.append([col, start, 1, row - start])
-                    start = col
-            start = 0
+    def get_cell(self):
+        """ Return the next free cell in the current layout """
+        if len(self.elements) < self.index:
+            raise ValueError("Not enough layout cells provided for content.")
 
-        return filler
+        class_name = "col{c} row{r} w{width} h{height}".format(
+            c=self.elements[self.index][0],
+            r=self.elements[self.index][1],
+            width=self.elements[self.index][2],
+            height=self.elements[self.index][3])
+
+        self.index += 1
+        return class_name
 
 
 if __name__ == '__main__':

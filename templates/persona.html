@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{persona.username}}</h2>
-<p>Email: {{persona.email}}</p>
-{% for star in starmap %}
-    <section><a href="{{ url_for('star', id=star._id) }}">{{star.text}}</a></section>
+<section class="{{vizier.get_cell()}}">
+    <a href="{{ url_for('star', id=contents[0]._id) }}">{{contents[0].text}}</a>
+</section>
+
+<section class="{{vizier.get_cell()}}">
+    <span class="content">
+        <h1>{{persona.username}}</h1>
+        <p>Email: {{persona.email}}</p>
+    </span>
+</section>
+
+{% for star in contents[2:] %}
+    <section class="{{vizier.get_cell()}}"><a href="{{ url_for('star', id=star._id) }}">{{star.text}}</a></section>
 {% endfor %}
+
 {% endblock %}
