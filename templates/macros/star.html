@@ -6,16 +6,16 @@
         </a>
     {% endif %}
 
-    {% if star.text %}{% for paragraph in star.text %} 
-        <p>{{ paragraph }}</p> 
-    {% endfor %}{% endif %}
+    {% if star.text %}
+        <p>{{ star.text }}</p> 
+    {% endif %}
 </span>
 
 <span class="meta">
     <span>
-        <a href="{{ url_for('star', id=star.id) }}">{{star.created|naturaltime}}</a> 
+        <a href="{{ url_for('star', id=star.id) }}">{{star.created}}</a> 
         by 
-        <a href="{{ url_for('persona', id=star.creator.id) }}">
+        <a href="{{ url_for('persona', id=star.creator_id) }}">
             {{ star.creator.name }}
         </a>
     </span>

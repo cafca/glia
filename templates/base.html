@@ -11,7 +11,7 @@
         <a href="{{ url_for('universe') }}"><h1>Soma</h1></a>
         <ul>
             {% for persona in controlled_personas %}
-            <a href="{{ url_for('persona', id=persona.value._id) }}" {% if persona.value._id == session.active_persona %}class="active"{% endif %}><li><p>Persona: {{persona.key}}</p></li></a>
+            <a href="{{ url_for('persona', id=persona.id) }}" {% if persona.id == session.active_persona %}class="active"{% endif %}><li><p>Persona: {{persona.username}}</p></li></a>
             {% endfor %}
         </ul>
         <ul>
