@@ -1,17 +1,11 @@
 {% extends "base.html" %}
+{% import "macros/star.html" as star_macros %}
 
 {% block content %}
 
-{% for star in sternenhimmel %}
+{% for star in constellation %}
 <section class="{{ vizier.get_cell() }}">
-    <a href="{{ url_for('star', id=star.id) }}">
-        <span class="content">
-            <p>{{star.text}}</p>
-        </span>
-    </a>
-    <span class="meta">
-        <span>posted by <a href="{{ url_for('persona', id=star.creator_id) }}">{{ star.creator_name }}</a></span>
-    </span>
+    {{ star_macros.star(star) }}
 </section>
 {% endfor %}
 

@@ -2,21 +2,19 @@ import datetime
 
 from flask import abort, Flask, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, Required, Email
-from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.couchdb import CouchDBManager, DateTimeField, Document, TextField, ViewDefinition, ViewField
-from gevent.wsgi import WSGIServer
+#from gevent.wsgi import WSGIServer
+from humanize import naturaltime
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
 
 """ Config """
-DATABASE = '/tmp/khemia.db'
 DEBUG = True
 SEND_FILE_MAX_AGE_DEFAULT = 1
 # TODO: Generate after installation, keep secret.
 SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1fOBi\x13'
 #pw: jodat
 PASSWORD_HASH = '8302a8fbf9f9a6f590d6d435e397044ae4c8fa22fdd82dc023bcc37d63c8018c'
-SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/khemia.db'
 SERVER_NAME = 'app.soma:5000'
 
 COUCHDB_SERVER = 'http://app.soma:5984'
@@ -24,11 +22,15 @@ COUCHDB_DATABASE = 'ark'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-db = SQLAlchemy(app)
+app.jinja_env.filters['naturaltime'] = naturaltime
 
 
 # Setup CouchDB
 manager = CouchDBManager()
+
+# Setup SQLAlchemy
+#app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
+#db = SQLAlchemy(app)
 
 
 # Setup Document Types
@@ -188,28 +190,38 @@ def setup():
 
 @app.route('/p/<id>/')
 def persona(id):
-    """ Render home of a persona """
-    contents = list()
+    """ Render home view of a persona """
 
     persona = Persona.load(id)
     if persona is None:
         abort(404)
 
-    starmap = Star.by_creator()[id].rows
+    stars = Star.by_creator()[id].rows[:4]
 
-    contents.append(starmap[0])
-    contents.append(persona)
-    for star in starmap[1:4]:
-        contents.append(star)
+    starmap = list()
+    for star in stars[:5]:
+        starmap.append({
+            "id": star.id,
+            "created": star.created,
+            "title": star.title if "title" in star else None,
+            "text": [star.text, ],
+            "creator": {
+                "id": star.creator_id,
+                "name": star.creator_name}
+        })
 
     vizier = Vizier([
+        [1, 5, 6, 2],
         [1, 1, 6, 4],
-        [1, 5, 6, 1],
         [7, 1, 2, 2],
         [7, 3, 2, 2],
         [7, 5, 2, 2]])
 
-    return render_template('persona.html', persona=persona, contents=contents, vizier=vizier)
+    return render_template('persona.html',
+        layout="persona",
+        vizier=vizier,
+        starmap=starmap,
+        persona=persona)
 
 
 class Create_persona_form(Form):
@@ -319,7 +331,19 @@ def create_star():
 def universe():
     """ Render the landing page """
 
-    sternenhimmel = Star.by_date().rows
+    stars = Star.by_date().rows
+
+    constellation = list()
+    for star in stars[:4]:
+        constellation.append({
+            "id": star.id,
+            "created": star.created,
+            "title": star.title if "title" in star else None,
+            "text": [star.text, ],
+            "creator": {
+                "id": star.creator_id,
+                "name": star.creator_name}
+        })
 
     vizier = Vizier([
         [1, 1, 6, 4],
@@ -328,7 +352,7 @@ def universe():
         [7, 1, 2, 5]
     ])
 
-    return render_template('universe.html', sternenhimmel=sternenhimmel, vizier=vizier)
+    return render_template('universe.html', layout="sternenhimmel", constellation=constellation, vizier=vizier)
 
 
 @app.route('/s/<id>/', methods=['GET'])
@@ -337,15 +361,25 @@ def star(id):
     star = Star.load(id)
     creator = Persona.load(star.creator_id)
 
-    return render_template('star.html', star=star, creator=creator)
+    star = {
+        "id": star.id,
+        "title": star.title if "title" in star else None,
+        "text": [star.text, ] if "text" in star else None,
+        "created": star.created,
+        "creator": {
+            "id": star.creator_id,
+            "name": star.creator_name
+        }}
+
+    return render_template('star.html', layout="star", star=star, creator=creator)
 
 
 class Vizier():
-    def __init__(self, elements):
+    def __init__(self, layout):
         from collections import defaultdict
 
         cells = defaultdict(list)
-        for e in elements:
+        for e in layout:
             x_pos = e[0]
             y_pos = e[1]
             x_size = e[2]
@@ -358,19 +392,19 @@ class Vizier():
                     else:
                         cells[col].append(row)
 
-        self.elements = elements
+        self.layout = layout
         self.index = 0
 
     def get_cell(self):
-        """ Return the next free cell in the current layout """
-        if len(self.elements) < self.index:
+        """ Return the next free cell's class name """
+        if len(self.layout) <= self.index:
             raise ValueError("Not enough layout cells provided for content.")
 
         class_name = "col{c} row{r} w{width} h{height}".format(
-            c=self.elements[self.index][0],
-            r=self.elements[self.index][1],
-            width=self.elements[self.index][2],
-            height=self.elements[self.index][3])
+            c=self.layout[self.index][0],
+            r=self.layout[self.index][1],
+            width=self.layout[self.index][2],
+            height=self.layout[self.index][3])
 
         self.index += 1
         return class_name

@@ -1,11 +1,8 @@
 {% extends "base.html" %}
+{% import "macros/star.html" as star_macros %}
 
 {% block content %}
-<section class="wide">
-    <span class="content">
-        <p>{{star.text}}</p>
-    </span>
-    <span class="meta">
-        <span><em>by <a href="{{url_for('persona', id=creator._id)}}">{{creator.username}}</a></span>
-    </span>
+<section class="col1 row1 w6 h2">
+    {{ star_macros.star(star) }}
+</section>
 {% endblock %}

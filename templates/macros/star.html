@@ -1,0 +1,23 @@
+{% macro star(star) %}
+<span class="content">
+    {% if star.title %} 
+        <a href="{{ url_for('star', id=star.id) }}">
+            <h1>{{ star.title }}</h1> 
+        </a>
+    {% endif %}
+
+    {% if star.text %}{% for paragraph in star.text %} 
+        <p>{{ paragraph }}</p> 
+    {% endfor %}{% endif %}
+</span>
+
+<span class="meta">
+    <span>
+        <a href="{{ url_for('star', id=star.id) }}">{{star.created|naturaltime}}</a> 
+        by 
+        <a href="{{ url_for('persona', id=star.creator.id) }}">
+            {{ star.creator.name }}
+        </a>
+    </span>
+</span>
+{% endmacro %}

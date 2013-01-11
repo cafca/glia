@@ -11,6 +11,7 @@
 
 @font-size: 16;         // Your base font-size in pixels
 @em: @font-size*1em;    // Shorthand for outputting ems, e.g. "12/@em"
+@line-height: @font-size * 1.5;
 
 @column: 60;    // The column-width of your grid in pixels
 @gutter: 20;    // The gutter-width of your grid in pixels
@@ -242,3 +243,114 @@ body {
 .row7 { top: @7cols}
 .row8 { top: @8cols}
 .row9 { top: @9cols}
+
+
+//
+//  MAIN STYLES
+//
+
+
+html > body {
+    font-family: Delicious;
+    margin: 0;
+    font-size: (@font-size)/16*1em;
+    line-height: (@line-height)/16*1em;
+}
+
+header {
+    position: absolute;
+    width: 128px;
+    top: 0;
+    bottom: 0;
+    background-color: lighten(black, 15%);
+
+    h1 {
+        color: darken(white, 10%);
+        font-size: @line-height*1.5/@em;
+        line-height: @line-height/@em;
+        font-weight: bold;
+        margin: .7em 5px 0;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        line-height: @line-height * (4/5)/@em;
+
+        .active a { color: white; }
+
+        li p { margin: 0 5px; }
+
+        a:hover li { background-color: lighten(black, 30%); }
+    }
+
+    a {
+        color: darken(white, 30%);
+        text-decoration: none;
+    }
+    a:hover {color: white;}
+}
+
+article {
+    position: absolute;
+    top: 0;
+    left: 128px;
+    right: 0;
+    bottom: 0;
+
+    p { margin: 0; }
+
+    .flash {
+        width: 100%;
+        background-color: rgba(161, 221, 255, 0.36);
+        border-bottom: 1px solid rgba(86, 120, 139, 0.28);
+
+        span { margin: 5px 10px; }
+    }
+
+    #container {margin: 1em .5em;}
+
+    section {
+        position: absolute;
+        margin-bottom: 1em;
+        overflow: hidden;
+
+        a { 
+            color: black;
+            text-decoration: none;
+        }
+
+        &.w1, &.w2 {
+            .content {
+                font-size: (@font-size - 1)/16*1em;
+                line-height: ((@font-size - 1) * 1.5)/16*1em;
+            }
+        }
+
+        &.w5, &.w6 {
+            .content {
+                font-size: (@font-size * 2.5)/16*1em;
+                line-height: 1em;
+            }
+        }
+
+        .content { 
+            display: block; 
+        }
+
+        .meta {
+            height: 1em;
+            font-size: (@font-size - 4)/@em;
+            line-height: (@line-height - 6)/@em;
+
+            span { margin-right: 3px; }
+
+            a {
+                color: lighten(black, 40%);
+                text-decoration: none;
+            }
+
+            a:hover { text-decoration: underline; }
+        }
+    }
+}

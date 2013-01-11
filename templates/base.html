@@ -21,7 +21,7 @@
         </ul>
     </header>
 
-    <article>
+    <article class="{% block layout_name %}{% endblock %}">
         {% for message in get_flashed_messages() %}
             <div class='flash'><span>{{message}}</span></div>
         {% endfor %}
