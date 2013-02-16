@@ -13,10 +13,10 @@
 
 <span class="meta">
     <span>
-        <a href="{{ url_for('star', id=star.id) }}">{{star.created}}</a> 
+        <a href="{{ url_for('star', id=star.id) }}">{{star.created|naturaltime}}</a> 
         by 
-        <a href="{{ url_for('persona', id=star.creator_id) }}">
-            {{ star.creator.name }}
+        <a href="{{ url_for('persona', id=star.creator.id) }}">
+            {{ star.creator.username}}
         </a>
     </span>
 </span>
