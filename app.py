@@ -371,7 +371,8 @@ class Vizier():
     def get_cell(self):
         """ Return the next free cell's class name """
         if len(self.layout) <= self.index:
-            raise ValueError("Not enough layout cells provided for content.")
+            app.logger.warning("Not enough layout cells provided for content.")
+            return "hidden"
 
         class_name = "col{c} row{r} w{width} h{height}".format(
             c=self.layout[self.index][0],
