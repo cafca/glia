@@ -314,9 +314,29 @@ def create_star():
 
         flash('New star created!')
 
-        gevent.spawn(starbeam, uuid)
+        # beam that change to the ppl
+        gevent.spawn(starbeam, new_star.id)
+
         return redirect(url_for('star', id=uuid))
     return render_template('create_star.html', form=form, creator=creator)
+
+
+@app.route('/s/<id>/delete', methods=["GET"])
+def delete_star(id):
+    """ Delete a star """
+    # TODO: Should only accept POST instead of GET
+    # TODO: Check permissions
+    # TODO: Create deletion request
+    # TODO: Distribute deletion request
+
+    # Delete instance from db
+    s = Star.query.filter_by(id=id).first_or_404()
+    db.session.delete(s)
+    db.session.commit()
+
+    app.logger.info("Deleted star {}".format(id))
+
+    return redirect(url_for('debug'))
 
 
 @app.route('/')
