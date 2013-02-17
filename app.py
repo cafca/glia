@@ -1,17 +1,19 @@
 import datetime
+import gevent
+import sys
 
-from flask import abort, Flask, request, flash, g, redirect, render_template, url_for, session
+from flask import abort, Flask, json, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, Required, Email
 from flask.ext.couchdb import CouchDBManager, DateTimeField, Document, TextField, ViewDefinition, ViewField
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import OperationalError
-#from gevent.wsgi import WSGIServer
+from gevent.wsgi import WSGIServer
 from humanize import naturaltime
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
 
 """ Config """
-DATABASE = '/tmp/khemia.db'
+DATABASE = 'khemia.db'
 DEBUG = True
 SEND_FILE_MAX_AGE_DEFAULT = 1
 # TODO: Generate after installation, keep secret.
@@ -50,6 +52,8 @@ class Persona(db.Model):
 class Star(db.Model):
     id = db.Column(db.String(32), primary_key=True)
     text = db.Column(db.Text)
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
+    modified = db.Column(db.DateTime, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
     creator_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
 
     def __init__(self, id, text, creator):
@@ -295,6 +299,8 @@ def create_star():
         db.session.commit()
 
         flash('New star created!')
+
+        gevent.spawn(starbeam, uuid)
         return redirect(url_for('star', id=uuid))
     return render_template('create_star.html', form=form, creator=creator)
 
@@ -313,12 +319,11 @@ def universe():
 
     return render_template('universe.html', layout="sternenhimmel", constellation=stars, vizier=vizier)
 
-
 @app.route('/s/<id>/', methods=['GET'])
 def star(id):
     """ Display a single star """
     star = Star.query.filter_by(id=id).first_or_404()
-    creator = Creator.query.filter_by(id=id)
+    creator = Persona.query.filter_by(id=id)
 
     return render_template('star.html', layout="star", star=star, creator=creator)
 
@@ -359,11 +364,35 @@ class Vizier():
         return class_name
 
 
+class DatagramServer(gevent.server.DatagramServer):
+    def handle(self, data, address):
+        print "{} got {}".format(address[0], data)
+        self.socket.sendto('Received {} bytes'.format(len(data)), address)
+
+
+def starbeam(star_id):
+    from gevent import socket
+
+    with app.app_context():
+        star = Star.query.filter_by(id=star_id).first()
+        address = ('localhost', 9000)
+        message = "Changed star {} at {}".format(star.id, star.modified)
+        sock = socket.socket(type=socket.SOCK_DGRAM)
+        sock.connect(address)
+        print 'Sending %s bytes to %s:%s' % ((len(message), ) + address)
+        sock.send(message)
+        data, address = sock.recvfrom(8192)
+        print '%s:%s: got %r' % (address + (data, ))
+
+
 if __name__ == '__main__':
     init_db()
     # flask development server
-    app.run()
+    #app.run()
+
+    # datagram server
+    DatagramServer(':9000').start()
 
     # gevent server
-    #local_server = WSGIServer(('', 12345), app)
-    #local_server.serve_forever()
+    local_server = WSGIServer(('', 5000), app)
+    local_server.serve_forever()
