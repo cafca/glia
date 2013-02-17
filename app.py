@@ -32,8 +32,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + DATABASE
 db = SQLAlchemy(app)
 
 
+class Serializable():
+    def json(self):
+        import json
+        return json.dumps({c.name: str(getattr(self, c.name)) for c in self.__table__.columns}, indent=4)
+
+
 # Setup Document Types
-class Persona(db.Model):
+class Persona(Serializable, db.Model):
     id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(80), unique=True)
     email = db.Column(db.String(120), unique=True)
@@ -49,7 +55,7 @@ class Persona(db.Model):
         self.public = public
 
 
-class Star(db.Model):
+class Star(Serializable, db.Model):
     id = db.Column(db.String(32), primary_key=True)
     text = db.Column(db.Text)
     created = db.Column(db.DateTime, default=datetime.datetime.now())
@@ -119,9 +125,9 @@ def before_request():
         app.logger.info("Redirecting to Setup")
         return redirect(url_for('setup', _external=True))
 
-    if request.base_url not in [setup_url, login_url] and not logged_in():
-        app.logger.info("Redirecting to Login")
-        return redirect(url_for('login', _external=True))
+    #if request.base_url not in [setup_url, login_url] and not logged_in():
+    #    app.logger.info("Redirecting to Login")
+    #    return redirect(url_for('login', _external=True))
 
 
 @app.teardown_request
@@ -283,8 +289,9 @@ def create_star():
 
     # TODO: Allow selection of author persona
     if session['active_persona'] == "":
+        # TODO error message
         abort(404)
-    creator = session['active_persona']
+    creator = Persona.query.filter_by(id=session['active_persona']).first()
 
     form = Create_star_form()
     if form.validate_on_submit():
@@ -294,7 +301,7 @@ def create_star():
         new_star = Star(
             uuid,
             request.form['text'],
-            creator)
+            creator.id)
         db.session.add(new_star)
         db.session.commit()
 
@@ -319,6 +326,7 @@ def universe():
 
     return render_template('universe.html', layout="sternenhimmel", constellation=stars, vizier=vizier)
 
+
 @app.route('/s/<id>/', methods=['GET'])
 def star(id):
     """ Display a single star """
@@ -326,6 +334,17 @@ def star(id):
     creator = Persona.query.filter_by(id=id)
 
     return render_template('star.html', layout="star", star=star, creator=creator)
+
+
+@app.route('/debug/')
+def debug():
+    from flask import json
+
+    """ Display raw data """
+    stars = Star.query.all()
+    personas = Persona.query.all()
+
+    return render_template('debug.html', stars=stars, personas=personas)
 
 
 class Vizier():
@@ -388,11 +407,11 @@ def starbeam(star_id):
 if __name__ == '__main__':
     init_db()
     # flask development server
-    #app.run()
+    app.run()
 
     # datagram server
-    DatagramServer(':9000').start()
+    #DatagramServer(':9000').start()
 
     # gevent server
-    local_server = WSGIServer(('', 5000), app)
-    local_server.serve_forever()
+    #local_server = WSGIServer(('', 5000), app)
+    #local_server.serve_forever()
