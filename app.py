@@ -1,6 +1,7 @@
 import datetime
 import gevent
 import sys
+import umemcache
 
 from flask import abort, Flask, json, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, Required, Email
@@ -21,6 +22,7 @@ SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1f
 #pw: jodat
 PASSWORD_HASH = '8302a8fbf9f9a6f590d6d435e397044ae4c8fa22fdd82dc023bcc37d63c8018c'
 SERVER_NAME = 'app.soma:5000'
+MEMCACHED_ADDRESS = 'app.soma:24000'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -54,6 +56,9 @@ class Persona(Serializable, db.Model):
         self.private = private
         self.public = public
 
+    def get_absolute_url(self):
+        return url_for('persona', id=self.id)
+
 
 class Star(Serializable, db.Model):
     id = db.Column(db.String(32), primary_key=True)
@@ -66,6 +71,9 @@ class Star(Serializable, db.Model):
         self.id = id
         self.text = text
         self.creator_id = creator
+
+    def get_absolute_url(self):
+        return url_for('star', id=self.id)
 
 # Setup Cache
 cache = SimpleCache()
@@ -189,7 +197,6 @@ def persona(id):
     """ Render home view of a persona """
 
     persona = Persona.query.filter_by(id=id).first_or_404()
-
     starmap = Star.query.filter_by(creator_id=id)[:4]
 
     vizier = Vizier([
@@ -384,19 +391,64 @@ class Vizier():
         return class_name
 
 
-class DatagramServer(gevent.server.DatagramServer):
+class PeerManager(gevent.server.DatagramServer):
+    """ Handle connections to peers """
+
+    def __init__(self, address):
+        gevent.server.DatagramServer.__init__(self, address)
+        self.logger = app.logger
+        #self.peers = umemcache.Client(MEMCACHED_ADDRESS)
+
     def handle(self, data, address):
         print "{} got {}".format(address[0], data)
-        self.socket.sendto('Received {} bytes'.format(len(data)), address)
+        if data == "":
+            self.logger.info("[{}] Empty message received".format(address[0]))
+        elif data[:1] == "s":
+            # Modified star
+            self.logger.info("[{}] Star {} modified at {}".format(
+                address[0], data[1:33], data[33:]))
+        else:
+            self.logger.warning("[{}] Unknown message format".format(address[0]))
+
+        #self.socket.sendto('Received {} bytes'.format(len(data)), address)
+
+    def update_peer_list(self):
+        """ Update peer list from login server """
+        # TODO: implement actual server connection
+        self.peers = {"fake": "localhost:24801"}
+
+        self.logger.info("Updated peer address list.")
+
+    def login(self):
+        """ Create session at login server """
+        pass
+
+    def logout(self):
+        """ Destroy session at login server """
+        pass
+
+    def keep_alive(self):
+        """ Ping server to keep session alive """
+        pass
+
+    def register_persona(self):
+        """ Register a persona on the login server """
+        pass
+
+    def delete_account(self):
+        """ Remove a persona from login server, currently not implemented """
+        pass
 
 
 def starbeam(star_id):
+    """ Notify all connected peers about an update to star_id """
     from gevent import socket
+    from time import mktime
 
     with app.app_context():
         star = Star.query.filter_by(id=star_id).first()
-        address = ('localhost', 9000)
-        message = "Changed star {} at {}".format(star.id, star.modified)
+        address = ('localhost', 24800)
+        message = "s{}{}".format(star.id, star.modified)
         sock = socket.socket(type=socket.SOCK_DGRAM)
         sock.connect(address)
         print 'Sending %s bytes to %s:%s' % ((len(message), ) + address)
@@ -407,12 +459,14 @@ def starbeam(star_id):
 
 if __name__ == '__main__':
     init_db()
-    # flask development server
-    app.run()
+    DEBUG_SERVER = False
+    if DEBUG_SERVER:
+        # flask development server
+        app.run()
+    else:
+        # datagram server
+        PeerManager(':24800').start()
 
-    # datagram server
-    #DatagramServer(':9000').start()
-
-    # gevent server
-    #local_server = WSGIServer(('', 5000), app)
-    #local_server.serve_forever()
+        # gevent server
+        local_server = WSGIServer(('', 5000), app)
+        local_server.serve_forever()
