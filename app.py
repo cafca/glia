@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import gevent
 import datetime
 import sys
@@ -325,11 +327,6 @@ def create_star():
     from uuid import uuid4
     """ Create a new star """
 
-    # TODO: Allow selection of author persona
-    if session['active_persona'] == "":
-        # TODO error message
-        app.logger.error("No active persona")
-        abort(404)
     controlled_personas = Persona.query.filter(Persona.private != None).all()
     creator_choices = [(p.id, p.username) for p in controlled_personas]
 
@@ -440,55 +437,96 @@ class Vizier():
         return class_name
 
 
+class Message(object):
+    """ Container for peer messages"""
+
+    # THIS CLASS IS WIP AND CURRENTLY NOT USED
+
+    def __init__(self, message_type, reply_to, data, data_type):
+        self.message_type = message_type
+        self.reply_to = reply_to
+        self.data = data
+        self.data_type = data_type
+        self.timestamp = None
+        self.send_attributes = ["message_type", "reply_to", "data", "data_type"]
+
+    def json():
+        """Return json encoded message"""
+        message = dict()
+        for attr in self.send_attributes:
+            message[attr] = getattr(self, attr)
+        message["timestamp"] = datetime.datetime.now().isoformat()
+
+
 class PeerManager(gevent.server.DatagramServer):
     """ Handle connections to peers """
 
     def __init__(self, address):
         gevent.server.DatagramServer.__init__(self, address)
         self.logger = app.logger
-        self.update_peer_list()
         self.message_pool = Pool(10)
+        self.source_format = lambda address: "{host}:{port}".format(host=address[0], port=address[1])
 
         # Subscribe to database modifications
         models_committed.connect(self.on_models_committed)
+
+        self.update_peer_list()
+
+    def request_object(self, object_type, object_id, source_address):
+        """ Request an object from a peer """
+        from gevent import socket
+
+        app.logger.info("Requesting {object_type} {object_id} from {source}".format(
+            object_type=object_type, object_id=object_id, source=self.source_format(source_address)))
+
+        # Construct request
+        message = dict()
+        message["message_type"] = "object_request"
+        message["object_type"] = object_type
+        message["object_id"] = object_id
+        message["port"] = PEERMANAGER_PORT
+        message_json = json.dumps(message)
+
+        # Send request
+        sock = socket.socket(type=socket.SOCK_DGRAM)
+        sock.connect(source_address)
+        sock.send(message_json)
 
     def handle(self, data, address):
         """ Handle incoming messages """
         if len(data) == 0:
             self.logger.info("[{}] Empty message received".format(address[0]))
         else:
-            # print "{} got {}".format(address[0], data)
+            self.logger.debug("[{source}] {json}".format(source=self.source_format(address), json=data))
             self.socket.sendto('Received {} bytes'.format(len(data)), address)
 
             # TODO: Check authenticy of message
             # TODO: Attempt correcting time of message by comparing machine clocks in the message
+            #   (see bittorrent utp spec)
 
             # Try parsing the message
             try:
                 message = json.loads(data)
             except ValueError, e:
-                app.logger.error("[{}] {}".format(address[0], e))
+                app.logger.error("[{source}] {error}".format(source=self.source_format(address), error=e))
                 return
 
-            # Pass on the message depending on message type
-            # Currently used message types are:
-            # - change_notification
-            # - inventory_request
-            # - inventory
-
-            # Address of peermanager on the other end
+            # Parse address of peermanager on the other end
             source_address = (address[0], message["port"])
 
-            if message["message_type"] == "change_notification":
-                self.handle_change_notification(message, source_address)
-            if message["message_type"] == "download_request":
-                self.upload_object(message, source_address)
-            if message["message_type"] == "requested_object":
-                self.handle_download_received(message, source_address)
-            if message["message_type"] == "inventory_request":
-                self.handle_inventory_request(message, source_address)
-            if message["message_type"] == "inventory":
-                self.handle_inventory_received(message, source_address)
+            # Allowed message types
+            message_types = [
+                "change_notification",
+                "object_request",
+                "object",
+                "inventory_request",
+                "inventory"
+            ]
+
+            # Pass on the message depending on message type
+            if message["message_type"] in message_types:
+                handler = getattr(self, "handle_{message_type}".format(message_type=message["message_type"]))
+                handler(message, source_address)
 
     def handle_change_notification(self, message, address):
         """ Delete or download the object the notification was about if that is neccessary """
@@ -502,96 +540,60 @@ class PeerManager(gevent.server.DatagramServer):
 
         # Load object if it exists
         if object_type == "Star":
-            o = Star.query.filter_by(id=object_id).first()
+            o = Star.query.get(object_id)
         elif object_type == "Persona":
-            o = Persona.query.filter_by(id=object_id).first()
+            o = Persona.query.get(object_id)
+
+        # TODO: Update inventory db
 
         # Reflect changes if neccessary
         if change == "delete":
             if o is None:
-                app.logger.info("[{}] {} {} deleted (no local copy)".format(address, object_type, object_id))
+                app.logger.info("[{source}] {object_type} {object_id} deleted (no local copy)".format(
+                    source=self.source_format(address), object_type=object_type, object_id=object_id))
             else:
                 db.session.delete(o)
                 db.session.commit()
-                app.logger.info("[{}] {} {} deleted".format(address, object_type, object_id))
+                app.logger.info("[{source}] {object_type} {object_id} deleted".format(
+                    source=self.source_format(address), object_type=object_type, object_id=object_id))
 
-        elif change == "insert" and o is None:
-            app.logger.info("[{}] New {} {} created".format(address, object_type, object_id))
+        elif change == "insert":
+            # Object already exists locally
+            if o is not None:
+                app.logger.info("[{source}] New {object_type} {object_id} already exists.".format(
+                    source=self.source_format(address), object_type=object_type, object_id=object_id))
+                return
+
+            # Request object
+            app.logger.info("[{source}] New {object_type} {object_id} available".format(
+                source=self.source_format(address), object_type=object_type, object_id=object_id))
             # TODO: Check if we even want to have this thing, also below in update
-            self.download_object(object_type, object_id, address)
+            self.request_object(object_type, object_id, address)
 
         elif change == "update":
-            app.logger.info("[{}] {} {} updated".format(address, object_type, object_id))
+            app.logger.info("[{source}] Updated {object_type} {object_id} available".format(
+                source=self.source_format(address), object_type=object_type, object_id=object_id))
             if o is None:
-                self.download_object(object_type, object_id, address)
+                self.request_object(object_type, object_id, address)
             else:
                 # Check if this is a newer version
                 if o.modified < change_time:
-                    self.download_object(object_type, object_id, address)
+                    self.request_object(object_type, object_id, address)
+                else:
+                    app.logger.debug("[{source}] Updated {object_type} {object_id} is obsolete \
+                        (Remote modified: {remote} Local modified: {local}".format(
+                        source=self.source_format(address), object_type=object_type,
+                        object_id=object_id, remote=change_time, local=o.modified))
 
-            self.logger.info("[{}] {} {} {} at {}".format(
-                address[0], message["object_type"], message["object_id"], message["change"], message["time"]))
+    def handle_inventory(self, message, address):
+        """ Look through an inventory to see if we want to download some of it """
+        pass
 
     def handle_inventory_request(self, message, address):
         """ Send an inventory to the given address """
         pass
 
-    def handle_inventory_received(self, message, address):
-        """ Look through an inventory to see if we want to download some of it """
-        pass
-
-    def download_object(self, object_type, object_id, source_address):
-        """ Request an object from a peer """
-        from gevent import socket
-
-        app.logger.info("Requesting object {} from {}".format(object_id, source_address))
-
-        # Construct request
-        message = dict()
-        message["message_type"] = "download_request"
-        message["object_type"] = object_type
-        message["object_id"] = object_id
-        message["port"] = PEERMANAGER_PORT
-        message_json = json.dumps(message)
-
-        # Send request
-        sock = socket.socket(type=socket.SOCK_DGRAM)
-        sock.connect(source_address)
-        sock.send(message_json)
-
-    def upload_object(self, message, address):
-        """ Serve an object to address in response to a request """
-        from gevent import socket
-
-        # Validate request
-        object_type = message["object_type"]
-        object_id = message["object_id"]
-
-        # Load object
-        if object_type == "Star":
-            obj = Star.query.filter_by(id=object_id).first()
-        elif object_type == "Persona":
-            obj = Persona.query.filter_by(id=object_id).first()
-
-        if obj is None:
-            self.socket.sendto(str(), address)
-            return
-
-        # Construct response
-        message = dict()
-        message["port"] = PEERMANAGER_PORT
-        message["message_type"] = "requested_object"
-        message["object_data"] = obj.json(exclude=["private"])
-        message["object_type"] = object_type
-        message_json = json.dumps(message)
-
-        # Send response
-        sock = socket.socket(type=socket.SOCK_DGRAM)
-        sock.connect(address)
-        sock.send(message_json)
-        app.logger.info("Sent {} {} to {} ({} bytes)".format(object_type, object_id, address, len(message_json)))
-
-    def handle_download_received(self, message, address):
+    def handle_object(self, message, address):
         """ Handle a received download """
         # Validate response
         # TODO: Decryption
@@ -610,21 +612,71 @@ class PeerManager(gevent.server.DatagramServer):
             o = Persona(obj["id"], obj["username"], obj["email"], None, obj["public"])
         db.session.add(o)
         db.session.commit()
-        app.logger.info("[{}] Added new {} {}".format(address, object_type, obj['id']))
+        app.logger.info("[{source}] Added new {object_type} {object_id}".format(
+            source=self.source_format(address), object_type=object_type, object_id=obj['id']))
 
-    def update_peer_list(self):
-        """ Update peer list from login server """
-        # TODO: implement actual server connection
-        if SERVER_PORT == 5000:
-            self.peers = [("localhost", 5051), ("localhost", 50590)]
-        else:
-            self.peers = [("localhost", 5050)]
+    def handle_object_request(self, message, address):
+        """ Serve an object to address in response to a request """
+        from gevent import socket
 
-        self.logger.info("Updated peer list ({} online)".format(len(self.peers)))
+        # Validate request
+        object_type = message["object_type"]
+        object_id = message["object_id"]
+
+        # Load object
+        if object_type == "Star":
+            obj = Star.query.get(object_id)
+        elif object_type == "Persona":
+            obj = Persona.query.get(object_id)
+
+        if obj is None:
+            # TODO: Serve error message
+            self.socket.sendto(str(), address)
+            return
+
+        # Construct response
+        message = dict()
+        message["port"] = PEERMANAGER_PORT
+        message["message_type"] = "object"
+        # Don't send private key of personas
+        message["object_data"] = obj.json(exclude=["private"])
+        message["object_type"] = object_type
+        message_json = json.dumps(message)
+
+        # Send response
+        sock = socket.socket(type=socket.SOCK_DGRAM)
+        sock.connect(address)
+        sock.send(message_json)
+        app.logger.info("Sent {object_type} {object_id} to {address} ({len} bytes)".format(
+            object_type=object_type, object_id=object_id, address=self.source_format(address), len=len(message_json)))
+
+    def inventory(self):
+        """ Return inventory of all data stored on this machine in json format """
+
+        # CURRENTLY NOT IN USE
+
+        stars = Star.query.all()
+        personas = Persona.query.all()
+
+        inventory = dict()
+        for star in stars:
+            inventory[star.id] = {
+                "type": "Star",
+                "creator": star.creator_id,
+                "modified": star.modified
+            }
+
+        for persona in personas:
+            inventory[persona.id] = {
+                "type": "persona",
+                "modified": persona.modified
+            }
+
+        inventory_json = json.dumps(inventory)
+        return inventory_json
 
     def on_models_committed(self, sender, changes):
         """ Notify all connected peers about modifications to Stars, Personas """
-        #with app.app_context():
         for model, change in changes:
             # Identify object type
             if isinstance(model, Star):
@@ -645,51 +697,35 @@ class PeerManager(gevent.server.DatagramServer):
             message_json = json.dumps(message)
 
             # Queue message once for every online peer
-            for peer in self.peers:
-                gevent.spawn(self.queue_message, peer, message_json)
+            for address in self.peers:
+                self.message_pool.spawn(self.send_message, address, message_json)
 
-    def queue_message(self, peer, message):
-        """ Add a message greenlet once a pool slot is available """
-        if self.message_pool.full():
-            self.message_pool.wait_available()
-        self.message_pool.spawn(self.send_message, peer, message)
-
-    def send_message(self, peer, message):
+    def send_message(self, address, message):
         """ Send a message  """
         from gevent import socket
 
         # Send message
         sock = socket.socket(type=socket.SOCK_DGRAM)
-        sock.connect(peer)
+        sock.connect(address)
         sock.send(message)
         try:
             data, address = sock.recvfrom(8192)
-            app.logger.info("[{}] {}".format(address[0], data))
+            app.logger.info("[{source}] Replied: {resp}".format(
+                source=self.source_format(address), resp=data))
         except Exception, e:
             self.update_peer_list()
-            app.logger.error("[{}] {}".format(peer, e))
+            app.logger.error("[{source}] Replied: {error}".format(
+                source=self.source_format(address), error=e))
 
-    def inventory(self):
-        """ Return inventory of all data stored on this machine in json format """
-        stars = Star.query.all()
-        personas = Persona.query.all()
+    def update_peer_list(self):
+        """ Update peer list from login server """
+        # TODO: implement actual server connection
+        if SERVER_PORT == 5000:
+            self.peers = [("localhost", 5051), ("localhost", 50590)]
+        else:
+            self.peers = [("localhost", 5050)]
 
-        inventory = dict()
-        for star in stars:
-            inventory[star.id] = {
-                "type": "Star",
-                "creator": star.creator_id,
-                "modified": star.modified
-            }
-
-        for persona in personas:
-            inventory[persona.id] = {
-                "type": "persona",
-                "modified": persona.modified
-            }
-
-        inventory_json = json.dumps(inventory)
-        return inventory_json
+        self.logger.info("Updated peer list ({} online)".format(len(self.peers)))
 
     def login(self):
         """ Create session at login server """
