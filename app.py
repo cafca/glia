@@ -47,10 +47,10 @@ db = SQLAlchemy(app)
 
 class Serializable():
     """ Make SQLAlchemy models json serializable"""
-    def json(self):
+    def json(self, exclude=[]):
         import json
         return json.dumps({c.name: str(getattr(self, c.name))
-            for c in self.__table__.columns}, indent=4)
+            for c in self.__table__.columns if c not in exclude}, indent=4)
 
 
 # Setup Document Types
@@ -442,7 +442,6 @@ class Vizier():
 
 class PeerManager(gevent.server.DatagramServer):
     """ Handle connections to peers """
-    from gevent import socket
 
     def __init__(self, address):
         gevent.server.DatagramServer.__init__(self, address)
@@ -458,7 +457,7 @@ class PeerManager(gevent.server.DatagramServer):
         if len(data) == 0:
             self.logger.info("[{}] Empty message received".format(address[0]))
         else:
-            print "{} got {}".format(address[0], data)
+            # print "{} got {}".format(address[0], data)
             self.socket.sendto('Received {} bytes'.format(len(data)), address)
 
             # TODO: Check authenticy of message
@@ -469,6 +468,7 @@ class PeerManager(gevent.server.DatagramServer):
                 message = json.loads(data)
             except ValueError, e:
                 app.logger.error("[{}] {}".format(address[0], e))
+                return
 
             # Pass on the message depending on message type
             # Currently used message types are:
@@ -476,12 +476,19 @@ class PeerManager(gevent.server.DatagramServer):
             # - inventory_request
             # - inventory
 
+            # Address of peermanager on the other end
+            source_address = (address[0], message["port"])
+
             if message["message_type"] == "change_notification":
-                self.handle_change_notification(message, address)
+                self.handle_change_notification(message, source_address)
+            if message["message_type"] == "download_request":
+                self.upload_object(message, source_address)
+            if message["message_type"] == "requested_object":
+                self.handle_download_received(message, source_address)
             if message["message_type"] == "inventory_request":
-                self.handle_inventory_request(message, address)
+                self.handle_inventory_request(message, source_address)
             if message["message_type"] == "inventory":
-                self.handle_inventory_received(message, address)
+                self.handle_inventory_received(message, source_address)
 
     def handle_change_notification(self, message, address):
         """ Delete or download the object the notification was about if that is neccessary """
@@ -499,24 +506,22 @@ class PeerManager(gevent.server.DatagramServer):
         elif object_type == "Persona":
             o = Persona.query.filter_by(id=object_id).first()
 
-        print type(o), o
-
         # Reflect changes if neccessary
         if change == "delete":
             if o is None:
-                app.logger.info("[{}] {} {} deleted (no local copy)".format(address[0], object_type, object_id))
+                app.logger.info("[{}] {} {} deleted (no local copy)".format(address, object_type, object_id))
             else:
                 db.session.delete(o)
                 db.session.commit()
-                app.logger.info("[{}] {} {} deleted".format(address[0], object_type, object_id))
+                app.logger.info("[{}] {} {} deleted".format(address, object_type, object_id))
 
         elif change == "insert" and o is None:
-            app.logger.info("[{}] New {} {} created".format(address[0], object_type, object_id))
+            app.logger.info("[{}] New {} {} created".format(address, object_type, object_id))
             # TODO: Check if we even want to have this thing, also below in update
             self.download_object(object_type, object_id, address)
 
         elif change == "update":
-            app.logger.info("[{}] {} {} updated".format(address[0], object_type, object_id))
+            app.logger.info("[{}] {} {} updated".format(address, object_type, object_id))
             if o is None:
                 self.download_object(object_type, object_id, address)
             else:
@@ -536,10 +541,76 @@ class PeerManager(gevent.server.DatagramServer):
         pass
 
     def download_object(self, object_type, object_id, source_address):
-        """ Download an object and insert or update locally """
-        app.logger.info("Downloading object {}".format(object_id))
+        """ Request an object from a peer """
+        from gevent import socket
 
-        pass
+        app.logger.info("Requesting object {} from {}".format(object_id, source_address))
+
+        # Construct request
+        message = dict()
+        message["message_type"] = "download_request"
+        message["object_type"] = object_type
+        message["object_id"] = object_id
+        message["port"] = PEERMANAGER_PORT
+        message_json = json.dumps(message)
+
+        # Send request
+        sock = socket.socket(type=socket.SOCK_DGRAM)
+        sock.connect(source_address)
+        sock.send(message_json)
+
+    def upload_object(self, message, address):
+        """ Serve an object to address in response to a request """
+        from gevent import socket
+
+        # Validate request
+        object_type = message["object_type"]
+        object_id = message["object_id"]
+
+        # Load object
+        if object_type == "Star":
+            obj = Star.query.filter_by(id=object_id).first()
+        elif object_type == "Persona":
+            obj = Persona.query.filter_by(id=object_id).first()
+
+        if obj is None:
+            self.socket.sendto(str(), address)
+            return
+
+        # Construct response
+        message = dict()
+        message["port"] = PEERMANAGER_PORT
+        message["message_type"] = "requested_object"
+        message["object_data"] = obj.json(exclude=["private"])
+        message["object_type"] = object_type
+        message_json = json.dumps(message)
+
+        # Send response
+        sock = socket.socket(type=socket.SOCK_DGRAM)
+        sock.connect(address)
+        sock.send(message_json)
+        app.logger.info("Sent {} {} to {} ({} bytes)".format(object_type, object_id, address, len(message_json)))
+
+    def handle_download_received(self, message, address):
+        """ Handle a received download """
+        # Validate response
+        # TODO: Decryption
+        object_type = message["object_type"]
+        try:
+            obj = json.loads(message["object_data"])
+        except ValueError, e:
+            app.logger.error("Error decoding response: {}".format(e))
+
+        # Handle answer
+        # TODO: Handle updates
+        if object_type == "Star":
+            o = Star(obj["id"], obj["text"], obj["creator_id"])
+        elif object_type == "Persona":
+            # private key is not assumed
+            o = Persona(obj["id"], obj["username"], obj["email"], None, obj["public"])
+        db.session.add(o)
+        db.session.commit()
+        app.logger.info("[{}] Added new {} {}".format(address, object_type, obj['id']))
 
     def update_peer_list(self):
         """ Update peer list from login server """
@@ -570,6 +641,7 @@ class PeerManager(gevent.server.DatagramServer):
             message["object_type"] = object_type
             message["object_id"] = model.id
             message["change_time"] = model.modified.isoformat()
+            message["port"] = PEERMANAGER_PORT
             message_json = json.dumps(message)
 
             # Queue message once for every online peer
@@ -584,6 +656,7 @@ class PeerManager(gevent.server.DatagramServer):
 
     def send_message(self, peer, message):
         """ Send a message  """
+        from gevent import socket
 
         # Send message
         sock = socket.socket(type=socket.SOCK_DGRAM)
@@ -591,7 +664,7 @@ class PeerManager(gevent.server.DatagramServer):
         sock.send(message)
         try:
             data, address = sock.recvfrom(8192)
-            app.logger.info("[{}] {}".format(peer, data))
+            app.logger.info("[{}] {}".format(address[0], data))
         except Exception, e:
             self.update_peer_list()
             app.logger.error("[{}] {}".format(peer, e))
@@ -650,7 +723,7 @@ if __name__ == '__main__':
         app.run(SERVER_HOST, SERVER_PORT)
     else:
         # datagram server
-        peermanager = PeerManager(':{}'.format(PEERMANAGER_PORT))
+        peermanager = PeerManager('{}:{}'.format(SERVER_HOST, PEERMANAGER_PORT))
         peermanager.start()
         # gevent server
         local_server = WSGIServer(('', SERVER_PORT), app)
