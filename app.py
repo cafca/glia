@@ -12,6 +12,7 @@ from flask.ext.sqlalchemy import SQLAlchemy, models_committed
 from gevent.wsgi import WSGIServer
 from gevent.pool import Pool
 from humanize import naturaltime
+from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from sqlalchemy.exc import OperationalError
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
@@ -60,20 +61,68 @@ class Persona(Serializable, db.Model):
     id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(80), unique=True)
     email = db.Column(db.String(120), unique=True)
-    private = db.Column(db.Text)
-    public = db.Column(db.Text)
+    crypt_private = db.Column(db.Text)
+    crypt_public = db.Column(db.Text)
+    sign_private = db.Column(db.Text)
+    sign_public = db.Column(db.Text)
     starmap = db.relationship('Star', backref=db.backref('creator'))
     modified = db.Column(db.DateTime, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
 
-    def __init__(self, id, username, email, private, public):
+    def __init__(self, id, username, email, sign_private=None, sign_public=None, crypt_private=None, crypt_public=None):
         self.id = id
         self.username = username
         self.email = email
-        self.private = private
-        self.public = public
+        self.sign_private = sign_private
+        self.sign_public = sign_public
+        self.crypt_private = crypt_private
+        self.crypt_public = crypt_public
 
     def get_absolute_url(self):
         return url_for('persona', id=self.id)
+
+    def generate_keys(self, password):
+        """ Generate new RSA keypairs for signing and encrypting. Commit to DB afterwards! """
+
+        # TODO: Store keys encrypted
+
+        # Generate and store keys
+        app.logger.info("Generating encryption key pair for Persona {username} ({id})".format(
+            username=self.username, id=self.id))
+
+        rsa1 = RsaPrivateKey.Generate()
+        self.sign_private = str(rsa1)
+        self.sign_public = str(rsa1.public_key)
+
+        app.logger.info("Generating signature key pair for Persona {username} ({id})".format(
+            username=self.username, id=self.id))
+
+        rsa2 = RsaPrivateKey.Generate()
+        self.crypt_private = str(rsa2)
+        self.crypt_public = str(rsa2.public_key)
+
+    def encrypt(self, data):
+        """ Encrypt data using RSA """
+
+        key_public = RsaPublicKey.Read(self.crypt_public)
+        return key_public.Encrypt(data)
+
+    def decrypt(self, cypher):
+        """ Decrypt cyphertext using RSA """
+
+        key_private = RsaPrivateKey.Read(self.crypt_private)
+        return key_private.Decrypt(cypher)
+
+    def sign(self, data):
+        """ Sign data using RSA """
+
+        key_private = RsaPrivateKey.Read(self.crypt_private)
+        return key_private.Sign(data)
+
+    def verify(self, data, signature):
+        """ Verify a signature using RSA """
+
+        key_public = RsaPublicKey.Read(self.crypt_public)
+        return key_public.Verify(data, signature)
 
 
 class Star(Serializable, db.Model):
@@ -104,12 +153,17 @@ def init_db():
     except OperationalError:
         app.logger.info("Initializing DB")
         db.create_all()
-        pv = Persona('247a1ca474b04a248c751d0eebf9738f', 'cievent', 'nichte@gmail.com',
-'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')
+
+        # Generate test persona #1
+        pv = Persona('247a1ca474b04a248c751d0eebf9738f', 'cievent', 'nichte@gmail.com')
+        pv.generate_keys('jodat')
         db.session.add(pv)
-        paul = Persona('6e345777ca1a49cd8d005ac5e2f37cac', 'paul', 'mail@vincentahrend.com', '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')
+
+        # Generate test persona #2
+        paul = Persona('6e345777ca1a49cd8d005ac5e2f37cac', 'paul', 'mail@vincentahrend.com')
+        paul.generate_keys('jodat')
         db.session.add(paul)
+
         db.session.commit()
 
 
@@ -117,7 +171,7 @@ def get_active_persona():
     """ Return the currently active persona or 0 if there is no controlled persona. """
 
     if 'active persona' not in session or session['active_persona'] is None:
-        controlled_personas = Persona.query.filter('private != ""')
+        controlled_personas = Persona.query.filter('sign_private != ""')
 
         if controlled_personas.first() == None:
             return ""
@@ -133,7 +187,7 @@ def logged_in():
 
 @app.context_processor
 def persona_context():
-    return dict(controlled_personas=Persona.query.filter('private != ""'))
+    return dict(controlled_personas=Persona.query.filter('sign_private != ""'))
 
 
 @app.before_request
@@ -237,37 +291,6 @@ class Create_persona_form(Form):
     email = WTFTextField('Email (optional)', validators=[Email(), ])
 
 
-def encrypt_symmetric(data, password):
-    """ Encrypt data using AES algorithm """
-
-    from Crypto.Cipher import AES
-    from Crypto.Random import get_random_bytes
-    from Padding import appendPadding as append_padding
-
-    iv = get_random_bytes(16)
-    if password is None:
-        app.logger.error("Not logged in")
-        abort(500)
-    encoder = AES.new(password, AES.MODE_CBC, iv)
-    data = append_padding(data)
-
-    # 16 byte IV is prepended to the encrypted data
-    return "".join([iv, encoder.encrypt(data)])
-
-
-def decrypt_symmetric(data, password):
-    """ Decrypt data using AES algorithm """
-
-    from Crypto.Cipher import AES
-    from Padding import removePadding as remove_padding
-
-    iv = data[:16]
-    decoder = AES.new(password, AES.MODE_CBC, iv)
-    data = decoder.decrypt(data[16:])
-
-    return remove_padding(data)
-
-
 @app.route('/p/create', methods=['GET', 'POST'])
 def create_persona():
     """ Render page for creating new persona """
@@ -280,20 +303,15 @@ def create_persona():
         # This is a unique ID which identifies the persona across all contexts
         uuid = uuid4().hex
 
-        # This is the RSA key used to sign the new persona's actions
-        key = RSA.generate(2048)
-
-        # Encrypt private key before saving to DB/disk
-        key_private = encrypt_symmetric(key.exportKey(), cache.get('password'))
-        key_public = encrypt_symmetric(key.publickey().exportKey(), cache.get('password'))
-
         # Save persona to DB
         p = Persona(
             uuid,
             request.form['name'],
-            request.form['email'],
-            private=b64encode(key_private),
-            public=b64encode(key_public))
+            request.form['email'])
+
+        # Create keypairs
+        p.generate_keys(cache.get('password'))
+
         db.session.add(p)
         db.session.commit()
 
@@ -327,7 +345,7 @@ def create_star():
     from uuid import uuid4
     """ Create a new star """
 
-    controlled_personas = Persona.query.filter(Persona.private != None).all()
+    controlled_personas = Persona.query.filter(Persona.sign_private != None).all()
     creator_choices = [(p.id, p.username) for p in controlled_personas]
 
     form = Create_star_form(default_creator=session['active_persona'])
@@ -609,7 +627,13 @@ class PeerManager(gevent.server.DatagramServer):
             o = Star(obj["id"], obj["text"], obj["creator_id"])
         elif object_type == "Persona":
             # private key is not assumed
-            o = Persona(obj["id"], obj["username"], obj["email"], None, obj["public"])
+            o = Persona(
+                id=obj["id"],
+                username=obj["username"],
+                email=obj["email"],
+                sign_public=obj["sign_public"],
+                crypt_public=obj["crypt_public"],
+            )
         db.session.add(o)
         db.session.commit()
         app.logger.info("[{source}] Added new {object_type} {object_id}".format(
@@ -638,8 +662,8 @@ class PeerManager(gevent.server.DatagramServer):
         message = dict()
         message["port"] = PEERMANAGER_PORT
         message["message_type"] = "object"
-        # Don't send private key of personas
-        message["object_data"] = obj.json(exclude=["private"])
+        # Don't send private keys of personas
+        message["object_data"] = obj.json(exclude=["sign_private, crypt_private"])
         message["object_type"] = object_type
         message_json = json.dumps(message)
 
