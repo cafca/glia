@@ -5,6 +5,7 @@ import datetime
 import sys
 import umemcache
 
+from blinker import Namespace
 from dateutil.parser import parse as dateutil_parse
 from flask import abort, Flask, json, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, SelectField as WTFSelectField, Required, Email
@@ -47,19 +48,30 @@ DATABASE = 'khemia_{}.db'.format(SERVER_PORT)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + DATABASE
 db = SQLAlchemy(app)
 
+# Create blinker signal namespace
+notification_signals = Namespace()
+star_created = notification_signals.signal('star-created')
+star_deleted = notification_signals.signal('star-deleted')
+persona_created = notification_signals.signal('persona-created')
+
 
 class Serializable():
     """ Make SQLAlchemy models json serializable"""
+    def export(self, exclude=[]):
+        """Return this object as a dict"""
+        return {c.name: str(getattr(self, c.name))
+            for c in self.__table__.columns if c not in exclude}
+
     def json(self, exclude=[]):
+        """Return this object JSON encoded"""
         import json
-        return json.dumps({c.name: str(getattr(self, c.name))
-            for c in self.__table__.columns if c not in exclude}, indent=4)
+        return json.dumps(self.export(exclude), indent=4)
 
 
 # Setup Document Types
 class Persona(Serializable, db.Model):
     id = db.Column(db.String(32), primary_key=True)
-    username = db.Column(db.String(80), unique=True)
+    username = db.Column(db.String(80))
     email = db.Column(db.String(120), unique=True)
     crypt_private = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
@@ -114,13 +126,17 @@ class Persona(Serializable, db.Model):
 
     def sign(self, data):
         """ Sign data using RSA """
+        from base64 import b64encode
 
         key_private = RsaPrivateKey.Read(self.crypt_private)
-        return key_private.Sign(data)
+        signature = key_private.Sign(data)
+        return b64encode(signature)
 
-    def verify(self, data, signature):
+    def verify(self, data, signature_b64):
         """ Verify a signature using RSA """
+        from base64 import b64decode
 
+        signature = b64decode(signature_b64)
         key_public = RsaPublicKey.Read(self.crypt_public)
         return key_public.Verify(data, signature)
 
@@ -312,8 +328,20 @@ def create_persona():
         # Create keypairs
         p.generate_keys(cache.get('password'))
 
+        # TODO: Error message when user already exists
         db.session.add(p)
         db.session.commit()
+
+        # Distribute "birth" certificate
+        data = dict({
+            "object_type": "Persona",
+            "object_id": uuid,
+            "change": "insert",
+            "change_time": p.modified.isoformat()
+        })
+
+        message = Message(message_type="change_notification", data=data)
+        persona_created.send(create_persona, message=message)
 
         flash("New persona {} created!".format(p.username))
         return redirect(url_for('persona', id=uuid))
@@ -345,6 +373,7 @@ def create_star():
     from uuid import uuid4
     """ Create a new star """
 
+    # Load author drop down contents
     controlled_personas = Persona.query.filter(Persona.sign_private != None).all()
     creator_choices = [(p.id, p.username) for p in controlled_personas]
 
@@ -361,8 +390,20 @@ def create_star():
         db.session.commit()
 
         flash('New star created!')
-
         app.logger.info('Created new star {}'.format(new_star.id))
+
+        # Create certificate
+        data = dict({
+            "object_type": "Star",
+            "object_id": uuid,
+            "change": "insert",
+            "change_time": new_star.modified.isoformat()
+        })
+
+        message = Message(message_type="change_notification", data=data)
+        message.sign(new_star.creator)
+        star_created.send(create_star, message=message)
+
         return redirect(url_for('star', id=uuid))
     return render_template('create_star.html', form=form, controlled_personas=controlled_personas)
 
@@ -372,13 +413,30 @@ def delete_star(id):
     """ Delete a star """
     # TODO: Should only accept POST instead of GET
     # TODO: Check permissions
-    # TODO: Create deletion request
-    # TODO: Distribute deletion request
+
+    # Load instance and creator persona
+    s = Star.query.get(id)
+
+    if s is None:
+        abort(404)
+
+    # Create deletion request
+    data = dict({
+        "object_type": "Star",
+        "object_id": s.id,
+        "change": "delete",
+        "change_time": datetime.datetime.now().isoformat()
+    })
+
+    message = Message(message_type="change_notification", data=json.dumps(data))
+    message.sign(s.creator)
 
     # Delete instance from db
-    s = Star.query.filter_by(id=id).first_or_404()
     db.session.delete(s)
     db.session.commit()
+
+    # Distribute deletion request
+    star_deleted.send(delete_star, message=message)
 
     app.logger.info("Deleted star {}".format(id))
 
@@ -456,24 +514,68 @@ class Vizier():
 
 
 class Message(object):
-    """ Container for peer messages"""
+    """ Container for peer messages """
 
-    # THIS CLASS IS WIP AND CURRENTLY NOT USED
-
-    def __init__(self, message_type, reply_to, data, data_type):
+    def __init__(self, message_type, data):
         self.message_type = message_type
-        self.reply_to = reply_to
         self.data = data
-        self.data_type = data_type
         self.timestamp = None
-        self.send_attributes = ["message_type", "reply_to", "data", "data_type"]
+        self.send_attributes = ["message_type", "data"]
 
-    def json():
-        """Return json encoded message"""
+    def __str__(self):
+        if hasattr(self, "author_id"):
+            author = Persona.query.get(self.author_id)
+            if author:
+                signed = "signed {username}<{id}>".format(
+                    username=author.username, id=self.author_id)
+            else:
+                signed = "signed Anonymous<{id}>".format(id=self.author_id)
+        else:
+            signed = "unsigned"
+        return "Message ({signed})".format(signed=signed)
+
+    def json(self):
+        """Return JSON representation"""
         message = dict()
         for attr in self.send_attributes:
             message[attr] = getattr(self, attr)
         message["timestamp"] = datetime.datetime.now().isoformat()
+        return json.dumps(message)
+
+    @staticmethod
+    def read(data):
+        """Create a Message instance from its JSON representation"""
+
+        msg = json.loads(data)
+        message = Message(message_type=msg["message_type"], data=msg["data"])
+
+        if "signature" in msg:
+            message.signature = msg["signature"]
+            message.author_id = msg["author_id"]
+
+            # Verify signature
+            p = Persona.query.get(message.author_id)
+            if p is None:
+                # TODO: Try to retrieve author persona from network
+                app.logger.warning("[{msg}] Could not verify signature. Author pubkey missing.".format(msg=message))
+            else:
+                is_valid = p.verify(message.data, message.signature)
+                if not is_valid:
+                    app.logger.error("[{msg}] Signature invalid!".format(msg=message))
+                    raise ValueError("Invalid signature")
+
+            # data field needs to be decoded if the message is signed
+            message.data = json.loads(message.data)
+        return message
+
+    def sign(self, author):
+        """Sign a message using an author persona. Make sure not to change message data after signing"""
+
+        if not isinstance(self.data, str):
+            self.data = json.dumps(self.data)
+        self.signature = author.sign(self.data)
+        self.author_id = author.id
+        self.send_attributes.extend(["signature", "author_id"])
 
 
 class PeerManager(gevent.server.DatagramServer):
@@ -485,52 +587,46 @@ class PeerManager(gevent.server.DatagramServer):
         self.message_pool = Pool(10)
         self.source_format = lambda address: "{host}:{port}".format(host=address[0], port=address[1])
 
-        # Subscribe to database modifications
-        models_committed.connect(self.on_models_committed)
+        # Subscribe notification distribution to signals
+        star_created.connect(self.on_notification_signal)
+        star_deleted.connect(self.on_notification_signal)
+        persona_created.connect(self.on_notification_signal)
 
         self.update_peer_list()
 
-    def request_object(self, object_type, object_id, source_address):
+    def request_object(self, object_type, object_id, address):
         """ Request an object from a peer """
         from gevent import socket
 
         app.logger.info("Requesting {object_type} {object_id} from {source}".format(
-            object_type=object_type, object_id=object_id, source=self.source_format(source_address)))
+            object_type=object_type, object_id=object_id, source=self.source_format(address)))
 
         # Construct request
-        message = dict()
-        message["message_type"] = "object_request"
-        message["object_type"] = object_type
-        message["object_id"] = object_id
-        message["port"] = PEERMANAGER_PORT
-        message_json = json.dumps(message)
+        data = {"object_type": object_type, "object_id": object_id}
+        message = Message("object_request", data)
 
         # Send request
-        sock = socket.socket(type=socket.SOCK_DGRAM)
-        sock.connect(source_address)
-        sock.send(message_json)
+        self.send_message(address, message)
 
     def handle(self, data, address):
         """ Handle incoming messages """
         if len(data) == 0:
             self.logger.info("[{}] Empty message received".format(address[0]))
         else:
-            self.logger.debug("[{source}] {json}".format(source=self.source_format(address), json=data))
+            self.logger.debug("[{source}] Received {l} bytes: {json}".format(
+                source=self.source_format(address), json=data, l=len(data)))
             self.socket.sendto('Received {} bytes'.format(len(data)), address)
 
-            # TODO: Check authenticy of message
             # TODO: Attempt correcting time of message by comparing machine clocks in the message
             #   (see bittorrent utp spec)
 
             # Try parsing the message
             try:
-                message = json.loads(data)
-            except ValueError, e:
-                app.logger.error("[{source}] {error}".format(source=self.source_format(address), error=e))
+                message = Message.read(data)
+            except KeyError, e:
+                app.logger.error("[{source}] Message malformed ({error})".format(
+                    source=self.source_format(address), error=e))
                 return
-
-            # Parse address of peermanager on the other end
-            source_address = (address[0], message["port"])
 
             # Allowed message types
             message_types = [
@@ -541,20 +637,26 @@ class PeerManager(gevent.server.DatagramServer):
                 "inventory"
             ]
 
+            # Identify return path
+            try:
+                return_address = (address[0], self.peers[address[0]])
+            except KeyError, e:
+                app.logger.warning("No return path for peer {host}".format(host=address[0]))
+
             # Pass on the message depending on message type
-            if message["message_type"] in message_types:
-                handler = getattr(self, "handle_{message_type}".format(message_type=message["message_type"]))
-                handler(message, source_address)
+            if message.message_type in message_types:
+                handler = getattr(self, "handle_{message_type}".format(message_type=message.message_type))
+                handler(message, return_address)
 
     def handle_change_notification(self, message, address):
         """ Delete or download the object the notification was about if that is neccessary """
 
         # Verify message
         # TODO: Check authenticity and authority
-        change = message["change"]
-        object_type = message["object_type"]
-        object_id = message["object_id"]
-        change_time = dateutil_parse(message["change_time"])
+        change = message.data["change"]
+        object_type = message.data["object_type"]
+        object_id = message.data["object_id"]
+        change_time = dateutil_parse(message.data["change_time"])
 
         # Load object if it exists
         if object_type == "Star":
@@ -566,6 +668,7 @@ class PeerManager(gevent.server.DatagramServer):
 
         # Reflect changes if neccessary
         if change == "delete":
+            # Check authority to delete
             if o is None:
                 app.logger.info("[{source}] {object_type} {object_id} deleted (no local copy)".format(
                     source=self.source_format(address), object_type=object_type, object_id=object_id))
@@ -580,15 +683,20 @@ class PeerManager(gevent.server.DatagramServer):
             if o is not None:
                 app.logger.info("[{source}] New {object_type} {object_id} already exists.".format(
                     source=self.source_format(address), object_type=object_type, object_id=object_id))
-                return
 
             # Request object
-            app.logger.info("[{source}] New {object_type} {object_id} available".format(
-                source=self.source_format(address), object_type=object_type, object_id=object_id))
-            # TODO: Check if we even want to have this thing, also below in update
-            self.request_object(object_type, object_id, address)
+            else:
+                app.logger.info("[{source}] New {object_type} {object_id} available".format(
+                    source=self.source_format(address), object_type=object_type, object_id=object_id))
+                # TODO: Check if we even want to have this thing, also below in update
+                self.request_object(object_type, object_id, address)
 
         elif change == "update":
+
+            #
+            # WIP & untested
+            #
+
             app.logger.info("[{source}] Updated {object_type} {object_id} available".format(
                 source=self.source_format(address), object_type=object_type, object_id=object_id))
             if o is None:
@@ -602,6 +710,9 @@ class PeerManager(gevent.server.DatagramServer):
                         (Remote modified: {remote} Local modified: {local}".format(
                         source=self.source_format(address), object_type=object_type,
                         object_id=object_id, remote=change_time, local=o.modified))
+        else:
+            app.logger.error("[{msg}] Protocol error: Unknown change type '{change}'".format(
+                msg=message, change=change))
 
     def handle_inventory(self, message, address):
         """ Look through an inventory to see if we want to download some of it """
@@ -615,11 +726,8 @@ class PeerManager(gevent.server.DatagramServer):
         """ Handle a received download """
         # Validate response
         # TODO: Decryption
-        object_type = message["object_type"]
-        try:
-            obj = json.loads(message["object_data"])
-        except ValueError, e:
-            app.logger.error("Error decoding response: {}".format(e))
+        object_type = message.data["object_type"]
+        obj = message.data["object"]
 
         # Handle answer
         # TODO: Handle updates
@@ -643,9 +751,8 @@ class PeerManager(gevent.server.DatagramServer):
         """ Serve an object to address in response to a request """
         from gevent import socket
 
-        # Validate request
-        object_type = message["object_type"]
-        object_id = message["object_id"]
+        object_id = message.data["object_id"]
+        object_type = message.data["object_type"]
 
         # Load object
         if object_type == "Star":
@@ -655,24 +762,31 @@ class PeerManager(gevent.server.DatagramServer):
 
         if obj is None:
             # TODO: Serve error message
+            app.logger.error("Requested object {type} <{id}> not found".format(
+                type=object_type, id=object_id))
             self.socket.sendto(str(), address)
             return
 
         # Construct response
-        message = dict()
-        message["port"] = PEERMANAGER_PORT
-        message["message_type"] = "object"
-        # Don't send private keys of personas
-        message["object_data"] = obj.json(exclude=["sign_private, crypt_private"])
-        message["object_type"] = object_type
-        message_json = json.dumps(message)
+        data = {
+            "object": obj.export(exclude=["sign_private, crypt_private"]),
+            "object_type": object_type
+        }
+        message = Message("object", data)
+
+        # Sign message
+        if object_type == "Star" and obj.creator.sign_private != "":
+            message.sign(obj.creator)
+        elif object_type == "Persona" and obj.sign_private != "":
+            message.sign(obj)
 
         # Send response
-        sock = socket.socket(type=socket.SOCK_DGRAM)
-        sock.connect(address)
-        sock.send(message_json)
-        app.logger.info("Sent {object_type} {object_id} to {address} ({len} bytes)".format(
-            object_type=object_type, object_id=object_id, address=self.source_format(address), len=len(message_json)))
+        self.send_message(address, message)
+        app.logger.info("Sent {object_type} {object_id} to {address}".format(
+            object_type=object_type,
+            object_id=object_id,
+            address=self.source_format(address)
+        ))
 
     def inventory(self):
         """ Return inventory of all data stored on this machine in json format """
@@ -699,55 +813,43 @@ class PeerManager(gevent.server.DatagramServer):
         inventory_json = json.dumps(inventory)
         return inventory_json
 
-    def on_models_committed(self, sender, changes):
-        """ Notify all connected peers about modifications to Stars, Personas """
-        for model, change in changes:
-            # Identify object type
-            if isinstance(model, Star):
-                object_type = "Star"
-            elif isinstance(model, Persona):
-                object_type = "Persona"
-            else:
-                continue
+    def on_notification_signal(self, sender, message=None):
+        """ Distribute notification messages """
+        app.logger.info("[{sender}] Distributing {msg}".format(sender=sender, msg=message))
+        self.distribute_message(message)
 
-            # Construct message
-            message = dict()
-            message["message_type"] = "change_notification"
-            message["change"] = change
-            message["object_type"] = object_type
-            message["object_id"] = model.id
-            message["change_time"] = model.modified.isoformat()
-            message["port"] = PEERMANAGER_PORT
-            message_json = json.dumps(message)
-
-            # Queue message once for every online peer
-            for address in self.peers:
-                self.message_pool.spawn(self.send_message, address, message_json)
+    def distribute_message(self, message):
+        """ Distribute a message to all peers who don't already have it """
+        for host, port in self.peers.iteritems():
+            # TODO: Check whether that peer has the message already
+            self.message_pool.spawn(self.send_message, (host, port), message)
 
     def send_message(self, address, message):
         """ Send a message  """
         from gevent import socket
 
+        message_json = message.json()
+
         # Send message
         sock = socket.socket(type=socket.SOCK_DGRAM)
         sock.connect(address)
-        sock.send(message)
+        sock.send(message_json)
         try:
             data, address = sock.recvfrom(8192)
-            app.logger.info("[{source}] Replied: {resp}".format(
+            app.logger.info("[{source}] replied: '{resp}'".format(
                 source=self.source_format(address), resp=data))
         except Exception, e:
             self.update_peer_list()
-            app.logger.error("[{source}] Replied: {error}".format(
+            app.logger.error("[{source}] replied: {error}".format(
                 source=self.source_format(address), error=e))
 
     def update_peer_list(self):
         """ Update peer list from login server """
         # TODO: implement actual server connection
         if SERVER_PORT == 5000:
-            self.peers = [("localhost", 5051), ("localhost", 50590)]
+            self.peers = {"127.0.0.1": 5051}
         else:
-            self.peers = [("localhost", 5050)]
+            self.peers = {"127.0.0.1": 5050}
 
         self.logger.info("Updated peer list ({} online)".format(len(self.peers)))
 
