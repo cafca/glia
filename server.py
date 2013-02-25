@@ -4,6 +4,7 @@ import datetime
 import flask
 
 from base64 import b64decode
+from dateutil.parser import parse as dateutil_parse
 from flask import request
 from flask.ext.sqlalchemy import SQLAlchemy
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
@@ -29,7 +30,7 @@ SERVER_HOST = 'app.soma'
 SERVER_PORT = 24500
 SERVER_KEY_FILE = "./server_private.key"
 DATABASE_FILE = './server.db'
-SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=60)
+SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
 
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 app = flask.Flask(__name__)
@@ -195,7 +196,7 @@ def persona(persona_id):
         db.session.add(p)
         db.session.commit()
 
-        # Lookup
+        # Lookup peer hostnames
         lookup = dict()
         if 'lookup' in request.args:
             lookup_ids = request.args['lookup'].split(";")
@@ -250,6 +251,7 @@ def persona(persona_id):
 
         # Create new session
         session_id = p.reset()
+        p.last_connected = datetime.datetime.now()
         db.session.add(p)
         db.session.commit()
 
@@ -300,25 +302,6 @@ def create_persona(persona_id):
         'errors': [],
     }
     return session_message(data=data)
-
-
-@app.route('/<persona_id>/logout', methods=['POST'])
-def logout(persona_id):
-    """Reset the session of a persona"""
-    errors = message_errors(request.json)
-    if request.json['data']['logout'] != persona_id:
-        errors.append(ERROR[5])
-    if errors:
-        return error_message(errors)
-
-    p = Persona.query.get(persona_id)
-    if p is None:
-        return error_message(errors=[ERROR[3], ])
-    else:
-        p.reset()
-        db.session.add(p)
-        db.session.commit()
-        return session_message(data={'auth': p.auth})
 
 
 if __name__ == '__main__':

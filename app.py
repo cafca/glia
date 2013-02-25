@@ -11,6 +11,7 @@ from dateutil.parser import parse as dateutil_parse
 from flask import abort, Flask, json, request, flash, g, redirect, render_template, url_for, session
 from flask.ext.wtf import Form, TextField as WTFTextField, SelectField as WTFSelectField, Required, Email
 from flask.ext.sqlalchemy import SQLAlchemy
+from gevent import Greenlet
 from gevent.wsgi import WSGIServer
 from gevent.pool import Pool
 from humanize import naturaltime
@@ -601,8 +602,6 @@ class PeerManager(gevent.server.DatagramServer):
         star_deleted.connect(self.on_notification_signal)
         persona_created.connect(self.on_notification_signal)
 
-        self.update_peer_list()
-
         # Login all personas
         persona_set = Persona.query.filter('sign_private != ""').all()
         for p in persona_set:
@@ -853,7 +852,6 @@ class PeerManager(gevent.server.DatagramServer):
             app.logger.info("[{source}] replied: '{resp}'".format(
                 source=self.source_format(address), resp=data))
         except Exception, e:
-            self.update_peer_list()
             app.logger.error("[{source}] replied: {error}".format(
                 source=self.source_format(address), error=e))
 
@@ -866,7 +864,8 @@ class PeerManager(gevent.server.DatagramServer):
             app.logger.debug("Posted request to server:\n{}".format(r.request.body))
         else:
             r = requests.get(url)
-            app.logger.debug("Sent request to server:\n{}".format(r.request.body))
+            app.logger.debug("Sent request to server:\n{} {}\n{}".format(
+                r.request.method, r.request.url, r.request.body))
 
         # Parse response
         error_strings = list()
@@ -885,13 +884,15 @@ class PeerManager(gevent.server.DatagramServer):
             #app.logger.debug("[server] Received data: {}".format(resp))
             return (resp, error_strings)
 
-    def update_peer_list(self):
+    def update_peer_list(self, persona):
         """ Update peer list from login server """
         # TODO: implement actual server connection
         if SERVER_PORT == 5000:
             self.peers = {"127.0.0.1": 5051}
         else:
             self.peers = {"127.0.0.1": 5050}
+
+        url = "http://{host}/{persona_id}/".format(host=LOGIN_SERVER, persona_id=persona.id)
 
         self.logger.info("Updated peer list ({} online)".format(len(self.peers)))
 
@@ -919,6 +920,7 @@ class PeerManager(gevent.server.DatagramServer):
                 'session_id': resp['data']['session_id'],
                 'timeout': resp['data']['timeout']
             }
+            self.queue_keepalive(persona)
             return
 
         # Do login
@@ -929,21 +931,50 @@ class PeerManager(gevent.server.DatagramServer):
             r, errors = self.server_request(url, Message('session', data))
 
             if errors:
-                app.logger.error("Login failed with errors:\n{}".format("\n".join(errors)))
+                app.logger.error("Login failed:\n{}".format("\n".join(errors)))
             else:
                 self.sessions[persona.id] = {
-                    'session_id': resp['data']['session_id'],
-                    'timeout': resp['data']['timeout'],
+                    'session_id': r['data']['session_id'],
+                    'timeout': r['data']['timeout'],
                 }
-                app.logger.info("Persona {} logged in until {}".format(persona, resp['data']['timeout']))
+                app.logger.info("Persona {} logged in until {}".format(
+                    persona, dateutil_parse(r['data']['timeout'])))
+                self.queue_keepalive(persona)
 
-    def logout(self):
-        """ Destroy session at login server """
-        pass
-
-    def keep_alive(self):
+    def keep_alive(self, persona):
         """ Ping server to keep session alive """
-        pass
+
+        url = "http://{host}/{persona_id}/".format(host=LOGIN_SERVER, persona_id=persona.id)
+        r, errors = self.server_request(url)
+
+        if errors:
+            app.logger.error("Error in keep_alive for {}:\n{}".format(
+                persona, "\n".join(errors)))
+
+            # Login if session is invalid
+            if r and 6 in [t[0] for t in r['data']['errors']]:
+                self.login(persona)
+        else:
+            self.sessions[persona.id] = {
+                'session_id': r['data']['session_id'],
+                'timeout': r['data']['timeout']
+            }
+            self.queue_keepalive(persona)
+
+    def queue_keepalive(self, persona):
+        """ Send keep-alive some time before the session times out """
+
+        if persona.id not in self.sessions:
+            send_in_seconds = 2
+        else:
+            buf = 30  # seconds
+            timeout = dateutil_parse(self.sessions[persona.id]['timeout'])
+            send_in_seconds = (timeout - datetime.datetime.now()).seconds - buf
+            if send_in_seconds < 0:
+                send_in_seconds = 2
+
+        ping = Greenlet(self.keep_alive, persona)
+        ping.start_later(send_in_seconds)
 
     def register_persona(self, persona):
         """ Register a persona on the login server """
@@ -972,7 +1003,8 @@ class PeerManager(gevent.server.DatagramServer):
                 'session_id': response['data']['session_id'],
                 'timeout': response['data']['timeout'],
             }
-            self.update_peer_list()
+            self.update_peer_list(persona)
+            self.queue_keepalive(persona)
 
     def delete_account(self):
         """ Remove a persona from login server, currently not implemented """
