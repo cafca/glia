@@ -1,0 +1,26 @@
+{% extends "server/base.html" %}
+
+{% block content %}
+
+<h1>{{sessions|length}} sessions</h1>
+
+<p>{{request.remote_addr}}</p>
+
+<table style="width: 900px">
+    <tr>
+        <th>user-id</th>
+        <th>session-id</th>
+        <th>hostname</th>
+        <th>last seen</th>
+    </tr>
+{% for session in sessions %}
+<tr>
+    <td>{{session.persona_id}}</td>
+    <td>{{session.session_id}}</td>
+    <td>{{session.hostname()}}</td>
+    <td>{{session.last_connected}}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
