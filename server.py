@@ -3,9 +3,10 @@
 import datetime
 import flask
 
+from base64 import b64decode
 from flask import request
 from flask.ext.sqlalchemy import SQLAlchemy
-from keyczar.keys import RsaPrivateKey
+from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 
 
@@ -18,6 +19,7 @@ ERROR = {
     3: (3, "Persona does not exist."),
     4: (4, "Missing data for this request."),
     5: (5, "Invalid signature."),
+    6: (6, "Session invalid. Please re-authenticate.")
 }
 
 DEBUG = True
@@ -70,16 +72,19 @@ class Persona(db.Model):
     host = db.Column(db.String(128))
     port = db.Column(db.Integer)
     connectable = db.Column(db.Boolean)
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
     last_connected = db.Column(db.DateTime, default=datetime.datetime.now())
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
 
-    def is_valid(self, my_session):
+    def is_valid(self, my_session=None):
         """Return True if the given session is valid"""
-        if my_session != self.id:
+
+        if my_session and my_session != self.id:
             # Invalid session id
             return False
-        elif self.timeout() > datetime.datetime.now():
+
+        if self.timeout() > datetime.datetime.now():
             return True
         else:
             # Session has expired
@@ -101,12 +106,19 @@ class Persona(db.Model):
     def timeout(self):
         return self.last_connected + SESSION_EXPIRATION_TIME
 
+    def verify(self, data, signature_b64):
+        """ Verify a signature using RSA """
+
+        signature = b64decode(signature_b64)
+        key_public = RsaPublicKey.Read(self.sign_public)
+        return key_public.Verify(data, signature)
+
 
 def session_message(data):
     """Create json response object"""
 
     app.logger.debug("Sending session message ({})".format(
-        flask.json.dumps(data, indent=4)))
+        flask.json.dumps(data)))
 
     #sig = SERVER_KEY.Sign(data)
 
@@ -173,7 +185,7 @@ def persona(persona_id):
                 session=p.session_id))
 
             data = {
-                'errors': 'Session invalid. Please re-authenticate.',
+                'errors': [ERROR[6], ],
                 'auth': p.auth
             }
             return session_message(data=data)
@@ -181,7 +193,7 @@ def persona(persona_id):
         # Keep session alive
         p.last_connected = datetime.datetime.now()
         db.session.add(p)
-        db.commit(p)
+        db.session.commit()
 
         # Lookup
         lookup = dict()
@@ -203,7 +215,6 @@ def persona(persona_id):
                     }
 
         data = {
-            'session_valid': True,
             'timeout': p.timeout().isoformat(),
             'session_id': p.session_id,
             'lookup': lookup,
@@ -216,21 +227,36 @@ def persona(persona_id):
         errors = message_errors(request.json)
         if errors:
             return error_message(errors)
+
         data = request.json['data']
+        required_fields = ['auth_signed']
+        errors = list()
+        for field in required_fields:
+            if field not in data:
+                errors.append((4, "{} ({})".format(ERROR[4][1], field)))
+        if errors:
+            return error_message(errors=errors)
 
         # Retrieve persona entry
-        p = Persona.query.get(data['persona_id'])
+        p = Persona.query.get(persona_id)
         if p is None:
             return error_message(errors=[ERROR[3], ])
+
+        # Validate request auth
+        is_valid = p.verify(p.auth, data['auth_signed'])
+        if not is_valid:
+            app.logger.error("Login failed with invalid signature.")
+            return error_message(errors=[ERROR[5], ])
 
         # Create new session
         session_id = p.reset()
         db.session.add(p)
-        db.session.commit(p)
+        db.session.commit()
 
         data = {
             'timeout': p.timeout().isoformat(),
             'session_id': session_id,
+            'errors': [],
         }
         return session_message(data=data)
 
@@ -271,6 +297,7 @@ def create_persona(persona_id):
     data = {
         'timeout': p.timeout().isoformat(),
         'session_id': p.session_id,
+        'errors': [],
     }
     return session_message(data=data)
 
@@ -295,5 +322,5 @@ def logout(persona_id):
 
 
 if __name__ == '__main__':
-    init_db()
+    #init_db()
     app.run(SERVER_HOST, SERVER_PORT)

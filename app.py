@@ -136,7 +136,7 @@ class Persona(Serializable, db.Model):
         """ Sign data using RSA """
         from base64 import b64encode
 
-        key_private = RsaPrivateKey.Read(self.crypt_private)
+        key_private = RsaPrivateKey.Read(self.sign_private)
         signature = key_private.Sign(data)
         return b64encode(signature)
 
@@ -145,7 +145,7 @@ class Persona(Serializable, db.Model):
         from base64 import b64decode
 
         signature = b64decode(signature_b64)
-        key_public = RsaPublicKey.Read(self.crypt_public)
+        key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
 
 
@@ -603,8 +603,10 @@ class PeerManager(gevent.server.DatagramServer):
 
         self.update_peer_list()
 
-        p = Persona.query.get('6e345777ca1a49cd8d005ac5e2f37cac')
-        self.register_persona(p)
+        # Login all personas
+        persona_set = Persona.query.filter('sign_private != ""').all()
+        for p in persona_set:
+            self.message_pool.spawn(self.login, p)
 
     def request_object(self, object_type, object_id, address):
         """ Request an object from a peer """
@@ -855,13 +857,33 @@ class PeerManager(gevent.server.DatagramServer):
             app.logger.error("[{source}] replied: {error}".format(
                 source=self.source_format(address), error=e))
 
-    def server_request(self, url, message):
-        """ HTTP request to server """
-        headers = {"Content-Type": "application/json"}
-        r = requests.post(url, message.json(), headers=headers)
+    def server_request(self, url, message=None):
+        """ HTTP request to server. Parses response and returns (resp, error_strings). """
+        # Make request
+        if message:
+            headers = {"Content-Type": "application/json"}
+            r = requests.post(url, message.json(), headers=headers)
+            app.logger.debug("Posted request to server:\n{}".format(r.request.body))
+        else:
+            r = requests.get(url)
+            app.logger.debug("Sent request to server:\n{}".format(r.request.body))
 
-        app.logger.debug("[server] Received: {}".format(r.text))
-        return r
+        # Parse response
+        error_strings = list()
+
+        # Status code above 400 means the request failed
+        if r.status_code >= 400:
+            error_strings.append("{} (HTTP error)".format(r.status_code))
+            return (None, error_strings)
+
+        # Parse JSON, extract errors
+        else:
+            resp = r.json()
+            if 'errors' in resp['data']:
+                for error in resp['data']['errors']:
+                    error_strings.append("{}: {}".format(error[0], error[1]))
+            #app.logger.debug("[server] Received data: {}".format(resp))
+            return (resp, error_strings)
 
     def update_peer_list(self):
         """ Update peer list from login server """
@@ -873,9 +895,47 @@ class PeerManager(gevent.server.DatagramServer):
 
         self.logger.info("Updated peer list ({} online)".format(len(self.peers)))
 
-    def login(self):
+    def login(self, persona):
         """ Create session at login server """
-        pass
+
+        # Check current state
+        url = "http://{host}/{persona_id}/".format(host=LOGIN_SERVER, persona_id=persona.id)
+        resp, errors = self.server_request(url)
+
+        if errors:
+            app.logger.error("Login failed with errors:\n{}".format("\n".join(errors)))
+            if not resp:
+                return
+
+            # Check error list for code 3 (persona not found) and register new persona if found
+            if 3 in [t[0] for t in resp['data']['errors']]:
+                self.register_persona(persona)
+                return
+
+        # Persona is already logged in
+        elif 'session_id' in resp['data']:
+            app.logger.info("Persona {} already logged in.".format(persona))
+            self.sessions[persona.id] = {
+                'session_id': resp['data']['session_id'],
+                'timeout': resp['data']['timeout']
+            }
+            return
+
+        # Do login
+        if 'auth' in resp['data']:
+            data = {
+                'auth_signed': persona.sign(resp['data']['auth'])
+            }
+            r, errors = self.server_request(url, Message('session', data))
+
+            if errors:
+                app.logger.error("Login failed with errors:\n{}".format("\n".join(errors)))
+            else:
+                self.sessions[persona.id] = {
+                    'session_id': resp['data']['session_id'],
+                    'timeout': resp['data']['timeout'],
+                }
+                app.logger.info("Persona {} logged in until {}".format(persona, resp['data']['timeout']))
 
     def logout(self):
         """ Destroy session at login server """
@@ -900,18 +960,19 @@ class PeerManager(gevent.server.DatagramServer):
         message = Message('create_persona', data)
 
         url = "http://{host}/{persona}/create".format(host=LOGIN_SERVER, persona=persona.id)
-        r = self.server_request(url, message=message)
-        app.logger.debug("[server] Received: {}".format(r.text))
+        response, errors = self.server_request(url, message=message)
+
+        if errors:
+            app.logger.error("Error creating account on server:\n{}".format("\n".join(errors)))
 
         # Evaluate response
-        response = r.json()
-        if response['message_type'] == "session":
-            app.logger.info("Persona {} is logged in.".format(persona))
-            self.sessions[persona.id] = response['data']
+        if 'session_id' in response['data']:
+            app.logger.info("Registered {} with server.".format(persona))
+            self.sessions[persona.id] = {
+                'session_id': response['data']['session_id'],
+                'timeout': response['data']['timeout'],
+            }
             self.update_peer_list()
-        elif response['message_type'] == 'error':
-            app.logger.error("Error creating account {}:\n{}".format(
-                persona, "\n".join([str(e) for e in response['data']['errors']])))
 
     def delete_account(self):
         """ Remove a persona from login server, currently not implemented """
