@@ -7,6 +7,7 @@ from base64 import b64decode
 from dateutil.parser import parse as dateutil_parse
 from flask import request
 from flask.ext.sqlalchemy import SQLAlchemy
+from gevent.wsgi import WSGIServer
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 
@@ -197,6 +198,8 @@ def persona(persona_id):
         db.session.commit()
 
         # Lookup peer hostnames
+        # The field 'lookup' may contain a list of persona-ids, separated by
+        # a semicolon for which an address is requested
         lookup = dict()
         if 'lookup' in request.args:
             lookup_ids = request.args['lookup'].split(";")
@@ -306,4 +309,5 @@ def create_persona(persona_id):
 
 if __name__ == '__main__':
     #init_db()
-    app.run(SERVER_HOST, SERVER_PORT)
+    local_server = WSGIServer(('', SERVER_PORT), app)
+    local_server.serve_forever()

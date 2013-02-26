@@ -179,7 +179,7 @@ def init_db():
         app.logger.info("Initializing DB")
         db.create_all()
 
-        # Generate test persona #1
+        """# Generate test persona #1
         pv = Persona('247a1ca474b04a248c751d0eebf9738f', 'cievent', 'nichte@gmail.com')
         pv.generate_keys('jodat')
         db.session.add(pv)
@@ -189,7 +189,7 @@ def init_db():
         paul.generate_keys('jodat')
         db.session.add(paul)
 
-        db.session.commit()
+        db.session.commit()"""
 
 
 def get_active_persona():
@@ -499,7 +499,7 @@ class Vizier():
             for col in xrange(x_pos, x_pos + x_size):
                 for row in xrange(y_pos, y_pos + y_size):
                     if col in cells and row in cells[col]:
-                        app.logger.info("Double binding of cell ({x},{y})".format(x=col, y=row))
+                        app.logger.warning("Double binding of cell ({x},{y})".format(x=col, y=row))
                     else:
                         cells[col].append(row)
 
@@ -596,11 +596,13 @@ class PeerManager(gevent.server.DatagramServer):
         self.message_pool = Pool(10)
         self.source_format = lambda address: "{host}:{port}".format(host=address[0], port=address[1])
         self.sessions = dict()
+        self.peers = dict()
 
         # Subscribe notification distribution to signals
         star_created.connect(self.on_notification_signal)
         star_deleted.connect(self.on_notification_signal)
         persona_created.connect(self.on_notification_signal)
+        persona_created.connect(self.on_persona_created)
 
         # Login all personas
         persona_set = Persona.query.filter('sign_private != ""').all()
@@ -826,16 +828,23 @@ class PeerManager(gevent.server.DatagramServer):
         inventory_json = json.dumps(inventory)
         return inventory_json
 
-    def on_notification_signal(self, sender, message=None):
+    def on_notification_signal(self, sender, message):
         """ Distribute notification messages """
         app.logger.info("[{sender}] Distributing {msg}".format(sender=sender, msg=message))
         self.distribute_message(message)
 
+    def on_persona_created(self, sender, message):
+        """ Register newly created personas with server """
+        persona_id = message.data['object_id']
+        persona = Persona.query.get(persona_id)
+        self.register_persona(persona)
+
     def distribute_message(self, message):
         """ Distribute a message to all peers who don't already have it """
-        for host, port in self.peers.iteritems():
-            # TODO: Check whether that peer has the message already
-            self.message_pool.spawn(self.send_message, (host, port), message)
+        if self.peers:
+            for host, port in self.peers.iteritems():
+                # TODO: Check whether that peer has the message already
+                self.message_pool.spawn(self.send_message, (host, port), message)
 
     def send_message(self, address, message):
         """ Send a message  """
@@ -891,6 +900,8 @@ class PeerManager(gevent.server.DatagramServer):
             self.peers = {"127.0.0.1": 5051}
         else:
             self.peers = {"127.0.0.1": 5050}
+
+        peer_list = ['247a1ca474b04a248c751d0eebf9738f', '6e345777ca1a49cd8d005ac5e2f37cac']
 
         url = "http://{host}/{persona_id}/".format(host=LOGIN_SERVER, persona_id=persona.id)
 
