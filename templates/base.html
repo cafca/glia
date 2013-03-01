@@ -1,24 +1,47 @@
 <!doctype html>
 <head>
     <title>{%block title %}soma{% endblock %}</title>
-    <link rel="stylesheet/less" type="text/css" href="/static/frameless.less">
-    <link rel="stylesheet/less" type="text/css" href="/static/style.less">
-    <script src="/static/less.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="/static/frameless.css">
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <link rel="stylesheet" type="text/css" href="/static/font-awesome.css">
 </head>
 <body>
-
     <header>
         <a href="{{ url_for('universe') }}"><h1>Soma</h1></a>
+
+        <h2>You</h2>
         <ul>
             {% for persona in controlled_personas %}
-            <a href="{{ url_for('persona', id=persona.id) }}" {% if persona.id == session.active_persona %}class="active"{% endif %}><li><p>Persona: {{persona.username}}</p></li></a>
+            <li>
+                {% if persona.id == session.active_persona %}
+                <a href="{{ url_for('universe') }}" class="active">
+                    <p><i class="icon-circle"></i> {{persona.username}}</p>
+                </a>
+                <ul>
+                    <li><a href="{{ url_for('persona', id=persona.id) }}">
+                    <p><i class="icon-angle-right"></i> Your Stuff</p></a></li>
+                    <li><a href="{{url_for('create_star')}}">
+                    <p><i class="icon-angle-right"></i> New Star</p></a></li>
+                </ul>
+                {% else %}
+                <a href="{{ url_for('activate_persona', id=persona.id) }}">
+                    <p><i class="icon-circle-blank"></i> {{persona.username}}</p>
+                </a>
+                {% endif %}
+            </li>
             {% endfor %}
+            <a href="{{ url_for('create_persona') }}"><li>
+                <p><i class="icon-plus-sign"></i> New</p>
+            </li></a>
         </ul>
+        <h2>System</h2>
         <ul>
-            <a href="{{ url_for('create_persona') }}"><li><p>Create Persona</p></p></li></a>
-            <a href="{{url_for('create_star')}}"><li><p>Create Star</p></li></a>
-            <a href="{{url_for('logout')}}"><li><p>Logout</p></li></a>
-            <a href="{{url_for('debug')}}"><li><p>Debug</p></li></a>
+            <a href="{{url_for('debug')}}"><li>
+                <p><i class="icon-cogs"></i> Debug</p>
+            </li></a>
+            <a href="{{url_for('logout')}}"><li>
+                <p><i class="icon-off"></i> Logout</p>
+            </li></a>
         </ul>
     </header>
 

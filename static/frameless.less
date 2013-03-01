@@ -272,10 +272,19 @@ header {
         margin: .7em 5px 0;
     }
 
+    h2 {
+        color: lighten(black, 70%);
+        font-size: @font-size /@em;
+        line-height: @line-height * (4/5)/@em;
+        font-weight: normal;
+        margin: 0 5px;
+    }
+
     ul {
         list-style: none;
         padding: 0;
         line-height: @line-height * (4/5)/@em;
+        margin-bottom: .5em;
 
         .active a { color: white; }
 

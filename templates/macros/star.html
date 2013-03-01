@@ -13,8 +13,10 @@
 
 <span class="meta">
     <span>
+        <i class="icon-asterisk"></i>
         <a href="{{ url_for('star', id=star.id) }}" title="{{star.created}}">{{star.created|naturaltime}}</a> 
         by 
+        <i class="icon-circle-blank"></i>
         <a href="{{ url_for('persona', id=star.creator.id) }}">
             {{ star.creator.username}}
         </a>
