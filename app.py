@@ -195,7 +195,7 @@ def init_db():
 def get_active_persona():
     """ Return the currently active persona or 0 if there is no controlled persona. """
 
-    if 'active persona' not in session or session['active_persona'] is None:
+    if 'active_persona' not in session or session['active_persona'] is None:
         controlled_personas = Persona.query.filter('sign_private != ""')
 
         if controlled_personas.first() == None:
@@ -363,10 +363,17 @@ def create_persona():
 @app.route('/p/<id>/activate', methods=['GET'])
 def activate_persona(id):
     """ Activate a persona """
-    p = Persona.query.filter_by(id=id).first()
+    p = Persona.query.get(id)
     if not p:
+        app.logger.error("Tried to activate a nonexistent persona")
+        abort(404)
+    if p.sign_private == "":
+        app.logger.error("Tried to activate foreign persona")
         flash("That is not you!")
-    session['active_persona'] = id
+    else:
+        app.logger.info("Activated persona {}".format(id))
+        session['active_persona'] = id
+    return redirect(url_for('universe'))
 
 
 class Create_star_form(Form):
