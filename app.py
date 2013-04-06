@@ -16,6 +16,7 @@ from gevent.wsgi import WSGIServer
 from gevent.pool import Pool
 from humanize import naturaltime
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
+from set_hosts import test_host_entry
 from sqlalchemy.exc import OperationalError
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
@@ -1035,6 +1036,9 @@ class PeerManager(gevent.server.DatagramServer):
 
 if __name__ == '__main__':
     init_db()
+    if not test_host_entry:
+        app.logger.error("Please execute set_hosts.py with administrator privileges\
+            to allow access to Soma at http://app.soma/.")
     if USE_DEBUG_SERVER:
         # flask development server
         app.run(SERVER_HOST, SERVER_PORT)
