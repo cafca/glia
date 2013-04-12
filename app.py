@@ -6,6 +6,7 @@ import sys
 import umemcache
 import requests
 
+from analytics import score, epoch_seconds
 from blinker import Namespace
 from dateutil.parser import parse as dateutil_parse
 from flask import abort, Flask, json, request, flash, g, redirect, render_template, url_for, session
@@ -163,8 +164,21 @@ class Star(Serializable, db.Model):
         self.text = text
         self.creator_id = creator
 
+    def __str__(self):
+        return "<Star {}-{}>".format(self.creator_id, self.created)
+
     def get_absolute_url(self):
         return url_for('star', id=self.id)
+
+    def hot(self):
+        """i reddit"""
+        from math import log
+        #s = score(self)
+        s = 1.0
+        order = log(max(abs(s), 1), 10)
+        sign = 1 if s > 0 else -1 if s < 0 else 0
+        return round(order + sign * epoch_seconds(self.created) / 45000, 7)
+
 
 # Setup Cache
 cache = SimpleCache()
@@ -463,16 +477,12 @@ def delete_star(id):
 @app.route('/')
 def universe():
     """ Render the landing page """
+    from analytics import PageManager
     stars = Star.query.all()
+    pm = PageManager()
+    page = pm.auto_layout(stars)
 
-    vizier = Vizier([
-        [1, 1, 6, 4],
-        [1, 5, 4, 2],
-        [5, 5, 2, 2],
-        [7, 1, 2, 5]
-    ])
-
-    return render_template('universe.html', layout="sternenhimmel", constellation=stars, vizier=vizier)
+    return render_template('universe.html', layout="sternenhimmel", stars=page)
 
 
 @app.route('/s/<id>/', methods=['GET'])

@@ -56,6 +56,7 @@ def create_server_certificate():
 try:
     with open(SERVER_KEY_FILE) as f:
         pass
+        # => key file does exist
 except IOError:
     create_server_certificate()
 
