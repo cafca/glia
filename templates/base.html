@@ -19,9 +19,11 @@
                 </a>
                 <ul>
                     <li><a href="{{ url_for('persona', id=persona.id) }}">
-                    <p><i class="icon-angle-right"></i> Your Stuff</p></a></li>
+                    <p><i class="icon-angle-right"></i> Your stuff</p></a></li>
                     <li><a href="{{url_for('create_star')}}">
-                    <p><i class="icon-angle-right"></i> New Star</p></a></li>
+                    <p><i class="icon-angle-right"></i> Post star</p></a></li>
+                    <li><a href="{{url_for('find_people')}}">
+                    <p><i class="icon-angle-right"></i> Find people</p></a></li>
                 </ul>
                 {% else %}
                 <a href="{{ url_for('activate_persona', id=persona.id) }}">

@@ -15,6 +15,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from gevent import Greenlet
 from gevent.wsgi import WSGIServer
 from gevent.pool import Pool
+from hashlib import sha256
 from humanize import naturaltime
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from set_hosts import test_host_entry
@@ -99,6 +100,10 @@ class Persona(Serializable, db.Model):
 
     def __str__(self):
         return "{} <{}>".format(self.username, self.id)
+
+    def get_email_hash(self):
+        """Return sha256 hash of this user's email address"""
+        return sha256(self.email).hexdigest()
 
     def get_absolute_url(self):
         return url_for('persona', id=self.id)
@@ -261,7 +266,6 @@ def teardown_request(exception):
 def login():
     """Display a login form and create a session if the correct pw is submitted"""
     from Crypto.Protocol.KDF import PBKDF2
-    from hashlib import sha256
 
     error = None
     if request.method == 'POST':
@@ -501,6 +505,42 @@ def debug():
     personas = Persona.query.all()
 
     return render_template('debug.html', stars=stars, personas=personas)
+
+
+class FindPeopleForm(Form):
+    email = WTFTextField('Email-Address', validators=[
+        Required(), Email()])
+
+
+@app.route('/find-people', methods=['GET', 'POST'])
+def find_people():
+    """Search for and follow people"""
+    form = FindPeopleForm(request.form)
+    results = None
+
+    if request.method == 'POST' and form.validate():
+        # Compile message
+        email = request.form['email']
+        email_hash = sha256(email).hexdigest()
+        app.logger.info("Searching for {}".format(email))
+        data = {
+            "email_hash": email_hash
+        }
+        message = Message(message_type='find_people', data=data)
+
+        # Send message
+        headers = {"Content-Type": "application/json"}
+        url = "http://{host}/find-people".format(host=LOGIN_SERVER)
+        r = requests.post(url, message.json(), headers=headers)
+
+        # Read response
+        resp = r.json()
+        try:
+            results = resp['data']['found']
+        except KeyError:
+            pass
+
+    return render_template('find_people.html', form=form, results=results)
 
 
 class Vizier():
@@ -1012,7 +1052,7 @@ class PeerManager(gevent.server.DatagramServer):
         # Create request
         data = {
             'persona_id': persona.id,
-            'email_hashes': None,
+            'email_hash': persona.get_email_hash(),
             'sign_public': persona.sign_public,
             'crypt_public': persona.crypt_public,
             'reply_to': PEERMANAGER_PORT

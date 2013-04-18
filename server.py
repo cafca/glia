@@ -68,7 +68,20 @@ SERVER_KEY = RsaPrivateKey.Read(rsa_json)
 """ MODELS """
 
 
-class Persona(db.Model):
+class Serializable():
+    """ Make SQLAlchemy models json serializable"""
+    def export(self, exclude=[]):
+        """Return this object as a dict"""
+        return {c.name: str(getattr(self, c.name))
+            for c in self.__table__.columns if c not in exclude}
+
+    def json(self, exclude=[]):
+        """Return this object JSON encoded"""
+        import json
+        return json.dumps(self.export(exclude), indent=4)
+
+
+class Persona(Serializable, db.Model):
     persona_id = db.Column(db.String(32), primary_key=True)
     session_id = db.Column(db.String(32), default=uuid4().hex)
     auth = db.Column(db.String(32), default=uuid4().hex)
@@ -79,6 +92,7 @@ class Persona(db.Model):
     last_connected = db.Column(db.DateTime, default=datetime.datetime.now())
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
+    email_hash = db.Column(db.String(32))
 
     def is_valid(self, my_session=None):
         """Return True if the given session is valid"""
@@ -277,19 +291,20 @@ def create_persona(persona_id):
     # Validate request data
     data = request.json['data']
     required_fields = [
-        'persona_id', 'email_hashes', 'sign_public', 'crypt_public', 'reply_to']
+        'persona_id', 'email_hash', 'sign_public', 'crypt_public', 'reply_to']
     errors = list()
     for field in required_fields:
         if field not in data:
             errors.append((4, "{} ({})".format(ERROR[4][1], field)))
+
     if errors:
         return error_message(errors=errors)
 
-    # TODO: save email hashes
     p = Persona(
         persona_id=data["persona_id"],
         sign_public=data["sign_public"],
         crypt_public=data["crypt_public"],
+        email_hash=data["email_hash"],
         host=request.remote_addr,
         port=data["reply_to"],
     )
@@ -308,7 +323,25 @@ def create_persona(persona_id):
     return session_message(data=data)
 
 
+@app.route('/find-people', methods=['POST'])
+def find_people():
+    # Validate request
+    app.logger.info("Request for 1 email address lookup.")
+
+    # Find corresponding personas
+    # TODO: Allow multiple lookups at once
+    email_hash = request.json['data']['email_hash']
+    p = Persona.query.filter_by(email_hash=email_hash).first()
+
+    # Compile response
+    data = {
+        'found': p.export(exclude=["sign_private, crypt_private"]),
+    }
+
+    return session_message(data=data)
+
+
 if __name__ == '__main__':
-    #init_db()
+    init_db()
     local_server = WSGIServer(('', SERVER_PORT), app)
     local_server.serve_forever()
