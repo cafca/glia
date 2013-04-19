@@ -335,6 +335,7 @@ def find_people():
 
 
 if __name__ == '__main__':
-    init_db()
+    if len(sys.argv) > 0 and sys.argv[0] == 'init_db':
+        init_db()
     local_server = WSGIServer(('', SERVER_PORT), app)
     local_server.serve_forever()
