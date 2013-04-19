@@ -3,9 +3,9 @@
 
 {% block content %}
 
-{% for star in constellation %}
-<section class="{{ vizier.get_cell() }}">
-    {{ star_macros.star(star) }}
+{% for star in stars %}
+<section class="{{ star[0] }}">
+    {{ star_macros.star(star[1]) }}
 </section>
 {% endfor %}
 
