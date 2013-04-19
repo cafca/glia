@@ -12,7 +12,7 @@ Werkzeug==0.8.3
 altgraph==0.10.2
 async==0.6.1
 blinker==1.2
-gevent==1.0dev
+git+git://github.com/surfly/gevent.git
 gitdb==0.5.4
 greenlet==0.4.0
 humanize==0.2
