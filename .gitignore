@@ -1,3 +1,4 @@
 khemia_*.db
 server.db
 server_private.key
+.env

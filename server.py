@@ -27,7 +27,7 @@ ERROR = {
 DEBUG = True
 USE_DEBUG_SERVER = False
 
-SERVER_HOST = 'app.soma'
+SERVER_HOST = 'pineal.herokuapp.com'
 SERVER_PORT = 24500
 SERVER_KEY_FILE = "./server_private.key"
 DATABASE_FILE = './server.db'
@@ -36,7 +36,7 @@ SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 app = flask.Flask(__name__)
 app.config.from_object(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + DATABASE_FILE
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
 
@@ -53,15 +53,7 @@ def create_server_certificate():
         f.write(str(rsa))
 
 # Load RSA key
-try:
-    with open(SERVER_KEY_FILE) as f:
-        pass
-        # => key file does exist
-except IOError:
-    create_server_certificate()
-
-with open(SERVER_KEY_FILE) as f:
-    rsa_json = f.read()
+rsa_json = os.environ['SERVER_PRIVATE_KEY']
 SERVER_KEY = RsaPrivateKey.Read(rsa_json)
 
 
