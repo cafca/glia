@@ -29,7 +29,7 @@ DEBUG = True
 USE_DEBUG_SERVER = False
 
 SERVER_HOST = 'pineal.herokuapp.com'
-SERVER_PORT = 24500
+SERVER_PORT = os.environ.get("PORT", 24500)
 SERVER_KEY_FILE = "./server_private.key"
 DATABASE_FILE = './server.db'
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
