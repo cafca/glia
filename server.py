@@ -3,6 +3,7 @@
 import datetime
 import flask
 import os
+import sys
 
 from base64 import b64decode
 from dateutil.parser import parse as dateutil_parse
@@ -29,7 +30,7 @@ DEBUG = True
 USE_DEBUG_SERVER = False
 
 SERVER_HOST = 'pineal.herokuapp.com'
-SERVER_PORT = os.environ.get("PORT", 24500)
+SERVER_PORT = int(os.environ.get("PORT", 24500))
 SERVER_KEY_FILE = "./server_private.key"
 DATABASE_FILE = './server.db'
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
