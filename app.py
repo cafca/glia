@@ -15,6 +15,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from gevent import Greenlet
 from gevent.wsgi import WSGIServer
 from gevent.pool import Pool
+from hashlib import sha256
 from humanize import naturaltime
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from set_hosts import test_host_entry
@@ -22,17 +23,21 @@ from sqlalchemy.exc import OperationalError
 from werkzeug.local import LocalProxy
 from werkzeug.contrib.cache import SimpleCache
 
-""" Config """
+# --- CONFIGURATION ---
 
 DEBUG = True
 USE_DEBUG_SERVER = False
 
 SEND_FILE_MAX_AGE_DEFAULT = 1
+
 # TODO: Generate after installation, keep secret.
 SECRET_KEY = '\xae\xac\xde\nIH\xe4\xed\xf0\xc1\xb9\xec\x08\xf6uT\xbb\xb6\x8f\x1fOBi\x13'
-#pw: jodat
+
+# Comment this out to set a custom password
+# pw: jodat
 PASSWORD_HASH = '8302a8fbf9f9a6f590d6d435e397044ae4c8fa22fdd82dc023bcc37d63c8018c'
 
+# Setup host addresses
 SERVER_HOST = 'app.soma'
 try:
     SERVER_PORT = int(sys.argv[1])
@@ -46,12 +51,13 @@ LOGIN_SERVER_HOST = "app.soma"
 LOGIN_SERVER_PORT = "24500"
 LOGIN_SERVER = "{}:{}".format(LOGIN_SERVER_HOST, LOGIN_SERVER_PORT)
 
+# Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.jinja_env.filters['naturaltime'] = naturaltime
 
 
-# Setup SQLAlchemy
+# Setup SQLAlchemy database
 DATABASE = 'khemia_{}.db'.format(SERVER_PORT)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + DATABASE
 db = SQLAlchemy(app)
@@ -61,10 +67,13 @@ notification_signals = Namespace()
 star_created = notification_signals.signal('star-created')
 star_deleted = notification_signals.signal('star-deleted')
 persona_created = notification_signals.signal('persona-created')
+contact_request_sent = notification_signals.signal('contact-request-sent')
+contact_request_received = notification_signals.signal('contact-request-received')
 
 
 class Serializable():
     """ Make SQLAlchemy models json serializable"""
+
     def export(self, exclude=[]):
         """Return this object as a dict"""
         return {c.name: str(getattr(self, c.name))
@@ -76,8 +85,10 @@ class Serializable():
         return json.dumps(self.export(exclude), indent=4)
 
 
-# Setup Document Types
+# --- MODEL CLASSES ---
+
 class Persona(Serializable, db.Model):
+    """A Persona represents a user profile"""
     id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(80))
     email = db.Column(db.String(120), unique=True)
@@ -98,7 +109,11 @@ class Persona(Serializable, db.Model):
         self.crypt_public = crypt_public
 
     def __str__(self):
-        return "{} <{}>".format(self.username, self.id)
+        return "<{} [{}]>".format(self.username, self.id)
+
+    def get_email_hash(self):
+        """Return sha256 hash of this user's email address"""
+        return sha256(self.email).hexdigest()
 
     def get_absolute_url(self):
         return url_for('persona', id=self.id)
@@ -109,14 +124,14 @@ class Persona(Serializable, db.Model):
         # TODO: Store keys encrypted
 
         # Generate and store keys
-        app.logger.info("Generating encryption key pair for Persona {username} ({id})".format(
+        app.logger.info("Generating signature key pair for Persona {username} ({id})".format(
             username=self.username, id=self.id))
 
         rsa1 = RsaPrivateKey.Generate()
         self.sign_private = str(rsa1)
         self.sign_public = str(rsa1.public_key)
 
-        app.logger.info("Generating signature key pair for Persona {username} ({id})".format(
+        app.logger.info("Generating encryption key pair for Persona {username} ({id})".format(
             username=self.username, id=self.id))
 
         rsa2 = RsaPrivateKey.Generate()
@@ -153,6 +168,8 @@ class Persona(Serializable, db.Model):
 
 
 class Star(Serializable, db.Model):
+    """A Star represents a post"""
+
     id = db.Column(db.String(32), primary_key=True)
     text = db.Column(db.Text)
     created = db.Column(db.DateTime, default=datetime.datetime.now())
@@ -161,7 +178,9 @@ class Star(Serializable, db.Model):
 
     def __init__(self, id, text, creator):
         self.id = id
+        # TODO: Attach multiple items as 'planets'
         self.text = text
+
         self.creator_id = creator
 
     def __str__(self):
@@ -173,11 +192,36 @@ class Star(Serializable, db.Model):
     def hot(self):
         """i reddit"""
         from math import log
+        # Uncomment to assign a score with analytics.score
         #s = score(self)
         s = 1.0
         order = log(max(abs(s), 1), 10)
         sign = 1 if s > 0 else -1 if s < 0 else 0
         return round(order + sign * epoch_seconds(self.created) / 45000, 7)
+
+
+class Notification(db.Model):
+    """Represents a stored notification to the user"""
+    id = db.Column(db.String(32), primary_key=True)
+    kind = db.Column(db.String(32))
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
+    to_persona_id = db.Column(db.String(32))
+
+    def __init__(self, kind, to_persona_id):
+        from uuid import uuid4
+        self.id = uuid4().hex
+        self.kind = kind
+        self.to_persona_id = to_persona_id
+
+
+class ContactRequestNotification(Notification):
+    def __init__(self, from_persona_id, to_persona_id):
+        Notification.__init__(
+            self,
+            kind='contact_request',
+            to_persona_id=to_persona_id)
+        self.from_persona_id = from_persona_id
+
 
 
 # Setup Cache
@@ -222,16 +266,20 @@ def get_active_persona():
 
 
 def logged_in():
+    """Check whether a user is logged in"""
     return cache.get('password') is not None
 
 
 @app.context_processor
 def persona_context():
+    """Makes controlled_personas available in templates"""
     return dict(controlled_personas=Persona.query.filter('sign_private != ""'))
 
 
 @app.before_request
 def before_request():
+    """Preprocess requests"""
+
     # TODO: serve favicon.ico
     if request.base_url[-3:] == "ico":
         abort(404)
@@ -241,7 +289,7 @@ def before_request():
 
     session['active_persona'] = get_active_persona()
 
-    if app.config['PASSWORD_HASH'] == None and request.base_url != setup_url:
+    if app.config['PASSWORD_HASH'] is None and request.base_url != setup_url:
         app.logger.info("Redirecting to Setup")
         return redirect(url_for('setup', _external=True))
 
@@ -252,6 +300,7 @@ def before_request():
 
 @app.teardown_request
 def teardown_request(exception):
+    """Things to do after a request"""
     pass
 
 """ Views """
@@ -261,7 +310,6 @@ def teardown_request(exception):
 def login():
     """Display a login form and create a session if the correct pw is submitted"""
     from Crypto.Protocol.KDF import PBKDF2
-    from hashlib import sha256
 
     error = None
     if request.method == 'POST':
@@ -311,6 +359,7 @@ def persona(id):
     persona = Persona.query.filter_by(id=id).first_or_404()
     starmap = Star.query.filter_by(creator_id=id)[:4]
 
+    # TODO: Use new layout system
     vizier = Vizier([
         [1, 5, 6, 2],
         [1, 1, 6, 4],
@@ -443,7 +492,7 @@ def create_star():
 def delete_star(id):
     """ Delete a star """
     # TODO: Should only accept POST instead of GET
-    # TODO: Check permissions
+    # TODO: Check permissions!
 
     # Load instance and creator persona
     s = Star.query.get(id)
@@ -503,7 +552,94 @@ def debug():
     return render_template('debug.html', stars=stars, personas=personas)
 
 
+class FindPeopleForm(Form):
+    email = WTFTextField('Email-Address', validators=[
+        Required(), Email()])
+
+
+@app.route('/find-people', methods=['GET', 'POST'])
+def find_people():
+    """Search for and follow people"""
+    form = FindPeopleForm(request.form)
+    found = None
+
+    if request.method == 'POST' and form.validate():
+        # Compile message
+        email = request.form['email']
+        email_hash = sha256(email).hexdigest()
+        app.logger.info("Searching for {}".format(email))
+        data = {
+            "email_hash": email_hash
+        }
+        message = Message(message_type='find_people', data=data)
+
+        # Send message
+        headers = {"Content-Type": "application/json"}
+        url = "http://{host}/find-people".format(host=LOGIN_SERVER)
+        r = requests.post(url, message.json(), headers=headers)
+
+        # Read response
+        try:
+            resp = r.json()
+        except ValueError, e:
+            app.logger.info("Error retrieving results: {}".format(r.data))
+            flash("Server error: Please try again.")
+
+        # TODO: Use message_errors() instead
+        if resp and resp['data'] and 'found' in resp['data']:
+            found = resp['data']['found']
+        else:
+            flash("No record for {}. Check the spelling!".format(email))
+
+        # Create persona for found contact
+        if found and Persona.query.get(found['persona_id']) is None:
+            app.logger.info("Storing new Persona {}".format(found['persona_id']))
+            p_new = Persona(
+                id=found['persona_id'],
+                username=found['username'],
+                email=email,
+                crypt_public=found['crypt_public'],
+                sign_public=found['sign_public'])
+            db.session.add(p_new)
+            db.session.commit()
+
+    return render_template('find_people.html', form=form, found=found)
+
+
+class ContactRequestForm(Form):
+    recipient_id = WTFTextField('Persona ID', validators=[Required()])
+    author_id = WTFSelectField('Contact as', validators=[Required()])
+
+
+@app.route('/p/<persona_id>/add_contact', methods=['GET', "POST"])
+def contact_request(persona_id):
+    """Send a contact request to a peer"""
+    form = ContactRequestForm(request.form)
+    persona = Persona.query.get(persona_id)
+    author = Persona.query.get(get_active_persona())
+
+    if request.method == 'POST' and persona is not None:
+        # Construct message
+        data = {
+            'recipient_id': persona.id,
+            'object_type': 'Persona',
+            'object': author.export(
+                exclude=['crypt_private', 'sign_private', 'starmap'])
+        }
+        message = Message('contact_request', data)
+        message.sign(author)
+
+        # Send message
+        contact_request_sent.send(contact_request, message=message)
+
+        flash("Contact request sent.")
+        return redirect(url_for('persona', id=persona.id))
+    return render_template('contact_request.html', form=form, persona=persona)
+
+
+
 class Vizier():
+    """Old layout system. Use Pagemanager instead"""
     def __init__(self, layout):
         from collections import defaultdict
 
@@ -609,20 +745,32 @@ class PeerManager(gevent.server.DatagramServer):
     """ Handle connections to peers """
 
     def __init__(self, address):
+        # UDP server
         gevent.server.DatagramServer.__init__(self, address)
+
         self.logger = app.logger
+
+        # Queue messages for sending
         self.message_pool = Pool(10)
-        self.source_format = lambda address: "{host}:{port}".format(host=address[0], port=address[1])
+
+        # Format a host address
+        self.source_format = lambda address: None if address is None else "{host}:{port}".format(host=address[0], port=address[1])
+
         self.sessions = dict()
+
+        # Contains addresses of online peers as peer_id: (host,port)
         self.peers = dict()
 
-        # Subscribe notification distribution to signals
+        # Subscribe notification message distribution to signals
         star_created.connect(self.on_notification_signal)
         star_deleted.connect(self.on_notification_signal)
+
         persona_created.connect(self.on_notification_signal)
         persona_created.connect(self.on_persona_created)
 
-        # Login all personas
+        contact_request_sent.connect(self.on_contact_request_sent)
+
+        # Login all owned personas
         persona_set = Persona.query.filter('sign_private != ""').all()
         for p in persona_set:
             self.message_pool.spawn(self.login, p)
@@ -642,7 +790,7 @@ class PeerManager(gevent.server.DatagramServer):
         self.send_message(address, message)
 
     def handle(self, data, address):
-        """ Handle incoming messages """
+        """ Handle incoming connections """
         if len(data) == 0:
             self.logger.info("[{}] Empty message received".format(address[0]))
         else:
@@ -650,36 +798,43 @@ class PeerManager(gevent.server.DatagramServer):
                 source=self.source_format(address), json=data, l=len(data)))
             self.socket.sendto('Received {} bytes'.format(len(data)), address)
 
+            if address[0] in self.peers:
+                return_address = (address[0], self.peers[address[0]])
+            else:
+                return_address = address
+                app.logger.warning("No known return path for message sender {}".format(
+                    self.source_format(address)))
+
             # TODO: Attempt correcting time of message by comparing machine clocks in the message
             #   (see bittorrent utp spec)
 
-            # Try parsing the message
-            try:
-                message = Message.read(data)
-            except KeyError, e:
-                app.logger.error("[{source}] Message malformed ({error})".format(
-                    source=self.source_format(address), error=e))
-                return
+            self.handle_message(data, return_address)
 
-            # Allowed message types
-            message_types = [
-                "change_notification",
-                "object_request",
-                "object",
-                "inventory_request",
-                "inventory"
-            ]
+    def handle_message(self, data, address):
+        """Parse received Message objects and pass them on to the correct handler"""
 
-            # Identify return path
-            try:
-                return_address = (address[0], self.peers[address[0]])
-            except KeyError, e:
-                app.logger.warning("No return path for peer {host}".format(host=address[0]))
+        # Try parsing the message
+        try:
+            message = Message.read(data)
+        except KeyError, e:
+            app.logger.error("[{source}] Message malformed ({error})".format(
+                source=self.source_format(address), error=e))
+            return
 
-            # Pass on the message depending on message type
-            if message.message_type in message_types:
-                handler = getattr(self, "handle_{message_type}".format(message_type=message.message_type))
-                handler(message, return_address)
+        # Allowed message types
+        message_types = [
+            "change_notification",
+            "object_request",
+            "object",
+            "inventory_request",
+            "inventory",
+            "contact_request"
+        ]
+
+        # Pass on the message depending on message type
+        if message.message_type in message_types:
+            handler = getattr(self, "handle_{message_type}".format(message_type=message.message_type))
+            handler(message, address)
 
     def handle_change_notification(self, message, address):
         """ Delete or download the object the notification was about if that is neccessary """
@@ -747,12 +902,43 @@ class PeerManager(gevent.server.DatagramServer):
             app.logger.error("[{msg}] Protocol error: Unknown change type '{change}'".format(
                 msg=message, change=change))
 
+    def handle_contact_request(self, message, address):
+        """Handle received contact request"""
+
+        # Validate request
+        author_id = message.author_id
+        recipient_id = message.data['recipient_id']
+
+        author = Persona.query.get(author_id)
+        if author is None:
+            app.logger.info("Creating missing request author persona.")
+            self.handle_object(message, address)
+
+        p = Persona.query.get(recipient_id)
+        if p is None or p.sign_private is None:
+            # The requested persona is not available
+            # TODO: Return error response
+            app.logger.warning("Received a contact request addressed to a foreign persona. ({})".format(author))
+        else:
+            app.logger.info("Received contact request for {} from {}".format(p, author))
+            # Save contacting persona
+            if Persona.query.get(author_id) is None:
+                self.handle_object(message, ('', ''))
+
+            # Create notification to ask user for confirmation
+            notif = ContactRequestNotification(author_id, recipient_id)
+            db.session.add(notif)
+            db.session.commit()
+
+            # Send signal
+            contact_request_received.send(self.server_request, message=message)
+
     def handle_inventory(self, message, address):
         """ Look through an inventory to see if we want to download some of it """
         pass
 
     def handle_inventory_request(self, message, address):
-        """ Send an inventory to the given address """
+        """ Send an inventory of published objects to the given address """
         pass
 
     def handle_object(self, message, address):
@@ -840,7 +1026,8 @@ class PeerManager(gevent.server.DatagramServer):
         for persona in personas:
             inventory[persona.id] = {
                 "type": "persona",
-                "modified": persona.modified
+                "modified": persona.modified,
+                "email_hash": persona.email_hash
             }
 
         inventory_json = json.dumps(inventory)
@@ -856,6 +1043,15 @@ class PeerManager(gevent.server.DatagramServer):
         persona_id = message.data['object_id']
         persona = Persona.query.get(persona_id)
         self.register_persona(persona)
+
+    def on_contact_request_sent(self, sender, message):
+        """ Send a contact request to the login server """
+        app.logger.info("Sending contact request to server")
+        url = "http://{host}/contact-request".format(host=LOGIN_SERVER)
+        resp, errors = self.server_request(url, message)
+        if errors:
+            for e in errors:
+                app.logger.error("[pm-send contact request] {}".format(e))
 
     def distribute_message(self, message):
         """ Distribute a message to all peers who don't already have it """
@@ -875,7 +1071,7 @@ class PeerManager(gevent.server.DatagramServer):
         sock.connect(address)
         sock.send(message_json)
         try:
-            data, address = sock.recvfrom(8192)
+            data, address = sock.recvfrom(8192)  # Read 8KB
             app.logger.info("[{source}] replied: '{resp}'".format(
                 source=self.source_format(address), resp=data))
         except Exception, e:
@@ -908,20 +1104,26 @@ class PeerManager(gevent.server.DatagramServer):
             if 'errors' in resp['data']:
                 for error in resp['data']['errors']:
                     error_strings.append("{}: {}".format(error[0], error[1]))
+
+            # Intercept notifications
+            if 'notifications' in resp['data']:
+                notifications = resp['data']['notifications']
+
+                # n contains a json string
+                for n in notifications:
+                    app.logger.info("Received notification message")
+                    self.handle_message(n, (LOGIN_SERVER_HOST, LOGIN_SERVER_PORT))
+
             #app.logger.debug("[server] Received data: {}".format(resp))
             return (resp, error_strings)
 
     def update_peer_list(self, persona):
-        """ Update peer list from login server """
-        # TODO: implement actual server connection
+        """ Update list of current peer host addresses """
+
         if SERVER_PORT == 5000:
             self.peers = {"127.0.0.1": 5051}
         else:
             self.peers = {"127.0.0.1": 5050}
-
-        peer_list = ['247a1ca474b04a248c751d0eebf9738f', '6e345777ca1a49cd8d005ac5e2f37cac']
-
-        url = "http://{host}/{persona_id}/".format(host=LOGIN_SERVER, persona_id=persona.id)
 
         self.logger.info("Updated peer list ({} online)".format(len(self.peers)))
 
@@ -1012,7 +1214,8 @@ class PeerManager(gevent.server.DatagramServer):
         # Create request
         data = {
             'persona_id': persona.id,
-            'email_hashes': None,
+            'username': persona.username,
+            'email_hash': persona.get_email_hash(),
             'sign_public': persona.sign_public,
             'crypt_public': persona.crypt_public,
             'reply_to': PEERMANAGER_PORT
@@ -1056,6 +1259,7 @@ if __name__ == '__main__':
         # datagram server
         peermanager = PeerManager('{}:{}'.format(SERVER_HOST, PEERMANAGER_PORT))
         peermanager.start()
+
         # gevent server
         local_server = WSGIServer(('', SERVER_PORT), app)
         local_server.serve_forever()

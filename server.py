@@ -2,6 +2,7 @@
 
 import datetime
 import flask
+import json
 
 from base64 import b64decode
 from dateutil.parser import parse as dateutil_parse
@@ -68,8 +69,26 @@ SERVER_KEY = RsaPrivateKey.Read(rsa_json)
 """ MODELS """
 
 
-class Persona(db.Model):
+class Serializable():
+    """ Make SQLAlchemy models json serializable"""
+    def export(self, exclude=[], include=None):
+        """Return this object as a dict"""
+        if include:
+            return {field: str(getattr(self, field))
+                for field in include}
+        else:
+            return {c.name: str(getattr(self, c.name))
+                for c in self.__table__.columns if c not in exclude}
+
+    def json(self, exclude=[]):
+        """Return this object JSON encoded"""
+        import json
+        return json.dumps(self.export(exclude), indent=4)
+
+
+class Persona(Serializable, db.Model):
     persona_id = db.Column(db.String(32), primary_key=True)
+    username = db.Column(db.String(80))
     session_id = db.Column(db.String(32), default=uuid4().hex)
     auth = db.Column(db.String(32), default=uuid4().hex)
     host = db.Column(db.String(128))
@@ -79,11 +98,17 @@ class Persona(db.Model):
     last_connected = db.Column(db.DateTime, default=datetime.datetime.now())
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
+    email_hash = db.Column(db.String(32))
+    certificates = db.relationship('Certificate',
+        backref='author', lazy='dynamic')
+
+    def __str__(self):
+        return "<{} [{}]>".format(self.username, self.persona_id)
 
     def is_valid(self, my_session=None):
         """Return True if the given session is valid"""
 
-        if my_session and my_session != self.id:
+        if my_session and my_session != self.session_id:
             # Invalid session id
             return False
 
@@ -115,6 +140,36 @@ class Persona(db.Model):
         signature = b64decode(signature_b64)
         key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
+
+
+class Certificate(db.Model, Serializable):
+    """Certificates authorize actions specified by the kind field"""
+    id = db.Column(db.String(32), primary_key=True)
+    kind = db.Column(db.String(32))
+    recipient_id = db.Column(db.String(32))
+    recipient = db.relationship('Persona', uselist=False)
+    author_id = db.Column(db.String(32), db.ForeignKey('persona.persona_id'))
+    json = db.Column(db.Text)
+
+    def __init__(self, kind, recipient, json):
+        from uuid import uuid4
+        self.id = uuid4().hex
+        self.kind = kind
+        self.recipient = recipient
+        self.json = json
+
+
+class Notification(db.Model):
+    """Store messages for delayed delivery"""
+    notification_id = db.Column(db.String(32), primary_key=True)
+    recipient_id = db.Column(db.String(32))
+    message_json = db.Column(db.Text)
+
+    def __init__(self, recipient_id, message_json):
+        from uuid import uuid4
+        self.notification_id = uuid4().hex
+        self.recipient_id = recipient_id
+        self.message_json = message_json
 
 
 def session_message(data):
@@ -160,6 +215,17 @@ def message_errors(message):
         errors.append(ERROR[1])
     if 'data' not in message or 'data' is None:
         errors.append(ERROR[2])
+    if 'signature' in message:
+        author = Persona.query.get(message['author_id'])
+        if author:
+            if author.verify(message['data'], message['signature']):
+                app.logger.info("Correct signature on {} from {}".format(
+                    message['message_type'], author))
+            else:
+                app.logger.error("Invalid signature on {}".format(message))
+                errors.append(ERROR[5])
+        else:
+            app.logger.error("Could not verify signature. Missing author. [{}]".format(message))
 
     return errors
 
@@ -199,30 +265,30 @@ def persona(persona_id):
         db.session.commit()
 
         # Lookup peer hostnames
-        # The field 'lookup' may contain a list of persona-ids, separated by
-        # a semicolon for which an address is requested
-        lookup = dict()
-        if 'lookup' in request.args:
-            lookup_ids = request.args['lookup'].split(";")
-            app.logger.info("Lookup requested for {} IDs".format(len(lookup_ids)))
-            for lookup_id in lookup_ids:
-                # TODO: Check whether the lookup has given permissions
-                p = Persona.query.get(persona_id)
-                if p:
-                    lookup[lookup_id] = {
-                        "last_connected": p.last_connected,
-                        "hostname": "{}:{}".format(p.host, p.port),
-                    }
-                else:
-                    lookup[lookup_id] = {
-                        # Persona does not exist
-                        "error": ERROR[3],
-                    }
+        peer_info = dict()
+        certs = Certificate.query.filter_by(
+            kind='lookup_authorization').filter_by(recipient=p).all()
+
+        for cert in certs:
+            p = cert.author
+            peer_info[p.persona_id] = {
+                "last_connected": p.last_connected.isoformat(),
+                "hostname": p.hostname()
+            }
+
+        # Compile notifications
+        notifications = Notification.query.filter_by(
+            recipient_id=persona_id).all()
+
+        notification_json = list()
+        for notif in notifications:
+            notification_json.append(notif.message_json)
 
         data = {
             'timeout': p.timeout().isoformat(),
             'session_id': p.session_id,
-            'lookup': lookup,
+            'peer_info': peer_info,
+            'notifications': notification_json
         }
         return session_message(data=data)
 
@@ -277,19 +343,21 @@ def create_persona(persona_id):
     # Validate request data
     data = request.json['data']
     required_fields = [
-        'persona_id', 'email_hashes', 'sign_public', 'crypt_public', 'reply_to']
+        'persona_id', 'username', 'email_hash', 'sign_public', 'crypt_public', 'reply_to']
     errors = list()
     for field in required_fields:
         if field not in data:
             errors.append((4, "{} ({})".format(ERROR[4][1], field)))
+
     if errors:
         return error_message(errors=errors)
 
-    # TODO: save email hashes
     p = Persona(
         persona_id=data["persona_id"],
+        username=data["username"],
         sign_public=data["sign_public"],
         crypt_public=data["crypt_public"],
+        email_hash=data["email_hash"],
         host=request.remote_addr,
         port=data["reply_to"],
     )
@@ -308,7 +376,80 @@ def create_persona(persona_id):
     return session_message(data=data)
 
 
+@app.route('/find-people', methods=['POST'])
+def find_people():
+    # Validate request
+    errors = message_errors(request.json)
+    if errors:
+        return error_message(errors)
+
+    # Find corresponding personas
+    # TODO: Allow multiple lookups at once
+    email_hash = request.json['data']['email_hash']
+    p = Persona.query.filter_by(email_hash=email_hash).first()
+
+    if p:
+        # Compile response
+        app.logger.info("[find people] Persona {} found".format(p))
+        data = {
+            'found': p.export(include=[
+                "persona_id",
+                "username",
+                "crypt_public",
+                "sign_public",
+                "connectable"]),
+        }
+    else:
+        app.logger.info(
+            "[find people] Persona <{}> not found.".format(email_hash[:8]))
+        data = None
+
+    return session_message(data=data)
+
+
+@app.route('/contact-request', methods=['POST'])
+def contact_request():
+    """Takes a contact request and stores it for the recipient"""
+    app.logger.info("Received contact request")
+
+    errors = message_errors(request.json)
+    if not 'signature' in request.json:
+        errors.append(ERROR[5])
+    if errors:
+        return error_message(errors)
+
+    data = json.loads(request.json['data'])
+
+    recipient_id = data['recipient_id']
+    recipient = Persona.query.get(recipient_id)
+    if not recipient:
+        errors.append(ERROR[3])  # Persona does not exist
+        return error_message(errors)
+
+    notif = Notification(recipient_id, request.data)
+    db.session.add(notif)
+
+    author_id = request.json['author_id']
+    author = Persona.query.get(author_id)
+    if author:
+        cert = Certificate(
+            kind="lookup_authorization",
+            recipient=recipient,
+            json=request.data)
+        author.certificates.append(cert)
+        db.session.add(cert)
+        db.session.add(author)
+        db.session.commit()
+        app.logger.info("Created contact request from {} to {}".format(author, recipient))
+    else:
+        app.logger.error("Contact request author not known [{}]".format(author_id))
+
+    return session_message(data={})
+
+
 if __name__ == '__main__':
-    #init_db()
+    import sys
+    if len(sys.argv) == 2 and sys.argv[1] == 'init_db':
+        init_db()
     local_server = WSGIServer(('', SERVER_PORT), app)
     local_server.serve_forever()
