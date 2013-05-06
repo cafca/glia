@@ -3,10 +3,12 @@
 import datetime
 import flask
 import json
+import logging
+import sys
 
 from base64 import b64decode
 from dateutil.parser import parse as dateutil_parse
-from flask import request
+from flask import request, jsonify
 from flask.ext.sqlalchemy import SQLAlchemy
 from gevent.wsgi import WSGIServer
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
@@ -25,7 +27,7 @@ ERROR = {
     6: (6, "Session invalid. Please re-authenticate.")
 }
 
-DEBUG = True
+DEBUG = False
 USE_DEBUG_SERVER = False
 
 SERVER_HOST = 'app.soma'
@@ -39,6 +41,24 @@ app = flask.Flask(__name__)
 app.config.from_object(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + DATABASE_FILE
 db = SQLAlchemy(app)
+
+# Setup loggers
+# Flask is configured to route logging events only to the console if it is in debug
+# mode. This overrides this setting and enables a new logging handler which prints
+# to the shell.
+LOG_FORMAT = (
+    '%(name)s :: %(module)s [%(pathname)s:%(lineno)d]\n' +
+    '%(message)s\n')
+
+loggers = [app.logger, logging.getLogger('synapse')]
+console_handler = logging.StreamHandler(stream=sys.stdout)
+console_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+
+for l in loggers:
+    del l.handlers[:]  # remove old handlers
+    l.setLevel(logging.INFO)
+    l.addHandler(console_handler)
+    l.propagate = False  # setting this to true triggers the root logger
 
 
 def init_db():
@@ -238,7 +258,23 @@ def index():
     return flask.render_template("server/index.html", sessions=sessions)
 
 
-@app.route('/<persona_id>/', methods=['GET', 'POST'])
+@app.route('/peerinfo', methods=['POST'])
+def peerinfo():
+    """Return address for each of submitted peer IDs"""
+    peer_info = dict()
+    import pdb; pdb.set_trace()
+    for p_id in request.json['request']:
+        p = Persona.query.get(p_id)
+        if p:
+            print "{}: {}:{}".format(p.username, p.host, p.port)
+            peer_info[p_id] = (p.host, p.port)
+
+    app.logger.info("Sending peer info for {} addresses.".format(len(request.json)))
+
+    return jsonify(peer_info)
+
+
+@app.route('/p/<persona_id>/', methods=['GET', 'POST'])
 def persona(persona_id):
     if request.method == 'GET':
         # keep-alive (and lookup)
@@ -333,7 +369,7 @@ def persona(persona_id):
         return session_message(data=data)
 
 
-@app.route('/<persona_id>/create', methods=['POST'])
+@app.route('/p/<persona_id>/create', methods=['POST'])
 def create_persona(persona_id):
     # Validate request
     errors = message_errors(request.json)
@@ -395,6 +431,8 @@ def find_people():
             'found': p.export(include=[
                 "persona_id",
                 "username",
+                "host",
+                "port",
                 "crypt_public",
                 "sign_public",
                 "connectable"]),
@@ -407,49 +445,20 @@ def find_people():
     return session_message(data=data)
 
 
-@app.route('/contact-request', methods=['POST'])
-def contact_request():
-    """Takes a contact request and stores it for the recipient"""
-    app.logger.info("Received contact request")
-
-    errors = message_errors(request.json)
-    if not 'signature' in request.json:
-        errors.append(ERROR[5])
-    if errors:
-        return error_message(errors)
-
-    data = json.loads(request.json['data'])
-
-    recipient_id = data['recipient_id']
-    recipient = Persona.query.get(recipient_id)
-    if not recipient:
-        errors.append(ERROR[3])  # Persona does not exist
-        return error_message(errors)
-
-    notif = Notification(recipient_id, request.data)
-    db.session.add(notif)
-
-    author_id = request.json['author_id']
-    author = Persona.query.get(author_id)
-    if author:
-        cert = Certificate(
-            kind="lookup_authorization",
-            recipient=recipient,
-            json=request.data)
-        author.certificates.append(cert)
-        db.session.add(cert)
-        db.session.add(author)
-        db.session.commit()
-        app.logger.info("Created contact request from {} to {}".format(author, recipient))
-    else:
-        app.logger.error("Contact request author not known [{}]".format(author_id))
-
-    return session_message(data={})
-
-
 if __name__ == '__main__':
     import sys
+    from sqlalchemy.exc import OperationalError
+
+    # Initialize database
+    try:
+        db.session.execute("SELECT * FROM 'persona' LIMIT 1")
+    except OperationalError:
+        app.logger.info("Initializing database")
+        db.create_all()
+
     if len(sys.argv) == 2 and sys.argv[1] == 'init_db':
         init_db()
+
+    app.logger.info("Starting glia server on port {}".format(SERVER_PORT))
     local_server = WSGIServer(('', SERVER_PORT), app)
     local_server.serve_forever()
