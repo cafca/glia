@@ -262,7 +262,6 @@ def index():
 def peerinfo():
     """Return address for each of submitted peer IDs"""
     peer_info = dict()
-    import pdb; pdb.set_trace()
     for p_id in request.json['request']:
         p = Persona.query.get(p_id)
         if p:
