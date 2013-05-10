@@ -19,6 +19,12 @@ ERROR = {
 # Initialize Flask app
 app = Flask('glia')
 app.config.from_object("default_config")
+
+if 'DATABASE_URL' in os.environ:
+    app.logger.info("Loading config from environment")
+    app.config['DATABASE_URL'] = os.environ['DATABASE_URL']
+    app.config['SERVER_KEY'] = os.environ['SERVER_PRIVATE_KEY']
+
 app.jinja_env.filters['naturaltime'] = naturaltime
 
 # Setup SQLAlchemy database
