@@ -26,6 +26,7 @@ class Serializable():
 class Persona(Serializable, db.Model):
     """A Persona is a user profile"""
 
+    __tablename__ = 'persona'
     persona_id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(80))
     session_id = db.Column(db.String(32), default=uuid4().hex)

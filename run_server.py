@@ -1,14 +1,11 @@
 #!/usr/bin/python
 
 from glia import app, db
-from glia.models import Persona
 from gevent.wsgi import WSGIServer
 from sqlalchemy.exc import OperationalError
 
 # Initialize database
-try:
-    Persona.query.first()
-except OperationalError:
+if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
     app.logger.info("Initializing database")
     db.create_all()
 
