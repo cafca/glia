@@ -20,12 +20,11 @@ ERROR = {
 # Initialize Flask app
 app = Flask('glia')
 app.config.from_object("default_config")
-app.config.from_envvar("GLIA_CONFIG")
-
-if 'DATABASE_URL' in os.environ:
-    app.logger.info("Loading config from environment")
-    app.config['DATABASE_URL'] = os.environ['DATABASE_URL']
-    app.config['SERVER_KEY'] = os.environ['SERVER_PRIVATE_KEY']
+try:
+    app.config.from_envvar("GLIA_CONFIG")
+except RuntimeError:
+    logging.warning("Only default_config was loaded. User the GLIA_CONFIG"
+                    + " environment variable to specify additional options.")
 
 app.jinja_env.filters['naturaltime'] = naturaltime
 
