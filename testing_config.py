@@ -1,11 +1,7 @@
 import os
 import datetime
 
-DEBUG = False
-
-LOG_FORMAT = (
-    '%(name)s :: %(module)s [%(pathname)s:%(lineno)d]\n' +
-    '%(message)s\n')
+from keyczar.keys import RsaPrivateKey
 
 # Define addresses
 SERVER_HOST = 'glia.herokuapp.com'
@@ -16,6 +12,6 @@ SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 
 # Load server cert
-SERVER_KEY = os.environ['SERVER_PRIVATE_KEY']
+SERVER_KEY = RsaPrivateKey.Read(os.environ['SERVER_PRIVATE_KEY'])
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
