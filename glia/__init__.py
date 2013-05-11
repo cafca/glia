@@ -20,6 +20,7 @@ ERROR = {
 # Initialize Flask app
 app = Flask('glia')
 app.config.from_object("default_config")
+app.config.from_envvar("GLIA_CONFIG")
 
 if 'DATABASE_URL' in os.environ:
     app.logger.info("Loading config from environment")
