@@ -1,12 +1,10 @@
 import logging
 import sys
-import os
 
 from blinker import Namespace
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from humanize import naturaltime
-from werkzeug.contrib.cache import SimpleCache
 
 ERROR = {
     1: (1, "No message type found."),

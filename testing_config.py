@@ -1,7 +1,5 @@
+import os
 import datetime
-import logging
-
-from keyczar.keys import RsaPrivateKey
 
 DEBUG = False
 
