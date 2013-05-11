@@ -15,7 +15,7 @@ SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
 # Define database setup
-DATABASE_FILE = './server.db'
+DATABASE_FILE = '../server.db'
 SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
 
 # Load server cert
