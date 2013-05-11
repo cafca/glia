@@ -9,7 +9,7 @@ LOG_FORMAT = (
 
 # Define addresses
 SERVER_HOST = 'glia.herokuapp.com'
-SERVER_PORT = os.environ['PORT']
+SERVER_PORT = int(os.environ['PORT'])
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
 # Define database setup
