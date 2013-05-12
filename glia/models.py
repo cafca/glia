@@ -38,7 +38,7 @@ class Persona(Serializable, db.Model):
     last_connected = db.Column(db.DateTime, default=datetime.datetime.now())
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
-    email_hash = db.Column(db.String(32))
+    email_hash = db.Column(db.String(64))
     certificates = db.relationship(
         'Certificate', backref='author', lazy='dynamic')
 
