@@ -10,7 +10,6 @@ SERVER_PORT = int(os.environ['PORT'])
 # On Heroku, the port bound to is not the same port the app will be accessible at from the outside
 # this means that we bind to os.environ['PORT'] (>1000) but are actually visible at port 80
 
-# SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 SERVER_NAME = SERVER_HOST
 
 # Define database setup

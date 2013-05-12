@@ -24,6 +24,7 @@ except RuntimeError:
     logging.warning("Only default_config was loaded. User the GLIA_CONFIG"
                     + " environment variable to specify additional options.")
 
+# naturaltime allows templates to render human readable time
 app.jinja_env.filters['naturaltime'] = naturaltime
 
 # Setup SQLAlchemy database
