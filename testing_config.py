@@ -6,7 +6,8 @@ from keyczar.keys import RsaPrivateKey
 # Define addresses
 SERVER_HOST = 'glia.herokuapp.com'
 SERVER_PORT = int(os.environ['PORT'])
-SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
+# SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
+SERVER_NAME = SERVER_HOST
 
 # Define database setup
 SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
