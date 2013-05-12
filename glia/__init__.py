@@ -4,6 +4,7 @@ import sys
 from blinker import Namespace
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
+from real_ip_address import ProxiedRequest
 from humanize import naturaltime
 
 ERROR = {
@@ -26,6 +27,10 @@ except RuntimeError:
 
 # naturaltime allows templates to render human readable time
 app.jinja_env.filters['naturaltime'] = naturaltime
+
+# For Heroku: ProxiedRequest replaces request.remote_addr which the real one
+# instead of their internal IP
+app.request_class = ProxiedRequest
 
 # Setup SQLAlchemy database
 db = SQLAlchemy(app)
