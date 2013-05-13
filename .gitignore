@@ -3,3 +3,5 @@ server.db
 server_private.key
 .env
 *.pyc
+
+secret_key

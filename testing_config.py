@@ -18,4 +18,7 @@ SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 # Load server cert
 SERVER_KEY = RsaPrivateKey.Read(os.environ['SERVER_PRIVATE_KEY'])
 
+# Set secret key
+SECRET_KEY = os.environ['GLIA_SECRET_KEY']  
+
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)

@@ -1,4 +1,5 @@
 import logging
+import os
 
 from keyczar.keys import RsaPrivateKey
 
@@ -24,3 +25,12 @@ except IOError:
     SERVER_KEY = RsaPrivateKey.Generate()
     with open(SERVER_KEY_FILE, "w") as f:
         f.write(str(SERVER_KEY))
+
+# Set secret key
+try:
+    with open('secret_key') as f:
+        SECRET_KEY = f.read()
+except IOError:
+    SECRET_KEY = os.urandom(24)
+    with open('secret_key', 'w') as f:
+        f.write(SECRET_KEY)
