@@ -140,7 +140,7 @@ def persona(persona_id):
             return error_message(errors)
 
         data = request.json['data']
-        required_fields = ['auth_signed']
+        required_fields = ['auth_signed', 'reply_to']
         errors = list()
         for field in required_fields:
             if field not in data:
@@ -162,6 +162,8 @@ def persona(persona_id):
         # Create new session
         session_id = p.reset()
         p.last_connected = datetime.datetime.now()
+        p.host = request.remote_addr
+        p.port = data['reply_to']
         db.session.add(p)
         db.session.commit()
 
