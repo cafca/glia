@@ -60,21 +60,22 @@ def find_people():
     # Find corresponding personas
     # TODO: Allow multiple lookups at once
     email_hash = request.json['data']['email_hash']
-    p = Persona.query.filter_by(email_hash=email_hash).first()
+    result = Persona.query.filter_by(email_hash=email_hash).all()
 
-    if p:
+    if result:
         # Compile response
-        app.logger.info("[find people] Persona {} found".format(p))
-        data = {
-            'found': p.export(include=[
+        app.logger.info("[find people] {} Personas found for email-hash {}".format(len(result), email_hash[:8]))
+        data = {'found': []}
+        for p in result:
+            p_json = p.export(include=[
                 "persona_id",
                 "username",
                 "host",
                 "port",
                 "crypt_public",
                 "sign_public",
-                "connectable"]),
-        }
+                "connectable"])
+            data['found'].append(p_json)
     else:
         app.logger.info(
             "[find people] Persona <{}> not found.".format(email_hash[:8]))
