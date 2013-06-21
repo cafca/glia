@@ -8,4 +8,3 @@ LOG_FORMAT = (
     '%(message)s\n')
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
-SERVER_PORT = 24500
