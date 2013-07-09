@@ -36,7 +36,7 @@ class Vesicle(object):
             if p:
                 author = p.username
             else:
-                author = author_id[:6]
+                author = self.author_id[:6]
         else:
             author = "anon"
         return "<vesicle {id}@{author}>".format(id=self.id[:6], author=author)
@@ -118,7 +118,7 @@ class Vesicle(object):
 
         author = Persona.query.get(self.author_id)
         if not author:
-            raise NameError("Signature of {} could not be verified: author not found.".format(self, **kwargs))
+            raise NameError("Signature of {} could not be verified: author not found.".format(self))
 
         return author.verify(self.cipher, self.signature)
 
