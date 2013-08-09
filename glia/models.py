@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    glia.models
+    ~~~~~
+
+    Defines models for all data permanently stored in the glia.
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import json
 import datetime
 

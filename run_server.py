@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    run_server
+    ~~~~~
+
+    Setup and run a Glia server. See glia/ directory.
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 #!/usr/bin/python
 
 from glia import app, db

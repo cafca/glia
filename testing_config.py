@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    testing_config
+    ~~~~~
+
+    Configuration for testing on the Heruko server.
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import os
 import datetime
 

@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    glia.views
+    ~~~~~
+
+    Implements public Glia API.
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import datetime
 import flask
 
