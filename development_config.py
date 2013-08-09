@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    glia
+    ~~~~~
+
+    Configuration for development. Uses a local SQLite DB and a file `secret_key` in
+    which the server RSA keys are stored
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import logging
 import os
 

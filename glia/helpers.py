@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    glia.helpers
+    ~~~~~
+
+    Helper methods to encapsulate often used procedures
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import datetime
 import flask
 

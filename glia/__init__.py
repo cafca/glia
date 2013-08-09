@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    glia
+    ~~~~~
+
+    A central server for the Souma cognitive network.
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import logging
 import sys
 
