@@ -10,164 +10,268 @@
 import datetime
 import flask
 
-from glia import app, db, ERROR
-from glia.helpers import error_message, session_message, message_errors
-from flask import request, jsonify
-from models import Certificate, Notification, Persona
+from glia import app, db
+from flask import redirect, url_for, request, jsonify
+from models import Notification, Persona, Souma
+from nucleus import ERROR
+
+def error_message(errors):
+    """
+    Construct a response containing the given error messages
+
+    Args:
+        errors (list): List of elements from nucleus.ERROR
+
+    Returns:
+        JSON-formatted response object
+    """
+    return jsonify({"meta": {"errors": errors}})
+
+@app.before_request
+def authenticate():
+    """Validate authentication"""
+
+    for k in ["Glia-Auth", "Glia-Souma", "Glia-Rand"]:
+        if not k in request.headers.iterkeys():
+            app.logger.error("Request is missing authentication parameter '{}'\n{}".format(k, request.headers))
+            flask.abort(401)  # 401==unauthorized
+
+    souma_id = request.headers["Glia-Souma"]
+
+    if (request.path == flask.url_for('soumas') and request.method == "POST"):
+        app.logger.info("Request skipped authentication for new Souma registration")
+    else:
+        souma = Souma.query.get(souma_id)
+        if not souma:
+            app.logger.warning("Authentication failed: Souma {} not found.".format(souma_id))
+            rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
+            rsp.status = "401 Souma {} not found.".format(souma_id)
+            return rsp
+
+        elif not souma.authentic_request(request):
+            # Failed auth
+            app.logger.warning("Request failed authentication")
+            flask.abort(401)
+        else:
+            app.logger.debug("Authentication of <Souma:{}> for {} {} succeeded".format(souma_id[:6], request.method, request.url))
 
 
-@app.route('/p/<persona_id>/create', methods=['POST'])
-def create_persona(persona_id):
-    # Validate request
-    errors = message_errors(request.json)
-    if errors:
-        return error_message(errors)
+@app.route('/v0/', methods=["GET"])
+def index():
+    """
+    Return server status.
+    """
+    # TODO: Read server status
+    # https://github.com/ciex/glia/issues/24
+    server_status = (0, "OK")
 
-    # Validate request data
-    data = request.json['data']
-    required_fields = [
-        'persona_id', 'username', 'email_hash', 'sign_public', 'crypt_public', 'reply_to']
-    errors = list()
-    for field in required_fields:
-        if field not in data:
-            errors.append((4, "{} ({})".format(ERROR[4][1], field)))
+    # TODO: Count online Soumas
+    soumas_online = -1
+    personas_registered = -1
 
-    if errors:
-        return error_message(errors=errors)
+    stars_stored = 0
+    planets_stored = 0
 
-    p = Persona(
-        persona_id=data["persona_id"],
-        username=data["username"],
-        sign_public=data["sign_public"],
-        crypt_public=data["crypt_public"],
-        email_hash=data["email_hash"],
-        host=request.remote_addr,
-        port=data["reply_to"],
-    )
-    p.reset()
-    db.session.add(p)
-    db.session.commit()
-
-    app.logger.info("New persona {} registered from {}:{}".format(
-        p.persona_id, p.host, p.port))
-
-    data = {
-        'timeout': p.timeout().isoformat(),
-        'session_id': p.session_id,
-        'errors': [],
+    resp = {
+        "server_status": [{
+            "id": 0,
+            "status_code": server_status[0],
+            "status_message": server_status[1],
+            "read_enabled": True,
+            "write_enabled": True,
+            "soumas_online": soumas_online,
+            "personas_registered": personas_registered,
+            "stars_stored": stars_stored,
+            "planets_stored": planets_stored
+        }]
     }
-    return session_message(data=data)
+
+    return jsonify(resp)
 
 
-@app.route('/find-people', methods=['POST'])
-def find_people():
-    # Validate request
-    errors = message_errors(request.json)
-    if errors:
-        return error_message(errors)
+@app.route('/v0/personas/', methods=["POST"])
+def find_personas():
+    """
+    Find personas by hashed email address
+    """
+
+    if "email_hash" not in request.json or not isinstance(request.json["email_hash"], list):
+        app.logger.error("Received malformed request for find_persona")
+        return error_message([ERROR["MISSING_KEY"]('email_hash')])
+
+    email_hash = request.json["email_hash"][0]
+
+    # TODO: Verify correct hash format
 
     # Find corresponding personas
-    # TODO: Allow multiple lookups at once
-    email_hash = request.json['data']['email_hash']
     result = Persona.query.filter_by(email_hash=email_hash).all()
 
+    resp = {'personas': list()}
     if result:
         # Compile response
-        app.logger.info("[find people] {} Personas found for email-hash {}".format(len(result), email_hash[:8]))
-        data = {'found': []}
+        app.logger.info("{} Personas found for email-hash {}".format(len(result), email_hash[:8]))
         for p in result:
-            p_json = p.export(include=[
-                "persona_id",
+            p_dict = p.export(include=[
+                "id",
                 "username",
                 "host",
                 "port",
                 "crypt_public",
                 "sign_public",
                 "connectable"])
-            data['found'].append(p_json)
+            p_dict["email_hash"] = email_hash
+            resp['personas'].append(p_dict)
     else:
+        resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](email_hash), ]
         app.logger.info(
-            "[find people] Persona <{}> not found.".format(email_hash[:8]))
-        data = None
+            "Persona <{}> not found.".format(email_hash[:8]))
 
-    return session_message(data=data)
-
-
-@app.route('/', methods=['GET'])
-def index():
-    """Display debug information"""
-    sessions = Persona.query.all()
-
-    return flask.render_template("index.html", sessions=sessions)
+    return jsonify(resp)
 
 
-@app.route('/p/<persona_id>/', methods=['GET', 'POST'])
-def persona(persona_id):
-    if request.method == 'GET':
-        # keep-alive (and lookup)
 
+@app.route('/v0/personas/<persona_id>/', methods=["GET", "PUT", "DELETE"])
+def personas(persona_id):
+    """Access and modify persona records on the server"""
+
+    if request.method == "GET":
+        # Return persona info
         p = Persona.query.get(persona_id)
+        resp = dict()
+        if p:
+            resp["personas"] = list()
+            resp["personas"].append(p.export(include=[
+                "id",
+                "username",
+                "host",
+                "port",
+                "crypt_public",
+                "sign_public",
+                "connectable",
+                "auth"]))
+        else:
+            resp["meta"] = dict()
+            resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](persona_id), ]
 
-        if p is None:
-            app.logger.error("Persona not found: {}".format(persona_id))
-            return error_message(errors=[ERROR[3], ])
+        return jsonify(resp)
 
-        if not p.is_valid():
-            app.logger.info('Session invalid: {session}.'.format(
-                session=p.session_id))
+    elif request.method == "PUT":
+        # Store new persona record on server
 
-            data = {
-                'errors': [ERROR[6], ],
-                'auth': p.auth
-            }
-            return session_message(data=data)
+        # Validate request data
+        if "personas" not in request.json or not isinstance(request.json["personas"], list):
+            self.logger.error("Malformed request: {}".format(request.json))
+            return error_message([ERROR["MISSING_KEY"]("personas")])
 
-        # Keep session alive
-        p.last_connected = datetime.datetime.now()
-        db.session.add(p)
-        db.session.commit()
+        new_persona = request.json['personas'][0]
 
-        # Compile notifications
-        notifications = Notification.query.filter_by(
-            recipient_id=persona_id).all()
+        # Check required fields
+        required_fields = [
+            'persona_id', 'username', 'email_hash', 'sign_public', 'crypt_public', 'reply_to']
+        errors = list()
+        for field in required_fields:
+            if field not in new_persona:
+                errors.append(ERROR["MISSING_KEY"](field))
 
-        notification_json = list()
-        for notif in notifications:
-            notification_json.append(notif.message_json)
+        # Check for duplicate identifier
+        if "persona_id" in new_persona:
+            p_existing = Persona.query.get(new_persona["persona_id"])
+            if p_existing:
+                errors.append(ERROR["DUPLICATE_ID"](new_persona["persona_id"]))
 
-        data = {
-            'timeout': p.timeout().isoformat(),
-            'session_id': p.session_id,
-            'notifications': notification_json
-        }
-        return session_message(data=data)
-
-    elif request.method == 'POST':
-        # Login
-
-        errors = message_errors(request.json)
+        # Return in case of errors
         if errors:
             return error_message(errors)
 
-        data = request.json['data']
-        required_fields = ['auth_signed', 'reply_to']
+        # Register new persona
+        p = Persona(
+            id=new_persona["persona_id"],
+            username=new_persona["username"],
+            sign_public=new_persona["sign_public"],
+            crypt_public=new_persona["crypt_public"],
+            email_hash=new_persona["email_hash"],
+            host=request.remote_addr,
+            port=new_persona["reply_to"],
+        )
+        p.reset()
+        db.session.add(p)
+        db.session.commit()
+
+        app.logger.info("New {} registered from {}:{}".format(
+            p, p.host, p.port))
+
+        return jsonify({
+            "sessions": [{
+                "id": p.session_id,
+                "timeout": p.timeout().isoformat()
+            }]
+        })
+
+    elif request.method == "DELETE":
+        pass
+
+
+@app.route('/v0/sessions/', methods=["GET", "POST"])
+def session_lookup():
+    """Peer lookup"""
+    if request.method == "GET":
+        # Find by ID
+        if "ids" in request.args:
+            ids = request.args["ids"]
+        else:
+            app.logger.warning("Received malformed peer lookup request. Missing `ids` parameter.")
+            return error_message([ERROR["MISSING_PARAMETER"]('ids')])
+
+        resp = {"sessions": list()}
+        found = 0
+        for p_id in ids:
+            p = Persona.query.get(p_id)
+            resp["sessions"].append({
+                "id": p_id,
+                "soumas": [{
+                    "host": p.host if p else None,
+                    "port": p.port if p else None
+                }]
+            })
+            if p:
+                found += 1
+
+        app.logger.info("Sending peer info for {}/{} addresses.\n* {}".format(
+            found,
+            len(ids), 
+            "\n* ".join(["{}: {}:{}".format(s["id"], s["host"], s["port"]) for s in resp["sessions"]])))
+        return jsonify(resp)
+
+    elif request.method == "POST":
+        # Login
+
+        # Validate request
         errors = list()
+        try:
+            data = request.json['personas'][0]
+        except KeyError, e:
+            app.logger.warning("Received malformed request: Missing key `e`".format(e))
+            errors.append(ERROR["MISSING_KEY"](field))
+            return error_message(errors)
+
+        required_fields = ['auth_signed', 'id', 'reply_to']
         for field in required_fields:
             if field not in data:
-                errors.append((4, "{} ({})".format(ERROR[4][1], field)))
+                errors.append(ERROR["MISSING_KEY"](field))
         if errors:
-            return error_message(errors=errors)
+            app.logger.warning("Received malformed request: Missing keys")
+            return error_message(errors)
 
         # Retrieve persona entry
-        p = Persona.query.get(persona_id)
+        p = Persona.query.get(data["id"])
         if p is None:
-            return error_message(errors=[ERROR[3], ])
+            return error_message([ERROR[3], ])
 
         # Validate request auth
         is_valid = p.verify(p.auth, data['auth_signed'])
         if not is_valid:
             app.logger.error("Login failed with invalid signature.")
-            return error_message(errors=[ERROR[5], ])
+            return error_message([ERROR[5], ])
 
         # Create new session
         session_id = p.reset()
@@ -177,24 +281,91 @@ def persona(persona_id):
         db.session.add(p)
         db.session.commit()
 
-        data = {
-            'timeout': p.timeout().isoformat(),
-            'session_id': session_id,
-            'errors': [],
+        resp = {
+            'sessions': [{
+                'id': session_id,
+                'timeout': p.timeout().isoformat(),
+            }]
         }
-        return session_message(data=data)
+        return jsonify(resp)
 
 
-@app.route('/peerinfo', methods=['POST'])
-def peerinfo():
-    """Return address for each of submitted peer IDs"""
-    peer_info = dict()
-    for p_id in request.json['request']:
-        p = Persona.query.get(p_id)
-        if p:
-            print "{}: {}:{}".format(p.username, p.host, p.port)
-            peer_info[p_id] = (p.host, p.port)
+@app.route('/v0/sessions/<session_id>/', methods=["GET", "DELETE"])
+def sessions(session_id):
+    """Perform operations on login sessions"""
+    if request.method == "GET":
+        # keep-alive
 
-    app.logger.info("Sending peer info for {} addresses.".format(len(request.json)))
+        p = Persona.query.get(persona_id)
 
-    return jsonify(peer_info)
+        if p is None:
+            app.logger.error("Persona not found: {}".format(persona_id))
+            return error_message([ERROR[3], ])
+
+        if not p.is_valid():
+            app.logger.info('Session invalid: {session}.'.format(
+                session=p.session_id))
+
+            resp = {
+                'meta': {
+                    'errors': [ERROR[6], ],
+                    'auth': p.auth
+                }
+            }
+            return jsonify(resp)
+        else:
+            # Keep session alive
+            p.last_connected = datetime.datetime.now()
+            db.session.add(p)
+            db.session.commit()
+
+            resp = {
+                'sessions': [{
+                    'id': p.session_id,
+                    'timeout': p.timeout().isoformat(),
+                }, ]
+            }
+            return jsonify(resp)
+    elif request.method == "DELETE":
+        pass
+
+@app.route('/v0/soumas/', methods=["POST"])
+def soumas():
+    """
+    Register a new Souma with this Glia
+    """
+    # Validate request
+    resp = {"meta": {"errors": list()}}
+
+    if not "soumas" in request.json or not isinstance(request.json["soumas"], list):
+        resp["meta"]["errors"].append(ERROR["MISSING_PAYLOAD"])
+        return jsonify(resp), 400
+    new_souma = request.json["soumas"][0]
+
+    required_fields = ["id", "crypt_public", "sign_public"]
+    for f in required_fields:
+        if f not in new_souma:
+            resp["meta"]["errors"].append(ERROR["MISSING_KEY"](f))
+
+    if "id" in new_souma:
+        old_souma = Souma.query.get(new_souma["id"])
+        if old_souma:
+            resp["meta"]["errors"].append(ERROR["DUPLICATE_ID"](new_souma["id"]))
+
+    
+    if len(resp["meta"]["errors"]) == 0:
+        souma = Souma(
+            id=new_souma["id"],
+            crypt_private=new_souma["crypt_public"],
+            sign_public=new_souma["sign_public"])
+
+        if not souma.authentic_request(request):
+            app.logger.warning("Authentication failed for new {}".format(request))
+            resp["meta"]["errors"].append(ERROR["INVALID_SIGNATURE"])
+            return jsonify(resp)
+        else:
+            app.logger.info("Registered new {}".format(souma))
+            db.session.add(souma)
+            db.session.commit()
+
+    return jsonify(resp)

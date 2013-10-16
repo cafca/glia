@@ -16,15 +16,6 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from real_ip_address import ProxiedRequest
 from humanize import naturaltime
 
-ERROR = {
-    1: (1, "No message type found."),
-    2: (2, "No data payload found."),
-    3: (3, "Persona does not exist."),
-    4: (4, "Missing data for this request."),
-    5: (5, "Invalid signature."),
-    6: (6, "Session invalid. Please re-authenticate.")
-}
-
 # Initialize Flask app
 app = Flask('glia')
 app.config.from_object("default_config")

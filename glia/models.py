@@ -27,16 +27,16 @@ class Serializable():
             return {c.name: str(getattr(self, c.name))
                 for c in self.__table__.columns if c not in exclude}
 
-    def json(self, exclude=[]):
+    def json(self, exclude=[], include=None):
         """Return this object JSON encoded"""
-        return json.dumps(self.export(exclude), indent=4)
+        return json.dumps(self.export(exclude=exclude, include=include), indent=4)
 
 
 class Persona(Serializable, db.Model):
     """A Persona is a user profile"""
 
     __tablename__ = 'persona'
-    persona_id = db.Column(db.String(32), primary_key=True)
+    id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(80))
     session_id = db.Column(db.String(32), default=uuid4().hex)
     auth = db.Column(db.String(32), default=uuid4().hex)
@@ -52,7 +52,7 @@ class Persona(Serializable, db.Model):
         'Certificate', backref='author', lazy='dynamic')
 
     def __str__(self):
-        return "<{} [{}]>".format(self.username, self.persona_id)
+        return "<{} [{}]>".format(self.username, self.id)
 
     def is_valid(self, my_session=None):
         """Return True if the given session is valid"""
@@ -97,7 +97,7 @@ class Certificate(db.Model, Serializable):
     kind = db.Column(db.String(32))
     recipient_id = db.Column(db.String(32))
     recipient = db.relationship('Persona', uselist=False)
-    author_id = db.Column(db.String(32), db.ForeignKey('persona.persona_id'))
+    author_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
     json = db.Column(db.Text)
 
     def __init__(self, kind, recipient, json):
@@ -119,3 +119,77 @@ class Notification(db.Model):
         self.notification_id = uuid4().hex
         self.recipient_id = recipient_id
         self.message_json = message_json
+
+
+class Souma(Serializable, db.Model):
+    """A physical machine in the Souma network"""
+
+    __tablename__ = "souma"
+    id = db.Column(db.String(32), primary_key=True)
+
+    crypt_private = db.Column(db.Text)
+    crypt_public = db.Column(db.Text)
+    sign_private = db.Column(db.Text)
+    sign_public = db.Column(db.Text)
+
+    def __str__(self):
+        return "<Souma [{}]>".format(self.id[:6])
+
+    def generate_keys(self):
+        """ Generate new RSA keypairs for signing and encrypting. Commit to DB afterwards! """
+
+        # TODO: Store keys encrypted
+        rsa1 = RsaPrivateKey.Generate()
+        self.sign_private = str(rsa1)
+        self.sign_public = str(rsa1.public_key)
+
+        rsa2 = RsaPrivateKey.Generate()
+        self.crypt_private = str(rsa2)
+        self.crypt_public = str(rsa2.public_key)
+
+    def authentic_request(self, request):
+        """Return true if a request carries a valid signature"""
+        glia_rand = request.headers["Glia-Rand"]
+        glia_auth = request.headers["Glia-Auth"]
+        # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.path, request.data))
+        return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
+
+    def encrypt(self, data):
+        """ Encrypt data using RSA """
+
+        if self.crypt_public == "":
+            raise ValueError("Error encrypting: No public encryption key found for {}".format(self))
+
+        key_public = RsaPublicKey.Read(self.crypt_public)
+        return key_public.Encrypt(data)
+
+    def decrypt(self, cypher):
+        """ Decrypt cyphertext using RSA """
+
+        if self.crypt_private == "":
+            raise ValueError("Error decrypting: No private encryption key found for {}".format(self))
+
+        key_private = RsaPrivateKey.Read(self.crypt_private)
+        return key_private.Decrypt(cypher)
+
+    def sign(self, data):
+        """ Sign data using RSA """
+        from base64 import urlsafe_b64encode
+
+        if self.sign_private == "":
+            raise ValueError("Error signing: No private signing key found for {}".format(self))
+
+        key_private = RsaPrivateKey.Read(self.sign_private)
+        signature = key_private.Sign(data)
+        return urlsafe_b64encode(signature)
+
+    def verify(self, data, signature_b64):
+        """ Verify a signature using RSA """
+        from base64 import urlsafe_b64decode
+
+        if self.sign_public == "":
+            raise ValueError("Error verifying: No public signing key found for {}".format(self))
+
+        signature = urlsafe_b64decode(signature_b64)
+        key_public = RsaPublicKey.Read(self.sign_public)
+        return key_public.Verify(data, signature)
