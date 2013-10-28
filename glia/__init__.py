@@ -60,3 +60,4 @@ app.logger.info(
 
 # Views need to be imported at the bottom to avoid circular import (see Flask docs)
 import glia.views
+import glia.myelin
