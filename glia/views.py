@@ -12,7 +12,8 @@ import flask
 
 from glia import app, db
 from flask import redirect, url_for, request, jsonify
-from models import Notification, Persona, Souma
+from sqlalchemy import func
+from models import Notification, Persona, Souma, DBVesicle
 from nucleus import ERROR
 
 def error_message(errors):
@@ -67,10 +68,9 @@ def index():
 
     # TODO: Count online Soumas
     soumas_online = -1
-    personas_registered = -1
+    personas_registered = db.session.query(func.count(Persona.id)).first()[0]
 
-    stars_stored = 0
-    planets_stored = 0
+    vesicles_stored = db.session.query(func.count(DBVesicle.id)).first()[0]
 
     resp = {
         "server_status": [{
@@ -81,8 +81,7 @@ def index():
             "write_enabled": True,
             "soumas_online": soumas_online,
             "personas_registered": personas_registered,
-            "stars_stored": stars_stored,
-            "planets_stored": planets_stored
+            "vesicles_stored": vesicles_stored,
         }]
     }
 

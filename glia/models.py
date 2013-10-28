@@ -52,7 +52,7 @@ class Persona(Serializable, db.Model):
         'Certificate', backref='author', lazy='dynamic')
 
     def __str__(self):
-        return "<{} [{}]>".format(self.username, self.id)
+        return "<Persona '{}' [{}]>".format(self.username.encode('utf-8'), self.id)
 
     def is_valid(self, my_session=None):
         """Return True if the given session is valid"""
@@ -193,3 +193,12 @@ class Souma(Serializable, db.Model):
         signature = urlsafe_b64decode(signature_b64)
         key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
+
+
+class DBVesicle(db.Model):   
+    """Store the representation of a Vesicle"""
+
+    __tablename__ = "vesicle"
+    id = db.Column(db.String(32), primary_key=True)
+    json = db.Column(db.Text)
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
