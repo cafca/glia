@@ -151,7 +151,7 @@ class Souma(Serializable, db.Model):
         """Return true if a request carries a valid signature"""
         glia_rand = request.headers["Glia-Rand"]
         glia_auth = request.headers["Glia-Auth"]
-        # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.path, request.data))
+        # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
         return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
 
     def encrypt(self, data):

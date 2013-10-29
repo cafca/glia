@@ -216,7 +216,7 @@ def session_lookup():
     if request.method == "GET":
         # Find by ID
         if "ids" in request.args:
-            ids = request.args["ids"]
+            ids = request.args["ids"].split(",")
         else:
             app.logger.warning("Received malformed peer lookup request. Missing `ids` parameter.")
             return error_message([ERROR["MISSING_PARAMETER"]('ids')])
@@ -238,7 +238,7 @@ def session_lookup():
         app.logger.info("Sending peer info for {}/{} addresses.\n* {}".format(
             found,
             len(ids), 
-            "\n* ".join(["{}: {}:{}".format(s["id"], s["host"], s["port"]) for s in resp["sessions"]])))
+            "\n* ".join(["{}: {}".format(s["id"], s["soumas"]) for s in resp["sessions"]])))
         return jsonify(resp)
 
     elif request.method == "POST":
@@ -295,10 +295,10 @@ def sessions(session_id):
     if request.method == "GET":
         # keep-alive
 
-        p = Persona.query.get(persona_id)
+        p = Persona.query.filter_by(session_id=session_id).first()
 
         if p is None:
-            app.logger.error("Persona not found: {}".format(persona_id))
+            app.logger.error("No persona found with session {}".format(session_id))
             return error_message([ERROR[3], ])
 
         if not p.is_valid():
@@ -314,6 +314,7 @@ def sessions(session_id):
             return jsonify(resp)
         else:
             # Keep session alive
+            app.logger.info("Successful keep-alive for {}".format(p))
             p.last_connected = datetime.datetime.now()
             db.session.add(p)
             db.session.commit()

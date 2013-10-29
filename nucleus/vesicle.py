@@ -194,11 +194,22 @@ class Vesicle(object):
         Return JSON representation
         """
 
+        # Temporarily encode data if this is a plaintext message
+        if self.payload is None:
+            plainenc = True
+            self.payload = json.dumps(self.data)
+        else:
+            plainenc = False
+
         message = dict()
         for attr in self.send_attributes:
             message[attr] = getattr(self, attr)
         message["created"] = datetime.datetime.now().isoformat()
-        return json.dumps(message)
+        r = json.dumps(message)
+
+        if plainenc:
+            self.payload = None
+        return r
 
     @staticmethod
     def read(data):
@@ -256,7 +267,7 @@ class Vesicle(object):
         """Save this Vesicle to the local Database, overwriting any previous versions"""
 
         if self.payload is None:
-            raise TypeError("Error saving {}: Please encrypt or sign.".format(self))
+            raise TypeError("Cannot store Vesicle without payload ({}). Please encrypt or sign.".format(self))
 
         v = DBVesicle.query.get(self.id)
         if v is None:
