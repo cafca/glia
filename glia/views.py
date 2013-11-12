@@ -51,7 +51,8 @@ def authenticate():
 
         elif not souma.authentic_request(request):
             # Failed auth
-            app.logger.warning("Request failed authentication")
+            app.logger.warning("Request failed authentication: {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(
+                request, request.headers["Glia-Souma"], request.headers["Glia-Rand"], request.url, request.data))
             flask.abort(401)
         else:
             app.logger.debug("Authentication of <Souma:{}> for {} {} succeeded".format(souma_id[:6], request.method, request.url))
@@ -299,7 +300,7 @@ def sessions(session_id):
 
         if p is None:
             app.logger.error("No persona found with session {}".format(session_id))
-            return error_message([ERROR[3], ])
+            return error_message([ERROR["OBJECT_NOT_FOUND"]("persona"), ])
 
         if not p.is_valid():
             app.logger.info('Session invalid: {session}.'.format(
@@ -307,7 +308,7 @@ def sessions(session_id):
 
             resp = {
                 'meta': {
-                    'errors': [ERROR[6], ],
+                    'errors': [ERROR["INVALID_SESSION"], ],
                     'auth': p.auth
                 }
             }

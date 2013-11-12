@@ -10,3 +10,6 @@ ERROR = {
     "MISSING_PARAMETER": lambda name: (9, "Missing HTTP parameter: {}".format(name)),
     "PROTOCOL_UNSUPPORTED": (10, "The request uses an unsupported protocol version")
 }
+
+class InvalidSignatureError(Exception):
+    pass

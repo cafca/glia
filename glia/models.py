@@ -10,10 +10,11 @@
 import json
 import datetime
 
-from base64 import b64decode
-from glia import app, db
+from base64 import b64decode, urlsafe_b64decode, urlsafe_b64encode
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
+
+from glia import app, db
 
 
 class Serializable():
@@ -48,6 +49,12 @@ class Persona(Serializable, db.Model):
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
     email_hash = db.Column(db.String(64))
+
+    # TODO: Enable starmap when using p2p
+    # starmap = db.relationship('DBVesicle', 
+    #     primaryjoin="dbvesicle.c.id==persona.c.starmap_id")
+    # starmap_id = db.Column(db.String(32), db.ForeignKey('dbvesicle.id'))
+
     certificates = db.relationship(
         'Certificate', backref='author', lazy='dynamic')
 
@@ -149,7 +156,7 @@ class Souma(Serializable, db.Model):
 
     def authentic_request(self, request):
         """Return true if a request carries a valid signature"""
-        glia_rand = request.headers["Glia-Rand"]
+        glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
         # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
         return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
@@ -174,8 +181,6 @@ class Souma(Serializable, db.Model):
 
     def sign(self, data):
         """ Sign data using RSA """
-        from base64 import urlsafe_b64encode
-
         if self.sign_private == "":
             raise ValueError("Error signing: No private signing key found for {}".format(self))
 
@@ -185,8 +190,6 @@ class Souma(Serializable, db.Model):
 
     def verify(self, data, signature_b64):
         """ Verify a signature using RSA """
-        from base64 import urlsafe_b64decode
-
         if self.sign_public == "":
             raise ValueError("Error verifying: No public signing key found for {}".format(self))
 
@@ -194,11 +197,22 @@ class Souma(Serializable, db.Model):
         key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
 
+keycrypt = db.Table('keycrypts',
+    db.Column('dbvesicle_id', db.String(32), db.ForeignKey('dbvesicle.id')),
+    db.Column('recipient_id', db.String(32), db.ForeignKey('persona.id'))
+)
 
-class DBVesicle(db.Model):   
+class DBVesicle(db.Model):
     """Store the representation of a Vesicle"""
 
-    __tablename__ = "vesicle"
+    __tablename__ = "dbvesicle"
     id = db.Column(db.String(32), primary_key=True)
     json = db.Column(db.Text)
     created = db.Column(db.DateTime, default=datetime.datetime.now())
+    author_id = db.Column(db.String(32))
+
+    recipients = db.relationship('Persona',
+        secondary='keycrypts',
+        primaryjoin="keycrypts.c.dbvesicle_id==dbvesicle.c.id",
+        secondaryjoin="keycrypts.c.recipient_id==persona.c.id",
+        backref='inbox')
