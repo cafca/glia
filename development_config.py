@@ -38,9 +38,9 @@ except IOError:
 
 # Set secret key
 try:
-    with open('secret_key') as f:
+    with open('secret_key', 'rb') as f:
         SECRET_KEY = f.read()
 except IOError:
     SECRET_KEY = os.urandom(24)
-    with open('secret_key', 'w') as f:
+    with open('secret_key', 'wb') as f:
         f.write(SECRET_KEY)
