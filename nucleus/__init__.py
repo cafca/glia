@@ -13,3 +13,6 @@ ERROR = {
 
 class InvalidSignatureError(Exception):
     pass
+
+class PersonaNotFoundError(Exception):
+    pass

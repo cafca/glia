@@ -155,7 +155,7 @@ class Vesicle(object):
 
         author = Persona.query.get(self.author_id)
         if not author:
-            raise NameError("Signature of {} could not be verified: author not found.".format(self))
+            raise PersonaNotFoundError("Signature of {} could not be verified: author not found.".format(self))
 
         return author.verify(self.payload, self.signature)
 
