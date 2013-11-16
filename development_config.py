@@ -16,7 +16,7 @@ from keyczar.keys import RsaPrivateKey
 DEBUG = True
 
 # Define addresses
-SERVER_HOST = 'app.soma'
+SERVER_HOST = 'app.souma'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
