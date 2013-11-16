@@ -20,13 +20,17 @@ from flask.ext.sqlalchemy import models_committed
 # Results returned per page
 PER_PAGE = 50
 
-@app.route('/v0/myelin/feed/<persona_id>/')
-def feed(persona_id):
-    """Return a feed of the most recent Vesicles sent to this Persona"""
-    pass
-
 def get_vesicle_or_error(vesicle_id):
-    """Return a Vesicle in JSON format or an error message"""
+    """
+    Return a Vesicle in JSON format or an error message
+
+    Parameters:
+        vesicle_id (str): ID of the Vesicle to be returned
+
+    Returns:
+        Response object containing a JSON encoded dictionary. It has a key
+        `vesicles` containing a list with the JSON encoded Vesicle as its value
+    """
     v = DBVesicle.query.get(vesicle_id)
     
     if v is None:
@@ -38,7 +42,16 @@ def get_vesicle_or_error(vesicle_id):
         })
 
 def store_vesicle_or_error(vesicle_json):
-    """Store a vesicle in the database and return a JSON response"""  
+    """
+    Store a vesicle in the database and return a JSON response
+
+    Parameters:
+        vesicle_json (str): JSON encoded Vesicle to be stored
+
+    Returns:
+        Response object containing a JSON encoded dictionary. It has a key
+        `vesicles` containing a list with the stored Vesicle as its value
+    """  
     try:
         v = Vesicle.read(vesicle_json)
     except InvalidSignatureError, e:

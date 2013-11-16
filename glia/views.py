@@ -39,7 +39,7 @@ def authenticate():
 
     souma_id = request.headers["Glia-Souma"]
 
-    if (request.path == flask.url_for('soumas') and request.method == "POST"):
+    if (request.path == '/v0/soumas/' and request.method == "POST"):
         app.logger.info("Request skipped authentication for new Souma registration")
     else:
         souma = Souma.query.get(souma_id)
@@ -122,7 +122,7 @@ def find_personas():
             p_dict["email_hash"] = email_hash
             resp['personas'].append(p_dict)
     else:
-        resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](email_hash), ]
+        resp["meta"] = {"errors": [ERROR["OBJECT_NOT_FOUND"](email_hash), ]}
         app.logger.info(
             "Persona <{}> not found.".format(email_hash[:8]))
 
@@ -363,7 +363,6 @@ def soumas():
         if not souma.authentic_request(request):
             app.logger.warning("Authentication failed for new {}".format(request))
             resp["meta"]["errors"].append(ERROR["INVALID_SIGNATURE"])
-            return jsonify(resp)
         else:
             app.logger.info("Registered new {}".format(souma))
             db.session.add(souma)
