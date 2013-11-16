@@ -10,7 +10,7 @@
 import datetime
 import logging
 
-DEBUG = True
+DEBUG = False
 
 LOG_FORMAT = (
     '%(name)s :: %(module)s [%(pathname)s:%(lineno)d]\n' +

@@ -13,7 +13,7 @@ import os
 
 from keyczar.keys import RsaPrivateKey
 
-# DEBUG = True
+DEBUG = True
 
 # Define addresses
 SERVER_HOST = 'app.soma'
