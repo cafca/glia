@@ -25,7 +25,7 @@ class Vesicle(object):
 
     """
 
-    def __init__(self, message_type, id=None, data=None, payload=None, signature=None, author_id=None, created=None, keycrypt=None, enc=DEFAULT_ENCODING, reply_to=SYNAPSE_PORT, soma_id=None):
+    def __init__(self, message_type, id=None, data=None, payload=None, signature=None, author_id=None, created=None, keycrypt=None, enc=DEFAULT_ENCODING, reply_to=SYNAPSE_PORT, souma_id=None):
         self.id = id if id is not None else uuid4().hex
         self._hashcode = None
         self.created = created
@@ -38,7 +38,7 @@ class Vesicle(object):
         self.send_attributes = set(["message_type", "id", "payload", "reply_to", "enc", "soma_id"])
         self.signature = signature
         self.author_id = author_id
-        self.soma_id = soma_id
+        self.souma_id = souma_id
 
     def __str__(self):
         """
