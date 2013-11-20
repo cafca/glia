@@ -19,6 +19,9 @@ SERVER_HOST = 'app.soma'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
+# Use in-memory database for testing
+SQLALCHEMY_DATABASE_URI = "sqlite://"
+
 # Load server cert
 SERVER_KEY_FILE = "./server_private.key"
 try:

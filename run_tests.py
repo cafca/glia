@@ -11,6 +11,7 @@
 import os
 import unittest
 import tempfile
+import requests
 
 from binascii import hexlify
 from uuid import uuid4
@@ -18,18 +19,15 @@ from Crypto import Random
 from flask import json
 from flask.ext.sqlalchemy import SQLAlchemy
 
-# Make sure that the right configuration is loaded
-GLIA_CONFIG_OLD_VALUE = os.getenv("GLIA_CONFIG", "../development_config.py")
-os.putenv("GLIA_CONFIG", "../unittest_config.py")
-
-from glia import app
+from glia import app, db
 from glia.models import Souma
+
+app.config.from_object("unittest_config")
 
 class GliaTestCase(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
-        self.db_fd, app.config["DATABASE"] = tempfile.mkstemp()
-        db = SQLAlchemy(app)
+        db.init_app(app)
         db.create_all()
         self.app = app.test_client()
         self.register_souma()
@@ -39,11 +37,17 @@ class GliaTestCase(unittest.TestCase):
         os.unlink(app.config["DATABASE"])
         os.setenv("GLIA_CONFIG", GLIA_CONFIG_OLD_VALUE)
 
-    def auth_headers(self, path, payload=""):
+    def auth_headers(self, path, headers=dict(), payload=""):
         """Return signed auth headers for the souma at self.souma"""
-        rand = hexlify(Random.new().read(16))
-        auth = self.souma.sign("".join([self.souma.id, rand, path, payload]))
-        return [("Glia-Rand", rand), ("Glia-Auth", auth), ("Glia-Souma", self.souma.id)]
+        class MockRequest(object):
+            headers = dict()
+            url = None
+
+        auth = GliaAuth(self.souma, payload)
+        r = MockRequest()
+        r.headers = headers
+        r = auth(r)
+        return r.headers
         
     def register_souma(self):
         """Assign a new Souma to self and register it with the Glia server"""
@@ -51,7 +55,8 @@ class GliaTestCase(unittest.TestCase):
         self.souma.generate_keys()
         payload = json.dumps({"soumas": [self.souma.export(include=["id", "crypt_public", "sign_public"]), ]})
         path = "/v0/soumas/"
-        return self.app.post(path, data=payload, content_type='application/json', headers=self.auth_headers(path, payload))
+        headers = self.auth_headers(path, payload=payload)
+        return self.app.post(path, data=payload, headers=headers, content_type='application/json')
 
     def test_register_souma(self):
         rv = self.register_souma()

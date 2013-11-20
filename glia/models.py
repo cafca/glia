@@ -159,7 +159,13 @@ class Souma(Serializable, db.Model):
         glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
         # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
-        return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
+        
+        # Authentication is disabled for testing as the GliaAuth library can
+        # only authenticate requests made with the Requests library
+        if app.config["TESTING"]:
+            return True
+        else:
+            return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
 
     def encrypt(self, data):
         """ Encrypt data using RSA """
