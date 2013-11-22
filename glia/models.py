@@ -13,6 +13,7 @@ import datetime
 from base64 import b64decode, urlsafe_b64decode, urlsafe_b64encode
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
+from sqlalchemy.orm import backref
 
 from glia import app, db
 
@@ -215,4 +216,4 @@ class DBVesicle(db.Model):
         secondary='keycrypts',
         primaryjoin="keycrypts.c.dbvesicle_id==dbvesicle.c.id",
         secondaryjoin="keycrypts.c.recipient_id==persona.c.id",
-        backref='inbox')
+        backref=backref('inbox', lazy='dynamic'))

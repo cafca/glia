@@ -7,6 +7,7 @@
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
+import iso8601
 
 from glia import app, db
 from glia.models import DBVesicle, Persona
@@ -77,10 +78,12 @@ def vesicles(vesicle_id):
     """Manage notification vesicles"""
     # Just return the vesicle for GET request
     if request.method == "GET":
+        app.logger.info("Processing GET request for <Vesicle [{}]>".format(vesicle_id))
         return get_vesicle_or_error(vesicle_id)
 
     # For PUT request: store the enclosed vesicle in the database
     elif request.method == "PUT":
+        app.logger.info("Processing PUT request for <Vesicle [{}]>".format(vesicle_id))
         # Validate request
         if "vesicles" not in request.json or not isinstance(request.json["vesicles"], list) or len(request.json["vesicles"]) == 0:
             app.logger.error("Malformed request: {}".format(request.json))
@@ -92,19 +95,35 @@ def vesicles(vesicle_id):
 @app.route('/v0/myelin/recipient/<recipient_id>/', methods=["GET"])
 def recipient(recipient_id):
     """Return vesicles with a specific recipient"""
+    # Validate and parse arguments
     recipient = Persona.query.get(recipient_id)
-    page = 1
-
-    # Recipient not found
     if recipient is None:
+        app.logger.warning("Request for unavailable Persona's Vesicle stream (ID: '{}'')".format(recipient_id))
         return error_message(ERROR["OBJECT_NOT_FOUND"]("<Persona [{}]>".format(recipient)))
 
+    offset_string = request.args.get('offset')
+    if offset_string is not None:
+        try:
+            offset = iso8601.parse_date(offset_string)
+        except iso8601.ParseError, e:
+            app.logger.error("Error parsing offset '{}'".format(offset_string))
+            return error_message([ERROR["INVALID_VALUE"]("Error parsing offset")])
+    else:
+        offset = None
+
+    # Get inbox
+    inbox = recipient.inbox.order_by(DBVesicle.created.desc())
+
+    # Filter by offset
+    if offset is not None:
+        app.logger.info("Filtering Myelin of {} at offset {}".format(recipient, offset))
+        inbox = inbox.filter(DBVesicle.created > offset)
+
     # Inbox is empty
-    if recipient.inbox is None:
-        return jsonify({"vesicles": []})
+    if inbox is None:
+        resp = {"vesicles": [], }
+    else:
+        resp = {"vesicles": [vesicle.json for vesicle in inbox]}
 
-    index_start = (page-1) * PER_PAGE
-    index_stop = (page * PER_PAGE) - 1
-    resp = {"vesicles": [vesicle.json for vesicle in recipient.inbox[index_start:index_stop]]}
-
+    app.logger.info("Returning {count} vesicles".format(count=len(resp["vesicles"])))
     return jsonify(resp)

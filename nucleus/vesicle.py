@@ -1,6 +1,7 @@
 import json
 import datetime
 import logging
+import iso8601
 
 from base64 import b64encode, b64decode
 from hashlib import sha256
@@ -231,7 +232,7 @@ class Vesicle(object):
                     payload=msg["payload"],
                     signature=msg["signature"] if "signature" in msg else None,
                     author_id=msg["author_id"] if "signature" in msg else None,
-                    created=msg["created"],
+                    created=iso8601.parse_date(msg["created"]),
                     reply_to=msg["reply_to"],
                     enc=msg["enc"])
             else:
@@ -242,7 +243,7 @@ class Vesicle(object):
                     signature=msg["signature"],
                     author_id=msg["author_id"],
                     keycrypt=msg["keycrypt"],
-                    created=msg["created"],
+                    created=iso8601.parse_date(msg["created"]),
                     reply_to=msg["reply_to"],
                     enc=msg["enc"])
 
@@ -289,7 +290,8 @@ class Vesicle(object):
             v = DBVesicle(
                 id=self.id,
                 json=json,
-                author_id=self.author_id if 'author_id' in dir(self) else None
+                author_id=self.author_id if 'author_id' in dir(self) else None,
+                created=datetime.datetime.now()
             )
         else:
             app.logger.info("Storing updated version of {} in database".format(self))
@@ -309,3 +311,4 @@ class Vesicle(object):
 
         db.session.add(v)
         db.session.commit()
+        app.logger.info("Created {}".format(v.created))
