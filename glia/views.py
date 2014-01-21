@@ -369,3 +369,15 @@ def soumas():
             db.session.commit()
 
     return jsonify(resp)
+
+@app.route('/v0/soumas/<souma_id>', methods=["GET"])
+def souma_info(souma_id):
+    """
+    Return an info dict for a souma_id
+    """
+    s = Souma.query.get(souma_id)
+    if s is not None:
+        souma_info = s.export(include=["id", "crypt_public", "sign_public"])
+        return jsonify({"soumas":[souma_info, ]})
+    else:
+        return error_message([ERROR["OBJECT_NOT_FOUND"](souma_id)])
