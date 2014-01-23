@@ -270,37 +270,38 @@ class Vesicle(object):
         else:
             raise KeyError("<Vesicle [{}]> could not be found".format(id[:6]))
 
-    def save(self, json=None):
+    def save(self, vesicle_json=None):
         """
         Save this Vesicle to the local Database, overwriting any previous versions
 
         Parameters:
-            json (String): Value to store as JSON instead of automatically generated JSON
+            vesicle_json (String): Value to store as JSON instead of automatically generated JSON
         """
 
         if self.payload is None:
             raise TypeError("Cannot store Vesicle without payload ({}). Please encrypt or sign.".format(self))
 
-        if json is None:
-            json = self.json()
+        if vesicle_json is None:
+            vesicle_json = self.json()
 
         v = DBVesicle.query.get(self.id)
         if v is None:
             app.logger.info("Storing {} in database".format(self))
             v = DBVesicle(
                 id=self.id,
-                json=json,
+                json=vesicle_json,
                 author_id=self.author_id if 'author_id' in dir(self) else None,
                 created=datetime.datetime.now()
             )
         else:
             app.logger.info("Storing updated version of {} in database".format(self))
-            v.json = json
+            v.json = vesicle_json
 
         # Update recipients
         if self.keycrypt is not None:
             del v.recipients[:]
-            for r_id in self.keycrypt.keys():
+            keycrypt = json.loads(self.keycrypt)
+            for r_id in keycrypt.keys():
                 r = Persona.query.get(r_id)
                 if r is None:
                     # TODO: Return error when this happens
