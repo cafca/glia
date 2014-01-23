@@ -1,11 +1,9 @@
 import json
 import datetime
-import logging
 import iso8601
 
-from base64 import b64encode, b64decode
 from hashlib import sha256
-from keyczar.keys import AesKey, HmacKey
+from keyczar.keys import AesKey
 from uuid import uuid4
 
 from nucleus import InvalidSignatureError
@@ -35,8 +33,7 @@ class Vesicle(object):
         self.keycrypt = keycrypt
         self.message_type = message_type
         self.payload = payload
-        self.reply_to = reply_to
-        self.send_attributes = set(["message_type", "id", "payload", "reply_to", "enc", "soma_id"])
+        self.send_attributes = set(["message_type", "id", "payload", "enc", "soma_id"])
         self.signature = signature
         self.author_id = author_id
         self.souma_id = souma_id
@@ -98,7 +95,12 @@ class Vesicle(object):
 
         This method does not remove the ciphertext from the payload field, so that encrypted() still returns True.
 
-        @param reader_persona Persona instance used to retrieve the hash key
+        Args:
+            reader_persona (Persona): Persona instance used to retrieve the hash key
+
+        Raises:
+            ValueError: If this Vesice is already plaintext
+            KeyError: If not Key was found for decrypting
         """
 
         # Validate state
@@ -233,7 +235,6 @@ class Vesicle(object):
                     signature=msg["signature"] if "signature" in msg else None,
                     author_id=msg["author_id"] if "signature" in msg else None,
                     created=iso8601.parse_date(msg["created"]),
-                    reply_to=msg["reply_to"],
                     enc=msg["enc"])
             else:
                 vesicle = Vesicle(
@@ -244,7 +245,6 @@ class Vesicle(object):
                     author_id=msg["author_id"],
                     keycrypt=msg["keycrypt"],
                     created=iso8601.parse_date(msg["created"]),
-                    reply_to=msg["reply_to"],
                     enc=msg["enc"])
 
             if "signature" in msg:

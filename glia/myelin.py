@@ -11,7 +11,7 @@ import iso8601
 
 from glia import app, db
 from glia.models import DBVesicle, Persona
-from glia.views import error_message 
+from glia.views import error_message
 from nucleus import ERROR, InvalidSignatureError
 from nucleus.vesicle import Vesicle
 
@@ -20,6 +20,7 @@ from flask.ext.sqlalchemy import models_committed
 
 # Results returned per page
 PER_PAGE = 50
+
 
 def get_vesicle_or_error(vesicle_id):
     """
@@ -33,7 +34,7 @@ def get_vesicle_or_error(vesicle_id):
         `vesicles` containing a list with the JSON encoded Vesicle as its value
     """
     v = DBVesicle.query.get(vesicle_id)
-    
+
     if v is None:
         app.logger.warning("Requested <Vesicle [{}]> could not be found".format(vesicle_id[:6]))
         return error_message([ERROR["OBJECT_NOT_FOUND"](vesicle_id)])
@@ -41,6 +42,7 @@ def get_vesicle_or_error(vesicle_id):
         return jsonify({
             "vesicles": [v.json, ]
         })
+
 
 def store_vesicle_or_error(vesicle_json):
     """
@@ -52,7 +54,7 @@ def store_vesicle_or_error(vesicle_json):
     Returns:
         Response object containing a JSON encoded dictionary. It has a key
         `vesicles` containing a list with the stored Vesicle as its value
-    """  
+    """
     try:
         v = Vesicle.read(vesicle_json)
     except InvalidSignatureError, e:
@@ -73,6 +75,7 @@ def store_vesicle_or_error(vesicle_json):
         "vesicles": [vesicle_json, ]
         })
 
+
 @app.route('/v0/myelin/vesicles/<vesicle_id>/', methods=["GET", "PUT"])
 def vesicles(vesicle_id):
     """Manage notification vesicles"""
@@ -85,12 +88,15 @@ def vesicles(vesicle_id):
     elif request.method == "PUT":
         app.logger.info("Processing PUT request for <Vesicle [{}]>".format(vesicle_id))
         # Validate request
-        if "vesicles" not in request.json or not isinstance(request.json["vesicles"], list) or len(request.json["vesicles"]) == 0:
+        if (("vesicles" not in request.json) or
+                (not isinstance(request.json["vesicles"], list)) or
+                (len(request.json["vesicles"]) == 0)):
             app.logger.error("Malformed request: {}".format(request.json))
             return error_message([ERROR["MISSING_KEY"]("vesicles")])
 
         vesicle_json = request.json["vesicles"][0]
         return store_vesicle_or_error(vesicle_json)
+
 
 @app.route('/v0/myelin/recipient/<recipient_id>/', methods=["GET"])
 def recipient(recipient_id):
@@ -106,7 +112,7 @@ def recipient(recipient_id):
         try:
             offset = iso8601.parse_date(offset_string)
         except iso8601.ParseError, e:
-            app.logger.error("Error parsing offset '{}'".format(offset_string))
+            app.logger.error("Error parsing offset '{}' ({})".format(offset_string, e))
             return error_message([ERROR["INVALID_VALUE"]("Error parsing offset")])
     else:
         offset = None
@@ -116,7 +122,7 @@ def recipient(recipient_id):
 
     # Filter by offset
     if offset is not None:
-        app.logger.info("Filtering Myelin of {} at offset {}".format(recipient, offset))
+        app.logger.debug("Filtering Myelin of {} at offset {}".format(recipient, offset))
         inbox = inbox.filter(DBVesicle.created > offset)
 
     # Inbox is empty
