@@ -12,7 +12,7 @@ import iso8601
 from glia import app, db
 from glia.models import DBVesicle, Persona
 from glia.views import error_message
-from nucleus import ERROR, InvalidSignatureError
+from nucleus import ERROR, InvalidSignatureError, PersonaNotFoundError
 from nucleus.vesicle import Vesicle
 
 from flask import request, Response, jsonify
@@ -60,6 +60,9 @@ def store_vesicle_or_error(vesicle_json):
     except InvalidSignatureError, e:
         app.logger.error("Error loading vesicle: {}".format(e))
         return error_message([ERROR["INVALID_SIGNATURE"]])
+    except PersonaNotFoundError, e:
+        app.logger.error("Error loading vesicle: {}".format(e))
+        return error_message([ERROR["OBJECT_NOT_FOUND"]("Author not found"), ])
     except ValueError, e:
         app.logger.error("Error loading vesicle JSON: {}".format(e))
         return error_message([ERROR["PROTOCOL_UNSUPPORTED"], ])
@@ -73,7 +76,7 @@ def store_vesicle_or_error(vesicle_json):
     # TODO: Queue recipient notifications
     return jsonify({
         "vesicles": [vesicle_json, ]
-        })
+    })
 
 
 @app.route('/v0/myelin/vesicles/<vesicle_id>/', methods=["GET", "PUT"])

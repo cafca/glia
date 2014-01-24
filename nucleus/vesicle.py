@@ -6,7 +6,7 @@ from hashlib import sha256
 from keyczar.keys import AesKey
 from uuid import uuid4
 
-from nucleus import InvalidSignatureError
+from nucleus import InvalidSignatureError, PersonaNotFoundError
 from glia import app, db
 from glia.models import DBVesicle, Persona
 
@@ -151,6 +151,9 @@ class Vesicle(object):
     def signed(self):
         """
         Return true if vesicle has a signature and it is valid
+
+        Raises:
+            PersonaNotFoundError: The signature can't be verified because the author is not known
         """
 
         if not hasattr(self, "signature"):
@@ -255,18 +258,22 @@ class Vesicle(object):
             return KeyError(e)
 
         # Verify signature
-        if vesicle.signature is not None and not vesicle.signed():
-            raise InvalidSignatureError("Invalid signature on {}\nAuthor ID: '{}'\nSignature: '{}'\nPayload: '{}'".format(
-                vesicle, vesicle.author_id, vesicle.signature, vesicle.payload))
+        try:
+            if vesicle.signature is not None and not vesicle.signed():
+                raise InvalidSignatureError(
+                    "Invalid signature on {}\nAuthor ID: '{}'\nSignature: '{}'\nPayload: '{}'".format(
+                        vesicle, vesicle.author_id, vesicle.signature, vesicle.payload))
+        except PersonaNotFoundError:
+            raise PersonaNotFoundError("Can not verify Vesicle signature because author [{}] is not known".format(vesicle.author_id))
 
         return vesicle
 
     @staticmethod
     def load(self, id):
         """Read a Vesicle back from the local database"""
-        json = DBVesicle.query.get(id)
-        if v:
-            return Vesicle.read(json)
+        v_json = DBVesicle.query.get(id)
+        if v_json:
+            return Vesicle.read(v_json)
         else:
             raise KeyError("<Vesicle [{}]> could not be found".format(id[:6]))
 
