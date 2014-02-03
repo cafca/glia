@@ -12,8 +12,10 @@ ERROR = {
     "INVALID_VALUE": lambda name: (11, "The request contained an invalid value ({})".format(name))
 }
 
+
 class InvalidSignatureError(Exception):
     pass
+
 
 class PersonaNotFoundError(Exception):
     pass

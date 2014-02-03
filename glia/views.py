@@ -9,9 +9,10 @@
 """
 import datetime
 import flask
+import iso8601
 
 from glia import app, db
-from flask import redirect, url_for, request, jsonify
+from flask import url_for, request, jsonify
 from sqlalchemy import func
 from models import Notification, Persona, Souma, DBVesicle
 from nucleus import ERROR
@@ -55,7 +56,8 @@ def authenticate():
                 request, request.headers["Glia-Souma"], request.headers["Glia-Rand"], request.url, request.data))
             flask.abort(401)
         else:
-            app.logger.debug("Authentication of <Souma:{}> for {} {} succeeded".format(souma_id[:6], request.method, request.url))
+            # app.logger.debug("Authentication of <Souma:{}> for {} {} succeeded".format(souma_id[:6], request.method, request.url))
+            pass
 
 
 @app.route('/v0/', methods=["GET"])
@@ -114,6 +116,7 @@ def find_personas():
             p_dict = p.export(include=[
                 "id",
                 "username",
+                "modified",
                 "host",
                 "port",
                 "crypt_public",
@@ -142,12 +145,12 @@ def personas(persona_id):
             resp["personas"] = list()
             resp["personas"].append(p.export(include=[
                 "id",
-                "username",
                 "host",
                 "port",
+                "username",
+                "modified",
                 "crypt_public",
                 "sign_public",
-                "connectable",
                 "auth"]))
         else:
             resp["meta"] = dict()
@@ -160,14 +163,14 @@ def personas(persona_id):
 
         # Validate request data
         if "personas" not in request.json or not isinstance(request.json["personas"], list):
-            self.logger.error("Malformed request: {}".format(request.json))
+            app.logger.error("Malformed request: {}".format(request.json))
             return error_message([ERROR["MISSING_KEY"]("personas")])
 
         new_persona = request.json['personas'][0]
 
         # Check required fields
         required_fields = [
-            'persona_id', 'username', 'email_hash', 'sign_public', 'crypt_public', 'reply_to']
+            'persona_id', 'username', 'email_hash', 'sign_public', 'crypt_public', "modified"]
         errors = list()
         for field in required_fields:
             if field not in new_persona:
@@ -179,6 +182,13 @@ def personas(persona_id):
             if p_existing:
                 errors.append(ERROR["DUPLICATE_ID"](new_persona["persona_id"]))
 
+        # Parse 'modified' datetime
+        try:
+            modified = iso8601.parse_date(new_persona["modified"])
+        except ValueError:
+            errors.append(ERROR["INVALID_VALUE"](
+                "'modified': {}".format(new_persona["modified"])))
+
         # Return in case of errors
         if errors:
             return error_message(errors)
@@ -187,6 +197,7 @@ def personas(persona_id):
         p = Persona(
             id=new_persona["persona_id"],
             username=new_persona["username"],
+            modified=modified,
             sign_public=new_persona["sign_public"],
             crypt_public=new_persona["crypt_public"],
             email_hash=new_persona["email_hash"],
@@ -238,7 +249,7 @@ def session_lookup():
 
         app.logger.info("Sending peer info for {}/{} addresses.\n* {}".format(
             found,
-            len(ids), 
+            len(ids),
             "\n* ".join(["{}: {}".format(s["id"], s["soumas"]) for s in resp["sessions"]])))
         return jsonify(resp)
 
@@ -353,7 +364,7 @@ def soumas():
         if old_souma:
             resp["meta"]["errors"].append(ERROR["DUPLICATE_ID"](new_souma["id"]))
 
-    
+
     if len(resp["meta"]["errors"]) == 0:
         souma = Souma(
             id=new_souma["id"],
@@ -369,3 +380,15 @@ def soumas():
             db.session.commit()
 
     return jsonify(resp)
+
+@app.route('/v0/soumas/<souma_id>', methods=["GET"])
+def souma_info(souma_id):
+    """
+    Return an info dict for a souma_id
+    """
+    s = Souma.query.get(souma_id)
+    if s is not None:
+        souma_info = s.export(include=["id", "crypt_public", "sign_public"])
+        return jsonify({"soumas":[souma_info, ]})
+    else:
+        return error_message([ERROR["OBJECT_NOT_FOUND"](souma_id)])
