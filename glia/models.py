@@ -46,13 +46,14 @@ class Persona(Serializable, db.Model):
     port = db.Column(db.Integer)
     connectable = db.Column(db.Boolean)
     created = db.Column(db.DateTime, default=datetime.datetime.now())
+    modified = db.Column(db.DateTime)
     last_connected = db.Column(db.DateTime, default=datetime.datetime.now())
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
     email_hash = db.Column(db.String(64))
 
     # TODO: Enable starmap when using p2p
-    # starmap = db.relationship('DBVesicle', 
+    # starmap = db.relationship('DBVesicle',
     #     primaryjoin="dbvesicle.c.id==persona.c.starmap_id")
     # starmap_id = db.Column(db.String(32), db.ForeignKey('dbvesicle.id'))
 
@@ -61,6 +62,19 @@ class Persona(Serializable, db.Model):
 
     def __str__(self):
         return "<Persona '{}' [{}]>".format(self.username.encode('utf-8'), self.id)
+
+    def controlled(self):
+        """Return True if Persona has private signing and encryption keys
+
+        Returns:
+            Boolean: True if self has private keys
+        """
+        if self.sign_private is None:
+            return False
+        elif self.crypt_private is None:
+            return False
+        else:
+            return True
 
     def is_valid(self, my_session=None):
         """Return True if the given session is valid"""
@@ -210,6 +224,7 @@ class DBVesicle(db.Model):
     id = db.Column(db.String(32), primary_key=True)
     json = db.Column(db.Text)
     created = db.Column(db.DateTime, default=datetime.datetime.now())
+    modified = db.Column(db.DateTime)
     author_id = db.Column(db.String(32))
 
     recipients = db.relationship('Persona',

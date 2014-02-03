@@ -45,13 +45,16 @@ class Vesicle(object):
 
         if hasattr(self, "author_id") and self.author_id is not None:
             p = Persona.query.get(self.author_id)
-            if p is not None:
+            if p is not None and p.username is not None:
                 author = p.username
             else:
-                author = self.author_id[:6]
+                author = "<[{}]>".format(self.author_id[:6])
         else:
             author = "anon"
-        return "<vesicle {type}@{author}>".format(type=self.message_type, author=author)
+        return "<vesicle {type} by {author} [{id}]>".format(
+            type=self.message_type,
+            author=author,
+            id=self.id[:6])
 
     def encrypt(self, author, recipients):
         """
@@ -294,21 +297,28 @@ class Vesicle(object):
         v = DBVesicle.query.get(self.id)
         if v is None:
             app.logger.info("Storing {} in database".format(self))
+            created = datetime.datetime.now()
             v = DBVesicle(
                 id=self.id,
                 json=vesicle_json,
                 author_id=self.author_id if 'author_id' in dir(self) else None,
-                created=datetime.datetime.now()
+                created=created,
+                modified=created
             )
         else:
-            app.logger.info("Storing updated version of {} in database".format(self))
             v.json = vesicle_json
+            v.modified = datetime.datetime.now()
+            app.logger.info("Storing updated version of {}, modified {} in database".format(self, v.modified))
 
         # Update recipients
         if self.keycrypt is not None:
             del v.recipients[:]
             keycrypt = json.loads(self.keycrypt)
             for r_id in keycrypt.keys():
+                # Don't add author as recipient
+                if r_id == v.author_id:
+                    continue
+
                 r = Persona.query.get(r_id)
                 if r is None:
                     # TODO: Return error when this happens
@@ -316,7 +326,7 @@ class Vesicle(object):
                         r_id, self))
                 else:
                     v.recipients.append(r)
+                    db.session.add(r)
 
         db.session.add(v)
         db.session.commit()
-        app.logger.info("Created {}".format(v.created))

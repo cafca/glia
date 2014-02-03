@@ -110,29 +110,34 @@ def recipient(recipient_id):
         app.logger.warning("Request for unavailable Persona's Vesicle stream (ID: '{}'')".format(recipient_id))
         return error_message(ERROR["OBJECT_NOT_FOUND"]("<Persona [{}]>".format(recipient)))
 
+    # Get inbox
+    from sqlalchemy import asc
+    inbox = recipient.inbox.order_by(asc(DBVesicle.created))
+
     offset_string = request.args.get('offset')
+    offset = None
     if offset_string is not None:
         try:
             offset = iso8601.parse_date(offset_string)
         except iso8601.ParseError, e:
             app.logger.error("Error parsing offset '{}' ({})".format(offset_string, e))
             return error_message([ERROR["INVALID_VALUE"]("Error parsing offset")])
-    else:
-        offset = None
-
-    # Get inbox
-    inbox = recipient.inbox.order_by(DBVesicle.created.desc())
-
-    # Filter by offset
-    if offset is not None:
-        app.logger.debug("Filtering Myelin of {} at offset {}".format(recipient, offset))
-        inbox = inbox.filter(DBVesicle.created > offset)
+        else:
+            inbox = inbox.filter(DBVesicle.modified > offset).order_by(DBVesicle.modified)
 
     # Inbox is empty
     if inbox is None:
         resp = {"vesicles": [], }
     else:
-        resp = {"vesicles": [vesicle.json for vesicle in inbox]}
+        resp = dict(vesicles=list(), meta=dict(myelin_modified=dict()))
+        for vesicle in inbox:
+            resp["vesicles"].append(vesicle.json)
+            resp["meta"]["myelin_modified"][vesicle.id] = vesicle.modified.isoformat()
 
-    app.logger.info("Returning {count} vesicles".format(count=len(resp["vesicles"])))
+    app.logger.info("Returning {count} vesicles for {recipient}\n{filter}\n{listing}".format(
+        count=len(resp["vesicles"]),
+        recipient=recipient,
+        filter="(Offset is {})".format(offset) if offset is not None else "(No offset)",
+        listing="\n".join(["* ID:{} Modified:{} Recipients:{}".format(v.id, v.modified, len(v.recipients)) for v in inbox])
+    ))
     return jsonify(resp)
