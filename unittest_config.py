@@ -3,8 +3,7 @@
     glia
     ~~~~~
 
-    Configuration for development. Uses a local SQLite DB and a file `secret_key` in
-    which the server RSA keys are stored
+    Configuration for unit testing.
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
@@ -13,17 +12,12 @@ import os
 
 from keyczar.keys import RsaPrivateKey
 
-DEBUG = True
-LOG_LEVEL = logging.INFO
+# DEBUG = True
 
 # Define addresses
-SERVER_HOST = 'app.souma'
+SERVER_HOST = 'app.soma'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
-
-# Define database setup
-DATABASE_FILE = '../server.db'
-SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
 
 # Load server cert
 SERVER_KEY_FILE = "./server_private.key"
@@ -39,9 +33,9 @@ except IOError:
 
 # Set secret key
 try:
-    with open('secret_key', 'rb') as f:
+    with open('secret_key') as f:
         SECRET_KEY = f.read()
 except IOError:
     SECRET_KEY = os.urandom(24)
-    with open('secret_key', 'wb') as f:
+    with open('secret_key', 'w') as f:
         f.write(SECRET_KEY)
