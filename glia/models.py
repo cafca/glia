@@ -173,8 +173,9 @@ class Souma(Serializable, db.Model):
         """Return true if a request carries a valid signature"""
         glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
-        # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
-        return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
+        app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
+        req = "".join([str(self.id), glia_rand, str(request.url), request.data])
+        return self.verify(req, glia_auth)
 
     def encrypt(self, data):
         """ Encrypt data using RSA """
@@ -208,7 +209,12 @@ class Souma(Serializable, db.Model):
         if self.sign_public == "":
             raise ValueError("Error verifying: No public signing key found for {}".format(self))
 
-        signature = urlsafe_b64decode(signature_b64)
+        # Signature arrives unicode formatted, encode in utf-8 to turn into
+        # a byte string that urlsafe_b64decode can digest.
+        # http://stackoverflow.com/questions/2229827/django-urlsafe-base64-decoding-with-decryption
+        signature_b64_bytes = signature_b64.encode("utf-8")
+
+        signature = urlsafe_b64decode(signature_b64_bytes)
         key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
 
