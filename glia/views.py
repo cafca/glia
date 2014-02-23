@@ -52,8 +52,7 @@ def authenticate():
 
         elif not souma.authentic_request(request):
             # Failed auth
-            app.logger.warning("Request failed authentication: {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(
-                request, request.headers["Glia-Souma"], request.headers["Glia-Rand"], request.url, request.data))
+            app.logger.warning("Request failed authentication: {}".format(request))
             flask.abort(401)
         else:
             # app.logger.debug("Authentication of <Souma:{}> for {} {} succeeded".format(souma_id[:6], request.method, request.url))

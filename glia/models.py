@@ -173,7 +173,12 @@ class Souma(Serializable, db.Model):
         """Return true if a request carries a valid signature"""
         glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
-        app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
+        app.logger.debug("""Authenticating {}
+            ID: {}
+            Rand: {}
+            Path: {}
+            Payload: {} ({} bytes)
+            Authentication: {} ({} bytes)""".format(request, str(self.id), glia_rand, str(request.url), request.data[:400], len(request.data), glia_auth[:8], len(glia_auth)))
         req = "".join([str(self.id), glia_rand, str(request.url), request.data])
         return self.verify(req, glia_auth)
 
@@ -222,6 +227,7 @@ keycrypt = db.Table('keycrypts',
     db.Column('dbvesicle_id', db.String(32), db.ForeignKey('dbvesicle.id')),
     db.Column('recipient_id', db.String(32), db.ForeignKey('persona.id'))
 )
+
 
 class DBVesicle(db.Model):
     """Store the representation of a Vesicle"""
