@@ -17,7 +17,7 @@ DEBUG = True
 LOG_LEVEL = logging.INFO
 
 # Define addresses
-SERVER_HOST = 'app.souma'
+SERVER_HOST = 'app.souma.io'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
