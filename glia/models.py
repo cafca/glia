@@ -10,7 +10,7 @@
 import json
 import datetime
 
-from base64 import b64decode, urlsafe_b64decode, urlsafe_b64encode
+from base64 import b64encode, b64decode, urlsafe_b64decode, urlsafe_b64encode
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 from sqlalchemy.orm import backref
@@ -170,11 +170,29 @@ class Souma(Serializable, db.Model):
         self.crypt_public = str(rsa2.public_key)
 
     def authentic_request(self, request):
-        """Return true if a request carries a valid signature"""
+        """Validate whether a request carries a valid authentication
+
+        Args:
+            request: A Flask request context
+
+        Raises:
+            ValueError: If authentication fails
+        """
+        if request.headers.get("X-Forwarded-Proto") == "https":
+            url = str(request.url).replace("http://", "https://")
+        else:
+            url = str(request.url)
+
         glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
-        # app.logger.debug("Authenticating {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(request, str(self.id), glia_rand, request.url, request.data))
-        return self.verify("".join([str(self.id), glia_rand, request.url, request.data]), glia_auth)
+        req = "".join([str(self.id), glia_rand, url, request.data])
+        if not self.verify(req, glia_auth):
+            raise ValueError("""Request failed authentication: {}
+                ID: {}
+                Rand: {}
+                Path: {}
+                Payload: {} ({} bytes)
+                Authentication: {} ({} bytes)""".format(request, str(self.id), b64encode(glia_rand), url, request.data[:400], len(request.data), glia_auth[:8], len(glia_auth)))
 
     def encrypt(self, data):
         """ Encrypt data using RSA """
@@ -208,7 +226,12 @@ class Souma(Serializable, db.Model):
         if self.sign_public == "":
             raise ValueError("Error verifying: No public signing key found for {}".format(self))
 
-        signature = urlsafe_b64decode(signature_b64)
+        # Signature arrives unicode formatted, encode in utf-8 to turn into
+        # a byte string that urlsafe_b64decode can digest.
+        # http://stackoverflow.com/questions/2229827/django-urlsafe-base64-decoding-with-decryption
+        signature_b64_bytes = signature_b64.encode("utf-8")
+
+        signature = urlsafe_b64decode(signature_b64_bytes)
         key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
 
@@ -216,6 +239,7 @@ keycrypt = db.Table('keycrypts',
     db.Column('dbvesicle_id', db.String(32), db.ForeignKey('dbvesicle.id')),
     db.Column('recipient_id', db.String(32), db.ForeignKey('persona.id'))
 )
+
 
 class DBVesicle(db.Model):
     """Store the representation of a Vesicle"""

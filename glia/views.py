@@ -8,14 +8,14 @@
     :copyright: (c) 2013 by Vincent Ahrend.
 """
 import datetime
-import flask
 import iso8601
 
 from glia import app, db
-from flask import url_for, request, jsonify
+from flask import request, jsonify, abort, redirect
 from sqlalchemy import func
-from models import Notification, Persona, Souma, DBVesicle
+from models import Persona, Souma, DBVesicle
 from nucleus import ERROR
+
 
 def error_message(errors):
     """
@@ -29,35 +29,57 @@ def error_message(errors):
     """
     return jsonify({"meta": {"errors": errors}})
 
+
+def valid_souma(souma_id):
+    """Return True if souma_id is registered and not blocked
+
+    Args:
+        souma_id: 32 byte Souma ID
+
+    Raises:
+        ValueError: If Souma is None
+        KeyError: If Souma is not found
+    """
+    if souma_id is None:
+        raise ValueError("Souma ID can't be None")
+
+    souma = Souma.query.get(souma_id)
+
+    if souma is None:
+        raise KeyError("Souma '{} was not found".format(souma_id))
+
+    return True
+
+
 @app.before_request
 def authenticate():
-    """Validate authentication"""
+    """Validate request has secure connection and valid souma"""
 
-    for k in ["Glia-Auth", "Glia-Souma", "Glia-Rand"]:
-        if not k in request.headers.iterkeys():
-            app.logger.error("Request is missing authentication parameter '{}'\n{}".format(k, request.headers))
-            flask.abort(401)  # 401==unauthorized
-
-    souma_id = request.headers["Glia-Souma"]
+    # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
+    # header is set to 'https'
+    if not any([app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
+            url = request.url
+            secure_url = url.replace("http://", "https://")
+            app.logger.info("Redirecting from {} to {}".format(url, secure_url))
+            return redirect(secure_url, code=301)
 
     if (request.path == '/v0/soumas/' and request.method == "POST"):
-        app.logger.info("Request skipped authentication for new Souma registration")
+        # Allowed to access this resource without known souma id
+        pass
     else:
+        souma_id = request.headers.get("Glia-Souma", default="")
         souma = Souma.query.get(souma_id)
-        if not souma:
-            app.logger.warning("Authentication failed: Souma {} not found.".format(souma_id))
+        if souma is None:
+            app.logger.info("Authentication failed: Souma {} not found.".format(souma_id))
             rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
             rsp.status = "401 Souma {} not found.".format(souma_id)
             return rsp
 
-        elif not souma.authentic_request(request):
-            # Failed auth
-            app.logger.warning("Request failed authentication: {}\nID: {}\nRand: {}\nPath: {}\nPayload: {}".format(
-                request, request.headers["Glia-Souma"], request.headers["Glia-Rand"], request.url, request.data))
-            flask.abort(401)
-        else:
-            # app.logger.debug("Authentication of <Souma:{}> for {} {} succeeded".format(souma_id[:6], request.method, request.url))
-            pass
+        try:
+            souma.authentic_request(request)
+        except ValueError as e:
+            app.logger.warning("Request failed authentication: {}\n{}".format(request, e))
+            abort(401)
 
 
 @app.route('/v0/', methods=["GET"])
@@ -130,7 +152,6 @@ def find_personas():
             "Persona <{}> not found.".format(email_hash[:8]))
 
     return jsonify(resp)
-
 
 
 @app.route('/v0/personas/<persona_id>/', methods=["GET", "PUT", "DELETE"])
@@ -262,7 +283,7 @@ def session_lookup():
             data = request.json['personas'][0]
         except KeyError, e:
             app.logger.warning("Received malformed request: Missing key `e`".format(e))
-            errors.append(ERROR["MISSING_KEY"](field))
+            errors.append(ERROR["MISSING_KEY"](e))
             return error_message(errors)
 
         required_fields = ['auth_signed', 'id', 'reply_to']
@@ -341,6 +362,7 @@ def sessions(session_id):
     elif request.method == "DELETE":
         pass
 
+
 @app.route('/v0/soumas/', methods=["POST"])
 def soumas():
     """
@@ -364,15 +386,16 @@ def soumas():
         if old_souma:
             resp["meta"]["errors"].append(ERROR["DUPLICATE_ID"](new_souma["id"]))
 
-
     if len(resp["meta"]["errors"]) == 0:
         souma = Souma(
             id=new_souma["id"],
             crypt_private=new_souma["crypt_public"],
             sign_public=new_souma["sign_public"])
 
-        if not souma.authentic_request(request):
-            app.logger.warning("Authentication failed for new {}".format(request))
+        try:
+            souma.authentic_request(request)
+        except ValueError as e:
+            app.logger.warning("Error registering new Souma {}\n{}".format(souma, e))
             resp["meta"]["errors"].append(ERROR["INVALID_SIGNATURE"])
         else:
             app.logger.info("Registered new {}".format(souma))
@@ -380,6 +403,7 @@ def soumas():
             db.session.commit()
 
     return jsonify(resp)
+
 
 @app.route('/v0/soumas/<souma_id>', methods=["GET"])
 def souma_info(souma_id):
@@ -389,6 +413,6 @@ def souma_info(souma_id):
     s = Souma.query.get(souma_id)
     if s is not None:
         souma_info = s.export(include=["id", "crypt_public", "sign_public"])
-        return jsonify({"soumas":[souma_info, ]})
+        return jsonify({"soumas": [souma_info, ]})
     else:
         return error_message([ERROR["OBJECT_NOT_FOUND"](souma_id)])
