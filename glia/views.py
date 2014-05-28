@@ -11,7 +11,7 @@ import datetime
 import iso8601
 
 from glia import app, db
-from flask import request, jsonify, redirect, abort
+from flask import request, jsonify, abort, redirect
 from sqlalchemy import func
 from models import Persona, Souma, DBVesicle
 from nucleus import ERROR
@@ -57,18 +57,19 @@ def authenticate():
 
     # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
     # header is set to 'https'
-    if not any([app.config["DEBUG"] is True, request.headers.get("HTTP_X_FORWARDED_PROTO", None) == 'https']):
+    if not any([app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
             url = request.url
             secure_url = url.replace("http://", "https://")
+            app.logger.info("Redirecting from {} to {}".format(url, secure_url))
             return redirect(secure_url, code=301)
 
     if (request.path == '/v0/soumas/' and request.method == "POST"):
         # Allowed to access this resource without known souma id
         pass
     else:
-        souma_id = request.headers.get("Glia-Souma")
+        souma_id = request.headers.get("Glia-Souma", default="")
         souma = Souma.query.get(souma_id)
-        if not souma:
+        if souma is None:
             app.logger.info("Authentication failed: Souma {} not found.".format(souma_id))
             rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
             rsp.status = "401 Souma {} not found.".format(souma_id)

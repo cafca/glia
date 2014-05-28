@@ -178,16 +178,21 @@ class Souma(Serializable, db.Model):
         Raises:
             ValueError: If authentication fails
         """
+        if request.headers.get("X-Forwarded-Proto") == "https":
+            url = str(request.url).replace("http://", "https://")
+        else:
+            url = str(request.url)
+
         glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
-        req = "".join([str(self.id), glia_rand, str(request.url), request.data])
+        req = "".join([str(self.id), glia_rand, url, request.data])
         if not self.verify(req, glia_auth):
             raise ValueError("""Request failed authentication: {}
                 ID: {}
                 Rand: {}
                 Path: {}
                 Payload: {} ({} bytes)
-                Authentication: {} ({} bytes)""".format(request, str(self.id), b64encode(glia_rand), str(request.url), request.data[:400], len(request.data), glia_auth[:8], len(glia_auth)))
+                Authentication: {} ({} bytes)""".format(request, str(self.id), b64encode(glia_rand), url, request.data[:400], len(request.data), glia_auth[:8], len(glia_auth)))
 
     def encrypt(self, data):
         """ Encrypt data using RSA """
