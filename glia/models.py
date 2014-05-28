@@ -10,7 +10,7 @@
 import json
 import datetime
 
-from base64 import b64decode, urlsafe_b64decode, urlsafe_b64encode
+from base64 import b64encode, b64decode, urlsafe_b64decode, urlsafe_b64encode
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 from sqlalchemy.orm import backref
@@ -170,17 +170,24 @@ class Souma(Serializable, db.Model):
         self.crypt_public = str(rsa2.public_key)
 
     def authentic_request(self, request):
-        """Return true if a request carries a valid signature"""
+        """Validate whether a request carries a valid authentication
+
+        Args:
+            request: A Flask request context
+
+        Raises:
+            ValueError: If authentication fails
+        """
         glia_rand = b64decode(request.headers["Glia-Rand"])
         glia_auth = request.headers["Glia-Auth"]
-        # app.logger.debug("""Authenticating {}
-        #     ID: {}
-        #     Rand: {}
-        #     Path: {}
-        #     Payload: {} ({} bytes)
-        #     Authentication: {} ({} bytes)""".format(request, str(self.id), glia_rand, str(request.url), request.data[:400], len(request.data), glia_auth[:8], len(glia_auth)))
         req = "".join([str(self.id), glia_rand, str(request.url), request.data])
-        return self.verify(req, glia_auth)
+        if not self.verify(req, glia_auth):
+            raise ValueError("""Request failed authentication: {}
+                ID: {}
+                Rand: {}
+                Path: {}
+                Payload: {} ({} bytes)
+                Authentication: {} ({} bytes)""".format(request, str(self.id), b64encode(glia_rand), str(request.url), request.data[:400], len(request.data), glia_auth[:8], len(glia_auth)))
 
     def encrypt(self, data):
         """ Encrypt data using RSA """
