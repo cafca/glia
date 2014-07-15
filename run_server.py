@@ -19,5 +19,6 @@ if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
     db.create_all()
 
 app.logger.info("Starting glia server on port {}".format(app.config['SERVER_PORT']))
+app.logger.info("Authentification is {}".format("enabled" if app.config["AUTH_ENABLED"] else "disabled"))
 glia_server = WSGIServer(('0.0.0.0', app.config['SERVER_PORT']), app)
 glia_server.serve_forever()

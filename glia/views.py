@@ -79,7 +79,8 @@ def authenticate():
             souma.authentic_request(request)
         except ValueError as e:
             app.logger.warning("Request failed authentication: {}\n{}".format(request, e))
-            # abort(401)
+            if app.config["AUTH_ENABLED"]:
+                abort(401)
 
 
 @app.route('/v0/', methods=["GET"])

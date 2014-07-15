@@ -16,6 +16,7 @@ from keyczar.keys import RsaPrivateKey
 # this means that we bind to os.environ['PORT'] (>1000) but are actually visible at port 80
 SERVER_HOST = 'glia.herokuapp.com'
 SERVER_PORT = int(os.environ['PORT'])
+AUTH_ENABLED = bool(os.environ['SOUMA_AUTH'])
 
 SERVER_NAME = SERVER_HOST
 
