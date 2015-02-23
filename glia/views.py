@@ -244,7 +244,13 @@ def personas(persona_id):
         pass
 
 
-@app.route('/v0/groups/<group_id>/', methods=["GET", "PUT", "DELETE"])
+@app.route('/v0/groups/', methods=["POST"])
+def find_groups():
+    """Find group by searching name and description"""
+    pass
+
+
+@app.route('/v0/groups/<group_id>/', methods=["GET", "PUT"])
 def groups(group_id):
     """Access and modify group records on the server"""
 
@@ -258,6 +264,7 @@ def groups(group_id):
                 "id",
                 "username",
                 "description",
+                "created",
                 "admin_id"]))
         else:
             resp["meta"] = dict()
@@ -318,9 +325,6 @@ def groups(group_id):
                 "created": g.created.isoformat()
             }]
         })
-
-    elif request.method == "DELETE":
-        pass
 
 
 @app.route('/v0/sessions/', methods=["GET", "POST"])
