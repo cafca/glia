@@ -246,8 +246,35 @@ def personas(persona_id):
 
 @app.route('/v0/groups/', methods=["POST"])
 def find_groups():
-    """Find group by searching name and description"""
-    pass
+    """Find group by searching group names for a query
+
+    The method expects a JSON formatted request body with a key 'query'
+    containing a search term at least three characters long."""
+
+    errors = list()
+
+    # ------------------------
+    # --- Validate query
+
+    if "query" not in request.json:
+        errors.append(ERROR["MISSING_PARAMETER"]("search query"))
+
+    if len(request.json["query"]) < 3:
+        errors.append(ERROR["INVALID_VALUE"]("search query too short"))
+
+    # ------------------------
+    # --- Retrieve results
+
+    results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
+
+    # ------------------------
+    # --- Compile return value
+
+    if errors:
+        return jsonify({"meta": {"errors": errors}})
+    else:
+        results = [result.export() for result in results]
+        return jsonify({"groups": results})
 
 
 @app.route('/v0/groups/<group_id>/', methods=["GET", "PUT"])
