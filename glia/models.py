@@ -113,6 +113,33 @@ class Persona(Serializable, db.Model):
         return key_public.Verify(data, signature)
 
 
+class Group(db.Model, Serializable):
+    """A group of Personas
+
+    Attributes:
+        id (String): 32 byte ID of this group
+        username (String): Public username of the group, max 80 bytes
+        description (String): Text decription of what this group is about
+        admin (Persona): Person that is allowed to make structural changes to the group_id
+
+    """
+    __tablename__ = 'group'
+
+    id = db.Column(db.String(32), primary_key=True)
+    username = db.Column(db.String(80))
+    description = db.Column(db.Text)
+    admin_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
+    admin = db.relationship("Persona", primaryjoin="persona.c.id==group.c.admin_id")
+
+    def __repr__(self):
+        try:
+            name = self.username.encode('utf-8')
+        except ValueError:
+            name = "(name encode error)"
+
+        return "<Group @{} [{}]>".format(name, self.id[:6])
+
+
 class Certificate(db.Model, Serializable):
     """Certificates authorize actions specified by the kind field"""
     id = db.Column(db.String(32), primary_key=True)
