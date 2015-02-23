@@ -121,6 +121,7 @@ class Group(db.Model, Serializable):
         username (String): Public username of the group, max 80 bytes
         description (String): Text decription of what this group is about
         admin (Persona): Person that is allowed to make structural changes to the group_id
+        created (DateTime): Time at which the group was originally created *in glia*
 
     """
     __tablename__ = 'group'
@@ -128,6 +129,7 @@ class Group(db.Model, Serializable):
     id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(80))
     description = db.Column(db.Text)
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
     admin_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
     admin = db.relationship("Persona", primaryjoin="persona.c.id==group.c.admin_id")
 

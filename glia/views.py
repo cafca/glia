@@ -13,7 +13,7 @@ import iso8601
 from glia import app, db
 from flask import request, jsonify, abort, redirect
 from sqlalchemy import func
-from models import Persona, Souma, DBVesicle
+from models import Persona, Souma, DBVesicle, Group
 from nucleus import ERROR
 
 
@@ -237,6 +237,85 @@ def personas(persona_id):
             "sessions": [{
                 "id": p.session_id,
                 "timeout": p.timeout().isoformat()
+            }]
+        })
+
+    elif request.method == "DELETE":
+        pass
+
+
+@app.route('/v0/groups/<group_id>/', methods=["GET", "PUT", "DELETE"])
+def groups(group_id):
+    """Access and modify group records on the server"""
+
+    if request.method == "GET":
+        # Return group info
+        g = Group.query.get(group_id)
+        resp = dict()
+        if g:
+            resp["groups"] = list()
+            resp["groups"].append(g.export(include=[
+                "id",
+                "username",
+                "description",
+                "admin_id"]))
+        else:
+            resp["meta"] = dict()
+            resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](group_id), ]
+
+        return jsonify(resp)
+
+    elif request.method == "PUT":
+        # Store new group record on server
+
+        # Validate request data
+        if "groups" not in request.json or not isinstance(request.json["groups"], list):
+            app.logger.error("Malformed request: {}".format(request.json))
+            return error_message([ERROR["MISSING_KEY"]("groups")])
+
+        new_group = request.json['groups'][0]
+
+        # Check required fields
+        required_fields = [
+            'group_id', 'username', 'description', 'admin_id']
+        errors = list()
+        for field in required_fields:
+            if field not in new_group:
+                errors.append(ERROR["MISSING_KEY"](field))
+
+        # Check for duplicate identifier
+        if "group_id" in new_group:
+            g_existing = Group.query.get(new_group["group_id"])
+            if g_existing:
+                errors.append(ERROR["DUPLICATE_ID"](new_group["group_id"]))
+
+        # Retrieve admin record
+        admin = Persona.query.get(new_group["admin_id"])
+        if admin is None:
+            errors.append(ERROR["DUPLICATE_ID"](new_group["admin_id"]))
+
+        # Return in case of errors
+        if errors:
+            return error_message(errors)
+
+        # Register new group
+        g = Group(
+            id=new_group["group_id"],
+            username=new_group["username"],
+            description=new_group["description"],
+            admin=admin,
+        )
+        db.session.add(g)
+        db.session.commit()
+
+        app.logger.info("New group '{}' registered".format(g.username.encode('utf-8')))
+
+        return jsonify({
+            "groups": [{
+                "id": g.id,
+                "username": g.username,
+                "description": g.description,
+                "created": g.created.isoformat()
             }]
         })
 
