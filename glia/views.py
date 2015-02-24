@@ -244,28 +244,35 @@ def personas(persona_id):
         pass
 
 
-@app.route('/v0/groups/', methods=["POST"])
+@app.route('/v0/groups/', methods=["GET", "POST"])
 def find_groups():
-    """Find group by searching group names for a query
+    """Return top groups or group search results
 
-    The method expects a JSON formatted request body with a key 'query'
-    containing a search term at least three characters long."""
+    The 'POST'-method expects a JSON formatted request body with a key 'query'
+    containing a search term at least three characters long.
+    """
 
     errors = list()
+    if request.method == "GET":
+        # ------------------------
+        # --- Retrieve top groups
 
-    # ------------------------
-    # --- Validate query
+        results = Group.query.limit(10).all()
 
-    if "query" not in request.json:
-        errors.append(ERROR["MISSING_PARAMETER"]("search query"))
+    elif request.method == "POST":
+        # ------------------------
+        # --- Validate query
 
-    if len(request.json["query"]) < 3:
-        errors.append(ERROR["INVALID_VALUE"]("search query too short"))
+        if "query" not in request.json:
+            errors.append(ERROR["MISSING_PARAMETER"]("search query"))
 
-    # ------------------------
-    # --- Retrieve results
+        if len(request.json["query"]) < 3:
+            errors.append(ERROR["INVALID_VALUE"]("search query too short"))
 
-    results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
+        # ------------------------
+        # --- Retrieve results
+
+        results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
 
     # ------------------------
     # --- Compile return value
