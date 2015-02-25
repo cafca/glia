@@ -253,9 +253,13 @@ def find_groups():
     """
 
     errors = list()
+    results = None
+
     if request.method == "GET":
         # ------------------------
         # --- Retrieve top groups
+
+        app.logger.info("Returning top groups")
 
         results = Group.query.limit(10).all()
 
@@ -263,16 +267,26 @@ def find_groups():
         # ------------------------
         # --- Validate query
 
-        if "query" not in request.json:
+        if "query" not in request.json or len(request.json['query']) == 0:
             errors.append(ERROR["MISSING_PARAMETER"]("search query"))
+            app.logger.warning("Group search request missing query parameter")
 
-        if len(request.json["query"]) < 3:
+        query = request.json['query'][0]
+
+        if not isinstance(query, basestring) or len(query) < 3:
             errors.append(ERROR["INVALID_VALUE"]("search query too short"))
+            app.logger.info("Group search query too short (was '{}')".format(query))
 
-        # ------------------------
-        # --- Retrieve results
+        else:
+            app.logger.info("Group search request for query '{}'".format(query))
 
-        results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
+            if query == "null":
+                query = None
+
+            # ------------------------
+            # --- Retrieve results
+
+            results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
 
     # ------------------------
     # --- Compile return value
