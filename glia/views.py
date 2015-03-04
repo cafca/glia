@@ -9,11 +9,15 @@
 """
 import datetime
 import iso8601
+import re
 
 from glia import app, db
-from flask import request, jsonify, abort, redirect
+from flask import request, jsonify, abort, redirect, render_template, flash
+from flask.ext.login import login_user, logout_user
 from sqlalchemy import func
-from models import Persona, Souma, DBVesicle
+
+from models import Persona, Souma, DBVesicle, User
+from forms import LoginForm, SignupForm
 from nucleus import ERROR
 
 
@@ -55,36 +59,105 @@ def valid_souma(souma_id):
 def authenticate():
     """Validate request has secure connection and valid souma"""
 
-    # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
-    # header is set to 'https'
-    if not any([app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
-            url = request.url
-            secure_url = url.replace("http://", "https://")
-            app.logger.info("Redirecting from {} to {}".format(url, secure_url))
-            return redirect(secure_url, code=301)
+    # Match API requests
+    rx = "/v0/"
+    if re.match(rx, request.path):
+        # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
+        # header is set to 'https'
+        if not any([app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
+                url = request.url
+                secure_url = url.replace("http://", "https://")
+                app.logger.info("Redirecting from {} to {}".format(url, secure_url))
+                return redirect(secure_url, code=301)
 
-    if (request.path == '/v0/soumas/' and request.method == "POST"):
-        # Allowed to access this resource without known souma id
-        pass
-    else:
-        souma_id = request.headers.get("Glia-Souma", default="")
-        souma = Souma.query.get(souma_id)
-        if souma is None:
-            app.logger.info("Authentication failed: Souma {} not found.".format(souma_id))
-            rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
-            rsp.status = "401 Souma {} not found.".format(souma_id)
-            return rsp
+        if (request.path == '/v0/soumas/' and request.method == "POST"):
+            # Allowed to access this resource without known souma id
+            pass
+        else:
+            souma_id = request.headers.get("Glia-Souma", default="")
+            souma = Souma.query.get(souma_id)
+            if souma is None:
+                app.logger.info("Authentication failed: Souma {} not found.".format(souma_id))
+                rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
+                rsp.status = "401 Souma {} not found.".format(souma_id)
+                return rsp
 
-        try:
-            souma.authentic_request(request)
-        except ValueError as e:
-            app.logger.warning("Request failed authentication: {}\n{}".format(request, e))
-            if app.config["AUTH_ENABLED"]:
-                abort(401)
+            try:
+                souma.authentic_request(request)
+            except ValueError as e:
+                app.logger.warning("Request failed authentication: {}\n{}".format(request, e))
+                if app.config["AUTH_ENABLED"]:
+                    abort(401)
+
+
+@app.route('/', methods=["GET"])
+def index():
+    """Front page"""
+    login_form = LoginForm()
+
+    return render_template('index.html', login_form=login_form)
+
+
+@app.route('/groups/', methods=["GET", "PUT"])
+def groups():
+    """Group search"""
+    pass
+
+
+@app.route('/groups/<group_id>', methods=["GET"])
+def group():
+    """Display a group's profile"""
+    pass
+
+
+@app.route('/stars/', methods=["POST"])
+def create_star():
+    """Post a new Star"""
+    pass
+
+
+@app.route('/login', methods=["GET", "POST"])
+def login():
+    """Login a user"""
+    form = LoginForm()
+    if form.validate_on_submit():
+        login_user(form.user)
+        flash("Logged in successfully")
+        return form.redirect('index')
+    return render_template('login.html', form=form)
+
+
+@app.route('/logout', methods=["GET", "POST"])
+def logout():
+    """Logout a user"""
+    logout_user()
+
+
+@app.route('/signup', methods=["GET", "POST"])
+def signup():
+    """Signup a new user"""
+    from uuid import uuid4
+    form = SignupForm()
+
+    if form.validate_on_submit():
+        user = User(email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+
+        persona = Persona(
+            id=uuid4().hex,
+            username=form.username.data,
+            user=user)
+
+        db.session.add(persona)
+        db.session.commit()
+
+        return form.redirect(url_for('index'))
+    return render_template('signup.html')
 
 
 @app.route('/v0/', methods=["GET"])
-def index():
+def api_index():
     """
     Return server status.
     """

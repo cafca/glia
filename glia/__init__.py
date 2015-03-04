@@ -13,6 +13,8 @@ import sys
 from blinker import Namespace
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.socketio import SocketIO
+from flask.ext.login import LoginManager
 from real_ip_address import ProxiedRequest
 from humanize import naturaltime
 
@@ -38,6 +40,20 @@ db = SQLAlchemy(app)
 
 # Setup Blinker namespace
 notification_signals = Namespace()
+
+# Setup websockets
+socketio = SocketIO()
+socketio.init_app(app)
+
+# Setup login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(userid):
+    from glia.models import User
+    return User.query.get(userid)
 
 # Setup loggers
 # Flask is configured to route logging events only to the console if it is in debug

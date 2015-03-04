@@ -14,6 +14,8 @@ from base64 import b64encode, b64decode, urlsafe_b64decode, urlsafe_b64encode
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 from sqlalchemy.orm import backref
+from hashlib import sha256
+from flask.ext.login import UserMixin
 
 from glia import app, db
 
@@ -32,6 +34,39 @@ class Serializable():
     def json(self, exclude=[], include=None):
         """Return this object JSON encoded"""
         return json.dumps(self.export(exclude=exclude, include=include), indent=4)
+
+
+class User(UserMixin, db.Model):
+    """A user of the website"""
+    __tablename__ = 'user'
+    id = db.Column(db.String(32), primary_key=True)
+    email = db.Column(db.String(128))
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    modified = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+
+    is_anonymous = False
+
+    def check_password(self, password):
+        """Return True if password matches user password
+
+        Args:
+            password (String): Password entered by user in login form
+        """
+        pw_hash = sha256(password).hexdigest()
+        return self.pw_hash == pw_hash
+
+    def get_id(self):
+        return unicode(self.id)
+
+    def set_password(self, password):
+        """Set password to a new value
+
+        Args:
+            password (String): Plaintext value of the new password
+        """
+        pw_hash = sha256(password).hexdigest()
+        self.pw_hash = pw_hash
 
 
 class Persona(Serializable, db.Model):
