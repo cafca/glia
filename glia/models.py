@@ -38,14 +38,15 @@ class Serializable():
 
 class User(UserMixin, db.Model):
     """A user of the website"""
-    __tablename__ = 'user'
-    id = db.Column(db.String(32), primary_key=True)
-    email = db.Column(db.String(128))
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow())
-    modified = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
 
-    is_anonymous = False
+    __tablename__ = 'user'
+    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    email = db.Column(db.String(128))
+    created = db.Column(db.DateTime)
+    modified = db.Column(db.DateTime)
+    pw_hash = db.Column(db.String(32))
+    active = db.Column(db.Boolean, default=True)
+    authenticated = db.Column(db.Boolean(), default=False)
 
     def check_password(self, password):
         """Return True if password matches user password
@@ -56,9 +57,6 @@ class User(UserMixin, db.Model):
         pw_hash = sha256(password).hexdigest()
         return self.pw_hash == pw_hash
 
-    def get_id(self):
-        return unicode(self.id)
-
     def set_password(self, password):
         """Set password to a new value
 
@@ -67,6 +65,23 @@ class User(UserMixin, db.Model):
         """
         pw_hash = sha256(password).hexdigest()
         self.pw_hash = pw_hash
+
+    def get_id(self):
+        return self.id
+
+    @property
+    def is_authenticated(self):
+        return self.authenticated
+
+    @is_authenticated.setter
+    def is_authenticated(self, value):
+        self.authenticated = value
+
+    def is_active(self):
+        return self.active
+
+    def is_anonymous(self):
+        return False
 
 
 class Persona(Serializable, db.Model):
@@ -86,6 +101,8 @@ class Persona(Serializable, db.Model):
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
     email_hash = db.Column(db.String(64))
+    user_id = db.Column(db.String(32), db.ForeignKey('user.id'))
+    user = db.relationship('User', backref="personas", primaryjoin="user.c.id==persona.c.user_id")
 
     # TODO: Enable starmap when using p2p
     # starmap = db.relationship('DBVesicle',

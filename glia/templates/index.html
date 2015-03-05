@@ -2,25 +2,14 @@
 
 {% block content %}
 
-<h1>Hello</h1>
 
-<p>Your are {{request.remote_addr}}</p>
+{% if current_user.is_authenticated %}
+    <h1>Hello {{ current_user.email }}!</h1>
+    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+{% else %}
+    <h1>Hello, why don't you <a href="{{ url_for('login') }}">login?</a></h1>
+{% endif %}
 
-<table style="width: 900px">
-    <tr>
-        <th>user-id</th>
-        <th>session-id</th>
-        <th>hostname</th>
-        <th>last seen</th>
-    </tr>
-{% for session in sessions %}
-<tr>
-    <td>{{session.persona_id}}</td>
-    <td>{{session.session_id}}</td>
-    <td>{{session.hostname()}}</td>
-    <td>{{session.last_connected}}</td>
-</tr>
-{% endfor %}
-</table>
+
 
 {% endblock %}

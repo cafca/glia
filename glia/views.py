@@ -12,8 +12,8 @@ import iso8601
 import re
 
 from glia import app, db
-from flask import request, jsonify, abort, redirect, render_template, flash
-from flask.ext.login import login_user, logout_user
+from flask import request, jsonify, abort, redirect, render_template, flash, url_for
+from flask.ext.login import login_user, logout_user, login_required, current_user
 from sqlalchemy import func
 
 from models import Persona, Souma, DBVesicle, User
@@ -90,12 +90,12 @@ def authenticate():
                     abort(401)
 
 
+@login_required
 @app.route('/', methods=["GET"])
 def index():
     """Front page"""
-    login_form = LoginForm()
 
-    return render_template('index.html', login_form=login_form)
+    return render_template('index.html')
 
 
 @app.route('/groups/', methods=["GET", "PUT"])
@@ -121,16 +121,29 @@ def login():
     """Login a user"""
     form = LoginForm()
     if form.validate_on_submit():
-        login_user(form.user)
+        app.logger.debug("Form validated fine")
+        form.user.is_authenticated = True
+        db.session.add(form.user)
+        db.session.commit()
+        login_user(form.user, remember=True)
         flash("Logged in successfully")
-        return form.redirect('index')
+        return form.redirect(url_for('index'))
+    elif request.method == "POST":
+        app.logger.error("Invalid password")
+        form.password.errors.append("Invalid password.")
     return render_template('login.html', form=form)
 
 
+@login_required
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
     """Logout a user"""
+    user = current_user
+    user.authenticated = False
+    db.session.add(user)
+    db.session.commit()
     logout_user()
+    return redirect(url_for('index'))
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -140,20 +153,28 @@ def signup():
     form = SignupForm()
 
     if form.validate_on_submit():
-        user = User(email=form.email.data)
+        created_dt = datetime.datetime.utcnow()
+        user = User(
+            email=form.email.data,
+            created=created_dt,
+            modified=created_dt)
         user.set_password(form.password.data)
         db.session.add(user)
 
+        created_dt = datetime.datetime.utcnow()
         persona = Persona(
             id=uuid4().hex,
             username=form.username.data,
+            created=created_dt,
+            modified=created_dt,
             user=user)
 
         db.session.add(persona)
         db.session.commit()
+        flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
 
         return form.redirect(url_for('index'))
-    return render_template('signup.html')
+    return render_template('signup.html', form=form)
 
 
 @app.route('/v0/', methods=["GET"])

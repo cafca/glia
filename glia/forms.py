@@ -1,6 +1,7 @@
 from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
-from flaskext.wtf import Form, TextField, HiddenField, PasswordField, validators
+from flask_wtf import Form
+from wtforms import TextField, HiddenField, PasswordField, validators
 
 from glia.models import User
 
@@ -68,7 +69,7 @@ class SignupForm(RedirectForm):
         if not rv:
             return False
 
-        user = User.query.filter_by(email=self.email.data).first() is None
+        user = User.query.filter_by(email=self.email.data).first()
         if user:
             self.email.errors.append("A user with this email address already exists.")
             rv = False
