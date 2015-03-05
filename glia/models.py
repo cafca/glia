@@ -15,9 +15,10 @@ from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 from sqlalchemy.orm import backref
 from hashlib import sha256
-from flask.ext.login import UserMixin
+from flask.ext.login import UserMixin, current_user
 
 from glia import app, db
+from glia.helpers import UnauthorizedError
 
 
 class Serializable():
@@ -36,6 +37,15 @@ class Serializable():
         return json.dumps(self.export(exclude=exclude, include=include), indent=4)
 
 
+class Association(db.Model):
+    """Connects user accounts and personas"""
+    __tablename__ = "association"
+    left_id = db.Column(db.String(32), db.ForeignKey('user.id'), primary_key=True)
+    right_id = db.Column(db.String(32), db.ForeignKey('persona.id'), primary_key=True)
+    active = db.Column(db.Boolean(), default=False)
+    persona = db.relationship("Persona", backref="associations")
+
+
 class User(UserMixin, db.Model):
     """A user of the website"""
 
@@ -46,7 +56,8 @@ class User(UserMixin, db.Model):
     modified = db.Column(db.DateTime)
     pw_hash = db.Column(db.String(32))
     active = db.Column(db.Boolean, default=True)
-    authenticated = db.Column(db.Boolean(), default=False)
+    authenticated = db.Column(db.Boolean(), default=True)
+    associations = db.relationship('Association', lazy="dynamic", backref="user")
 
     def check_password(self, password):
         """Return True if password matches user password
@@ -69,19 +80,22 @@ class User(UserMixin, db.Model):
     def get_id(self):
         return self.id
 
-    @property
     def is_authenticated(self):
         return self.authenticated
-
-    @is_authenticated.setter
-    def is_authenticated(self, value):
-        self.authenticated = value
 
     def is_active(self):
         return self.active
 
     def is_anonymous(self):
         return False
+
+    @property
+    def active_persona(self):
+        try:
+            return self.associations.filter_by(active=True).first().persona
+        except AttributeError:
+            # no persona associated
+            return None
 
 
 class Persona(Serializable, db.Model):
@@ -101,8 +115,6 @@ class Persona(Serializable, db.Model):
     sign_public = db.Column(db.Text)
     crypt_public = db.Column(db.Text)
     email_hash = db.Column(db.String(64))
-    user_id = db.Column(db.String(32), db.ForeignKey('user.id'))
-    user = db.relationship('User', backref="personas", primaryjoin="user.c.id==persona.c.user_id")
 
     # TODO: Enable starmap when using p2p
     # starmap = db.relationship('DBVesicle',
@@ -114,6 +126,21 @@ class Persona(Serializable, db.Model):
 
     def __str__(self):
         return "<Persona '{}' [{}]>".format(self.username.encode('utf-8'), self.id)
+
+    def activate(self):
+        if current_user.is_anonymous:
+            return UnauthorizedError("Need to be logged in to activate Personas")
+
+        if not self.associations[0].user == current_user:
+            raise UnauthorizedError("You can't activate foreign Personas")
+
+        for asc in Association.query.filter(Association.user==current_user, Association.active==True):
+            asc.active = False
+            db.session.add(asc)
+
+        self.associations[0].active = True
+        db.session.add(self.associations[0])
+        db.session.commit()
 
     def controlled(self):
         """Return True if Persona has private signing and encryption keys
@@ -163,6 +190,35 @@ class Persona(Serializable, db.Model):
         signature = b64decode(signature_b64)
         key_public = RsaPublicKey.Read(self.sign_public)
         return key_public.Verify(data, signature)
+
+
+class Group(Serializable, db.Model):
+    """Represents an entity that is comprised of users collaborating on stars
+
+    Attributes:
+        id (String): 32 byte ID of this group
+        description (String): Text decription of what this group is about
+        admin (Persona): Person that is allowed to make structural changes to the group_id
+
+    """
+
+    __tablename__ = "group"
+
+    id = db.Column(db.String(32), primary_key=True)
+    modified = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    username = db.Column(db.String(80))
+    description = db.Column(db.Text)
+
+    admin_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
+    admin = db.relationship("Persona", backref="groups", primaryjoin="persona.c.id==group.c.admin_id")
+
+    def __repr__(self):
+        try:
+            name = self.username.encode('utf-8')
+        except AttributeError:
+            name = "(name encode error)"
+
+        return "<Group @{} [{}]>".format(name, self.id[:6])
 
 
 class Certificate(db.Model, Serializable):

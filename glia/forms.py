@@ -75,3 +75,7 @@ class SignupForm(RedirectForm):
             rv = False
 
         return rv
+
+
+class CreateGroupForm(Form):
+    name = TextField('New group name', [validators.Required(), validators.Length(min=3, max=20)])
