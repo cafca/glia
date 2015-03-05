@@ -12,7 +12,7 @@ import iso8601
 import re
 
 from glia import app, db
-from flask import request, jsonify, abort, redirect, render_template, flash, url_for
+from flask import request, jsonify, abort, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, login_required, current_user
 from sqlalchemy import func
 from uuid import uuid4
@@ -122,6 +122,7 @@ def groups():
     return render_template("groups.html", form=form)
 
 
+@login_required
 @app.route('/groups/<id>', methods=["GET"])
 def group(id):
     """Display a group's profile"""
@@ -129,6 +130,10 @@ def group(id):
     if not group:
         flash("Group not found")
         return(redirect(url_for('groups')))
+
+    session['name'] = current_user.active_persona.username
+    session['room'] = group.username
+
     return render_template('group.html', group=group)
 
 

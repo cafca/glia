@@ -15,8 +15,11 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
+from gevent import monkey
 from real_ip_address import ProxiedRequest
 from humanize import naturaltime
+
+monkey.patch_all()
 
 # Initialize Flask app
 app = Flask('glia')
@@ -53,6 +56,7 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(userid):
     from glia.models import User
+    app.logger.debug("Loaded user {}".format(userid))
     return User.query.get(userid)
 
 # Setup loggers
@@ -78,3 +82,4 @@ app.logger.info(
 # Views need to be imported at the bottom to avoid circular import (see Flask docs)
 import glia.views
 import glia.myelin
+import glia.events
