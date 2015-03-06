@@ -33,3 +33,22 @@ def setup_loggers(loggers):
         l.setLevel(logging.DEBUG)
         l.addHandler(console_handler)
         l.propagate = False  # setting this to true triggers the root logger
+
+
+class AnonymousPersona(object):
+    """Used by Flask-Login"""
+
+    class active_persona():
+        username = "Anonymous"
+
+    def get_id(self):
+        return None
+
+    def is_active(self):
+        return False
+
+    def is_authenticated(self):
+        return False
+
+    def is_anonymous(self):
+        return False

@@ -14,8 +14,9 @@ import re
 from flask import request, jsonify, abort, redirect, current_app
 from sqlalchemy import func
 
-from glia.models import Persona, Souma, DBVesicle, Group
-from nucleus import ERROR
+from nucleus.nucleus.models import Persona, Souma, Group
+from nucleus.nucleus.vesicle import Vesicle
+from nucleus.nucleus import ERROR
 
 from .. import db
 
@@ -104,7 +105,7 @@ def index():
     soumas_online = -1
     personas_registered = db.session.query(func.count(Persona.id)).first()[0]
 
-    vesicles_stored = db.session.query(func.count(DBVesicle.id)).first()[0]
+    vesicles_stored = db.session.query(func.count(Vesicle.id)).first()[0]
 
     resp = {
         "server_status": [{

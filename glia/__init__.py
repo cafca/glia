@@ -17,12 +17,13 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from real_ip_address import ProxiedRequest
 from humanize import naturaltime
 
-from glia.helpers import setup_loggers
+from .database import db
+from .helpers import setup_loggers
+
 
 socketio = SocketIO()
 login_manager = LoginManager()
 notification_signals = Namespace()
-db = SQLAlchemy()
 
 
 def create_app():
@@ -47,6 +48,8 @@ def create_app():
     db.init_app(app)
     with app.app_context():
         if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
+            from nucleus.nucleus.models import *
+            from nucleus.nucleus.vesicle import *
             app.logger.info("Initializing database")
             db.create_all()
 
@@ -61,12 +64,12 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(userid):
-        from glia.models import User
+        from nucleus.nucleus.models import User
         return User.query.get(userid)
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
-    app.register_blueprint(api_blueprint)
+    # app.register_blueprint(api_blueprint)
     app.register_blueprint(web_blueprint)
 
     setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger])
