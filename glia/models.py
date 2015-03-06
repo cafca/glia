@@ -14,8 +14,11 @@ from base64 import b64encode, b64decode, urlsafe_b64decode, urlsafe_b64encode
 from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 from sqlalchemy.orm import backref
+from hashlib import sha256
+from flask.ext.login import UserMixin, current_user
 
 from glia import app, db
+from glia.helpers import UnauthorizedError
 
 
 class Serializable():
@@ -32,6 +35,86 @@ class Serializable():
     def json(self, exclude=[], include=None):
         """Return this object JSON encoded"""
         return json.dumps(self.export(exclude=exclude, include=include), indent=4)
+
+
+class Association(db.Model):
+    """Connects user accounts and personas"""
+    __tablename__ = "association"
+    left_id = db.Column(db.String(32), db.ForeignKey('user.id'), primary_key=True)
+    right_id = db.Column(db.String(32), db.ForeignKey('persona.id'), primary_key=True)
+    active = db.Column(db.Boolean(), default=False)
+    persona = db.relationship("Persona", backref="associations")
+
+
+class User(UserMixin, db.Model):
+    """A user of the website"""
+
+    __tablename__ = 'user'
+    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    email = db.Column(db.String(128))
+    created = db.Column(db.DateTime)
+    modified = db.Column(db.DateTime)
+    pw_hash = db.Column(db.String(32))
+    active = db.Column(db.Boolean, default=True)
+    authenticated = db.Column(db.Boolean(), default=True)
+    associations = db.relationship('Association', lazy="dynamic", backref="user")
+
+    def check_password(self, password):
+        """Return True if password matches user password
+
+        Args:
+            password (String): Password entered by user in login form
+        """
+        pw_hash = sha256(password).hexdigest()
+        return self.pw_hash == pw_hash
+
+    def set_password(self, password):
+        """Set password to a new value
+
+        Args:
+            password (String): Plaintext value of the new password
+        """
+        pw_hash = sha256(password).hexdigest()
+        self.pw_hash = pw_hash
+
+    def get_id(self):
+        return self.id
+
+    def is_authenticated(self):
+        return self.authenticated
+
+    def is_active(self):
+        return self.active
+
+    def is_anonymous(self):
+        return False
+
+    @property
+    def active_persona(self):
+        try:
+            return self.associations.filter_by(active=True).first().persona
+        except AttributeError:
+            # no persona associated
+            return None
+
+
+class AnonymousPersona(object):
+    """Used by Flask-Login"""
+
+    class active_persona():
+        username = "Anonymous"
+
+    def get_id(self):
+        return None
+
+    def is_active(self):
+        return False
+
+    def is_authenticated(self):
+        return False
+
+    def is_anonymous(self):
+        return False
 
 
 class Persona(Serializable, db.Model):
@@ -62,6 +145,21 @@ class Persona(Serializable, db.Model):
 
     def __str__(self):
         return "<Persona '{}' [{}]>".format(self.username.encode('utf-8'), self.id)
+
+    def activate(self):
+        if current_user.is_anonymous:
+            return UnauthorizedError("Need to be logged in to activate Personas")
+
+        if not self.associations[0].user == current_user:
+            raise UnauthorizedError("You can't activate foreign Personas")
+
+        for asc in Association.query.filter(Association.user==current_user, Association.active==True):
+            asc.active = False
+            db.session.add(asc)
+
+        self.associations[0].active = True
+        db.session.add(self.associations[0])
+        db.session.commit()
 
     def controlled(self):
         """Return True if Persona has private signing and encryption keys
@@ -113,30 +211,31 @@ class Persona(Serializable, db.Model):
         return key_public.Verify(data, signature)
 
 
-class Group(db.Model, Serializable):
-    """A group of Personas
+class Group(Serializable, db.Model):
+    """Represents an entity that is comprised of users collaborating on stars
 
     Attributes:
         id (String): 32 byte ID of this group
-        username (String): Public username of the group, max 80 bytes
         description (String): Text decription of what this group is about
         admin (Persona): Person that is allowed to make structural changes to the group_id
-        created (DateTime): Time at which the group was originally created *in glia*
 
     """
-    __tablename__ = 'group'
+
+    __tablename__ = "group"
 
     id = db.Column(db.String(32), primary_key=True)
+    modified = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     username = db.Column(db.String(80))
     description = db.Column(db.Text)
-    created = db.Column(db.DateTime, default=datetime.datetime.now())
+
     admin_id = db.Column(db.String(32), db.ForeignKey('persona.id'))
-    admin = db.relationship("Persona", primaryjoin="persona.c.id==group.c.admin_id")
+    admin = db.relationship("Persona", backref="groups", primaryjoin="persona.c.id==group.c.admin_id")
 
     def __repr__(self):
         try:
             name = self.username.encode('utf-8')
-        except ValueError:
+
+        except AttributeError:
             name = "(name encode error)"
 
         return "<Group @{} [{}]>".format(name, self.id[:6])

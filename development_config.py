@@ -14,6 +14,7 @@ import os
 from keyczar.keys import RsaPrivateKey
 
 DEBUG = True
+USE_DEBUG_SERVER = True
 LOG_LEVEL = logging.DEBUG
 
 # Define addresses

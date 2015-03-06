@@ -2,25 +2,23 @@
 
 {% block content %}
 
-<h1>{{sessions|length}} sessions</h1>
 
-<p>Your are {{request.remote_addr}}</p>
+{% if current_user.is_authenticated() %}
+    <h1>Hello {{ current_user.active_persona.username }}!</h1>
+    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+    <form action="{{ url_for('groups') }}" method="POST">
+        {{ groupform.hidden_tag() }}
+        {{ groupform.name }} {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
+        <button type="submit" class="btn">Go to new group</button>
+    </form>
+{% else %}
+    <h1>Hello, why don't you <a href="{{ url_for('login') }}">login</a>, or create a <a href="{{ url_for('signup') }}">new account?</a></h1>
+{% endif %}
 
-<table style="width: 900px">
-    <tr>
-        <th>user-id</th>
-        <th>session-id</th>
-        <th>hostname</th>
-        <th>last seen</th>
-    </tr>
-{% for session in sessions %}
-<tr>
-    <td>{{session.persona_id}}</td>
-    <td>{{session.session_id}}</td>
-    <td>{{session.hostname()}}</td>
-    <td>{{session.last_connected}}</td>
-</tr>
+<ul>
+{% for group in groups %}
+<li><a href="{{ url_for('group', id=group.id) }}">{{ group.username }}</a></li>
 {% endfor %}
-</table>
+</ul>
 
 {% endblock %}

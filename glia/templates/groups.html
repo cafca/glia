@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Create a new group</h1>
+
+<form action="{{ url_for('groups') }}" method="POST">
+    {{ groupform.hidden_tag() }}
+    {{ groupform.name.label }} {{ groupform.name }} {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
+    <button type="submit" class="btn">Go to new group</button>
+</form>
+
+{% endblock %}

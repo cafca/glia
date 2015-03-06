@@ -9,7 +9,7 @@
 """
 #!/usr/bin/python
 
-from glia import app, db
+from glia import app, db, socketio
 from gevent.wsgi import WSGIServer
 from sqlalchemy.exc import OperationalError
 
@@ -20,5 +20,10 @@ if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
 
 app.logger.info("Starting glia server on port {}".format(app.config['SERVER_PORT']))
 app.logger.info("Authentification is {}".format("enabled" if app.config["AUTH_ENABLED"] else "disabled"))
-glia_server = WSGIServer(('0.0.0.0', app.config['SERVER_PORT']), app)
-glia_server.serve_forever()
+
+if app.config['USE_DEBUG_SERVER']:
+    # flask development server
+    socketio.run(app, host=app.config['SERVER_HOST'], port=app.config['SERVER_PORT'], use_reloader=True)
+else:
+    glia_server = WSGIServer(('0.0.0.0', app.config['SERVER_PORT']), app)
+    glia_server.serve_forever()

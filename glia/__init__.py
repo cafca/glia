@@ -13,8 +13,13 @@ import sys
 from blinker import Namespace
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.socketio import SocketIO
+from flask.ext.login import LoginManager
+from gevent import monkey
 from real_ip_address import ProxiedRequest
 from humanize import naturaltime
+
+monkey.patch_all()
 
 # Initialize Flask app
 app = Flask('glia')
@@ -39,6 +44,24 @@ db = SQLAlchemy(app)
 # Setup Blinker namespace
 notification_signals = Namespace()
 
+# Setup websockets
+socketio = SocketIO()
+socketio.init_app(app)
+
+# Setup login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+from glia.models import AnonymousPersona
+login_manager.anonymous_user = AnonymousPersona
+
+
+@login_manager.user_loader
+def load_user(userid):
+    from glia.models import User
+    app.logger.debug("Loaded user {}".format(userid))
+    return User.query.get(userid)
+
 # Setup loggers
 # Flask is configured to route logging events only to the console if it is in debug
 # mode. This overrides this setting and enables a new logging handler which prints
@@ -62,3 +85,4 @@ app.logger.info(
 # Views need to be imported at the bottom to avoid circular import (see Flask docs)
 import glia.views
 import glia.myelin
+import glia.events

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block script %}
+var socket;
+$(document).ready(function(){
+    socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
+    socket.on('connect', function() {
+        socket.emit('joined', {path: location.pathname});
+    });
+    socket.on('status', function(data) {
+        $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
+        $('#chat').scrollTop($('#chat')[0].scrollHeight);
+    });
+    socket.on('message', function(data) {
+        $('#chat').val($('#chat').val() + data.msg + '\n');
+        $('#chat').scrollTop($('#chat')[0].scrollHeight);
+    });
+    $('#text').keypress(function(e) {
+        var code = e.keyCode || e.which;
+        if (code == 13) {
+            text = $('#text').val();
+            $('#text').val('');
+            socket.emit('text', {msg: text, path: location.pathname});
+        }
+    });
+});
+{% endblock %}
+
+{% block content %}
+
+<h1>Group {{group.username}}</h1>
+
+<p>Admin: {{group.admin.username}}</p>
+
+<textarea id="chat" cols="80" rows="20"></textarea><br><br>
+<input id="text" size="80" placeholder="Enter your message here"><br><br>
+<a href="{{ url_for('index') }}" onclick="socket.emit('left', {});">Leave this room</a>
+
+<p><a href="{{ url_for('index') }}">Back to index</a></p>
+
+{% endblock %}
