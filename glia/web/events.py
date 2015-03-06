@@ -37,7 +37,7 @@ def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
     join_room(message['path'])
-    emit('status', {'msg': session.get('name') + ' has entered the room.'}, room=message['path'])
+    emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message['path'])
 
 
 @socketio_authenticated_only

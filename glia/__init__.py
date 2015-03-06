@@ -62,15 +62,14 @@ def create_app():
     @login_manager.user_loader
     def load_user(userid):
         from glia.models import User
-        app.logger.debug("Loaded user {}".format(userid))
         return User.query.get(userid)
 
-    # from glia.api import app as api_blueprint
+    from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
+    app.register_blueprint(api_blueprint)
     app.register_blueprint(web_blueprint)
-    # app.register_blueprint(api_blueprint)
 
-    setup_loggers([app.logger, web_blueprint.logger], app.config['LOG_FORMAT'])
+    setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger])
 
     # Log configuration info
     app.logger.info(

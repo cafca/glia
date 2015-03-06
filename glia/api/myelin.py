@@ -9,14 +9,13 @@
 """
 import iso8601
 
-from glia import app, db
+from flask import request, jsonify
 from glia.models import DBVesicle, Persona
-from glia.views import error_message
 from nucleus import ERROR, InvalidSignatureError, PersonaNotFoundError
 from nucleus.vesicle import Vesicle
 
-from flask import request, Response, jsonify
-from flask.ext.sqlalchemy import models_committed
+from . import app
+from .views import error_message
 
 # Results returned per page
 PER_PAGE = 50
