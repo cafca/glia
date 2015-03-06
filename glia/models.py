@@ -98,6 +98,25 @@ class User(UserMixin, db.Model):
             return None
 
 
+class AnonymousPersona(object):
+    """Used by Flask-Login"""
+
+    class active_persona():
+        username = "Anonymous"
+
+    def get_id(self):
+        return None
+
+    def is_active(self):
+        return False
+
+    def is_authenticated(self):
+        return False
+
+    def is_anonymous(self):
+        return False
+
+
 class Persona(Serializable, db.Model):
     """A Persona is a user profile"""
 
