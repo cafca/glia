@@ -15,10 +15,11 @@ from keyczar.keys import RsaPrivateKey, RsaPublicKey
 from uuid import uuid4
 from sqlalchemy.orm import backref
 from hashlib import sha256
+from flask import current_app
 from flask.ext.login import UserMixin, current_user
 
-from glia import app, db
-from glia.helpers import UnauthorizedError
+from . import db
+from nucleus import UnauthorizedError
 
 
 class Serializable():
@@ -201,7 +202,7 @@ class Persona(Serializable, db.Model):
         return "{host}:{port}".format(host=self.host, port=self.port)
 
     def timeout(self):
-        return self.last_connected + app.config['SESSION_EXPIRATION_TIME']
+        return self.last_connected + current_app.config['SESSION_EXPIRATION_TIME']
 
     def verify(self, data, signature_b64):
         """ Verify a signature using RSA """

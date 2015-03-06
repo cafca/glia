@@ -11,15 +11,15 @@ import datetime
 import iso8601
 import re
 
-from glia import app, db
-from flask import request, jsonify, abort, redirect, render_template, flash, url_for, session
-from flask.ext.login import login_user, logout_user, login_required, current_user
+from flask import request, jsonify, abort, redirect, current_app
 from sqlalchemy import func
-from uuid import uuid4
 
-from models import Persona, Souma, DBVesicle, User, Group, Association
-from forms import LoginForm, SignupForm, CreateGroupForm
+from glia.models import Persona, Souma, DBVesicle, Group
 from nucleus import ERROR
+
+from .. import db
+
+from . import app
 
 
 def error_message(errors):
@@ -65,7 +65,7 @@ def authenticate():
     if re.match(rx, request.path):
         # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
         # header is set to 'https'
-        if not any([app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
+        if not any([current_app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
                 url = request.url
                 secure_url = url.replace("http://", "https://")
                 app.logger.info("Redirecting from {} to {}".format(url, secure_url))
@@ -91,130 +91,8 @@ def authenticate():
                     abort(401)
 
 
-@login_required
-@app.route('/', methods=["GET"])
-def index():
-    """Front page"""
-    groupform = CreateGroupForm()
-    groups = Group.query.all()
-
-    return render_template('index.html', groupform=groupform, groups=groups)
-
-
-@login_required
-@app.route('/groups/', methods=["GET", "POST"])
-def groups():
-    """Create groups"""
-    form = CreateGroupForm()
-
-    # Create a group
-    if form.validate_on_submit():
-        group_id = uuid4().hex
-        group = Group(
-            id=group_id,
-            username=form.name.data,
-            admin=current_user.active_persona)
-        db.session.add(group)
-        db.session.commit()
-        flash("Your new group is ready!")
-        return redirect(url_for('group', id=group_id))
-
-    return render_template("groups.html", form=form)
-
-
-@login_required
-@app.route('/groups/<id>', methods=["GET"])
-def group(id):
-    """Display a group's profile"""
-    group = Group.query.get(id)
-    if not group:
-        flash("Group not found")
-        return(redirect(url_for('groups')))
-
-    session['name'] = current_user.active_persona.username
-    session['room'] = group.username
-
-    return render_template('group.html', group=group)
-
-
-@app.route('/stars/', methods=["POST"])
-def create_star():
-    """Post a new Star"""
-    pass
-
-
-@app.route('/login', methods=["GET", "POST"])
-def login():
-    """Login a user"""
-    form = LoginForm()
-    if form.validate_on_submit():
-        app.logger.debug("Form validated fine")
-        form.user.authenticated = True
-        db.session.add(form.user)
-        db.session.commit()
-        login_user(form.user, remember=True)
-        flash("Welcome back, {}".format(form.user.active_persona.username))
-        return form.redirect(url_for('index'))
-    elif request.method == "POST":
-        app.logger.error("Invalid password")
-        form.password.errors.append("Invalid password.")
-    return render_template('login.html', form=form)
-
-
-@login_required
-@app.route('/logout', methods=["GET", "POST"])
-def logout():
-    """Logout a user"""
-    user = current_user
-    user.authenticated = False
-    db.session.add(user)
-    db.session.commit()
-    logout_user()
-    return redirect(url_for('index'))
-
-
-@app.route('/signup', methods=["GET", "POST"])
-def signup():
-    """Signup a new user"""
-    from uuid import uuid4
-    form = SignupForm()
-
-    if form.validate_on_submit():
-        created_dt = datetime.datetime.utcnow()
-        user = User(
-            email=form.email.data,
-            created=created_dt,
-            modified=created_dt)
-        user.set_password(form.password.data)
-        db.session.add(user)
-
-        created_dt = datetime.datetime.utcnow()
-        persona = Persona(
-            id=uuid4().hex,
-            username=form.username.data,
-            created=created_dt,
-            modified=created_dt)
-
-        db.session.add(persona)
-
-        ap = user.active_persona
-        if ap:
-            ap.association[0].active = False
-
-        association = Association(user=user, persona=persona, active=True)
-        db.session.add(association)
-        db.session.commit()
-
-        login_user(user, remember=True)
-
-        flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
-
-        return form.redirect(url_for('index'))
-    return render_template('signup.html', form=form)
-
-
 @app.route('/v0/', methods=["GET"])
-def api_index():
+def index():
     """
     Return server status.
     """
