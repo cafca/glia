@@ -7,7 +7,7 @@ from flask.ext.socketio import emit, join_room, leave_room
 
 from . import app
 from .. import socketio
-from glia.models import Group
+from nucleus.nucleus.models import Group
 
 
 def socketio_authenticated_only(f):

@@ -3,7 +3,7 @@ from flask import request, url_for, redirect
 from flask_wtf import Form
 from wtforms import TextField, HiddenField, PasswordField, validators
 
-from glia.models import User
+from nucleus.nucleus.models import User
 
 
 def is_safe_url(target):

@@ -15,7 +15,7 @@ from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, login_required, current_user
 from uuid import uuid4
 
-from glia.models import Persona, User, Group, Association
+from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation
 from forms import LoginForm, SignupForm, CreateGroupForm
 
 
@@ -45,6 +45,7 @@ def groups():
         db.session.add(group)
         db.session.commit()
         flash("Your new group is ready!")
+        app.logger.debug("{} created new group {}".format(current_user.active_persona, group))
         return redirect(url_for('.group', id=group_id))
 
     return render_template("groups.html", form=form)
@@ -57,6 +58,7 @@ def group(id):
     group = Group.query.get(id)
     if not group:
         flash("Group not found")
+        app.logger.warning("Group '{}' not found. User: {}".format(id, current_user))
         return(redirect(url_for('.groups')))
 
     session['name'] = current_user.active_persona.username
@@ -76,15 +78,15 @@ def login():
     """Login a user"""
     form = LoginForm()
     if form.validate_on_submit():
-        app.logger.debug("Form validated fine")
         form.user.authenticated = True
         db.session.add(form.user)
         db.session.commit()
         login_user(form.user, remember=True)
         flash("Welcome back, {}".format(form.user.active_persona.username))
+        app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
         return form.redirect(url_for('.index'))
     elif request.method == "POST":
-        app.logger.error("Invalid password")
+        app.logger.error("Invalid password for email '{}'".format(form.email.data))
         form.password.errors.append("Invalid password.")
     return render_template('login.html', form=form)
 
@@ -98,6 +100,7 @@ def logout():
     db.session.add(user)
     db.session.commit()
     logout_user()
+    app.logger.debug("{} logged out.".format(user))
     return redirect(url_for('.index'))
 
 
@@ -129,13 +132,14 @@ def signup():
         if ap:
             ap.association[0].active = False
 
-        association = Association(user=user, persona=persona, active=True)
+        association = PersonaAssociation(user=user, persona=persona, active=True)
         db.session.add(association)
         db.session.commit()
 
         login_user(user, remember=True)
 
         flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
+        app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         return form.redirect(url_for('.index'))
     return render_template('signup.html', form=form)

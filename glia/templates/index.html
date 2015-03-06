@@ -12,7 +12,7 @@
         <button type="submit" class="btn">Go to new group</button>
     </form>
 {% else %}
-    <h1>Hello, why don't you <a href="{{ url_for('.login') }}">login</a>, or create a <a href="{{ url_for('signup') }}">new account?</a></h1>
+    <h1>Hello, why don't you <a href="{{ url_for('.login') }}">login</a>, or create a <a href="{{ url_for('.signup') }}">new account?</a></h1>
 {% endif %}
 
 <ul>

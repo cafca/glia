@@ -10,9 +10,9 @@
 import iso8601
 
 from flask import request, jsonify
-from glia.models import DBVesicle, Persona
-from nucleus import ERROR, InvalidSignatureError, PersonaNotFoundError
-from nucleus.vesicle import Vesicle
+from nucleus.nucleus import ERROR, InvalidSignatureError, PersonaNotFoundError
+from nucleus.nucleus.models import Persona
+from nucleus.nucleus.vesicle import Vesicle
 
 from . import app
 from .views import error_message
@@ -32,7 +32,7 @@ def get_vesicle_or_error(vesicle_id):
         Response object containing a JSON encoded dictionary. It has a key
         `vesicles` containing a list with the JSON encoded Vesicle as its value
     """
-    v = DBVesicle.query.get(vesicle_id)
+    v = Vesicle.query.get(vesicle_id)
 
     if v is None:
         app.logger.warning("Requested <Vesicle [{}]> could not be found".format(vesicle_id[:6]))
@@ -113,7 +113,7 @@ def recipient(recipient_id):
 
     # Get inbox
     from sqlalchemy import asc
-    inbox = recipient.inbox.order_by(asc(DBVesicle.created))
+    inbox = recipient.inbox.order_by(asc(Vesicle.created))
 
     offset_string = request.args.get('offset')
     offset = None
@@ -124,7 +124,7 @@ def recipient(recipient_id):
             app.logger.error("Error parsing offset '{}' ({})".format(offset_string, e))
             return error_message([ERROR["INVALID_VALUE"]("Error parsing offset")])
         else:
-            inbox = inbox.filter(DBVesicle.modified > offset).order_by(DBVesicle.modified)
+            inbox = inbox.filter(Vesicle.modified > offset).order_by(Vesicle.modified)
 
     # Inbox is empty
     if inbox is None:

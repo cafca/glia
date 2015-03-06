@@ -23,7 +23,8 @@ GLIA_CONFIG_OLD_VALUE = os.getenv("GLIA_CONFIG", "../development_config.py")
 os.putenv("GLIA_CONFIG", "../unittest_config.py")
 
 from glia import app
-from glia.models import Souma
+from nucleus.nucleus.models import Souma
+
 
 class GliaTestCase(unittest.TestCase):
     def setUp(self):
@@ -44,7 +45,7 @@ class GliaTestCase(unittest.TestCase):
         rand = hexlify(Random.new().read(16))
         auth = self.souma.sign("".join([self.souma.id, rand, path, payload]))
         return [("Glia-Rand", rand), ("Glia-Auth", auth), ("Glia-Souma", self.souma.id)]
-        
+
     def register_souma(self):
         """Assign a new Souma to self and register it with the Glia server"""
         self.souma = Souma(id=uuid4().hex[:32])
