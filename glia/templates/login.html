@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1>Login to your account</h1>
-<form method="POST" action="{{ url_for('login') }}">
+<form method="POST" action="{{ url_for('.login') }}">
     {{ form.hidden_tag() }}
     {{ form.email.label }} {{ form.email(size=20) }} {% if form.email.errors %} {{ form.email.errors }} {% endif %}
     {{ form.password.label }} {{ form.password(size=20) }}{% if form.password.errors %} {{ form.password.errors }} {% endif %}

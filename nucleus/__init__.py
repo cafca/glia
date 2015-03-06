@@ -19,3 +19,6 @@ class InvalidSignatureError(Exception):
 
 class PersonaNotFoundError(Exception):
     pass
+
+class UnauthorizedError(Exception):
+    pass

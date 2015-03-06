@@ -5,7 +5,8 @@ from flask import session, request
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
 
-from glia import app, socketio
+from . import app
+from .. import socketio
 from glia.models import Group
 
 

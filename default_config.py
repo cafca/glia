@@ -13,7 +13,7 @@ import logging
 DEBUG = False
 
 LOG_FORMAT = (
-    '%(name)s :: %(module)s [%(pathname)s:%(lineno)d]\n' +
-    '%(message)s\n')
+    '%(name)s :: %(module)s [%(filename)s:%(lineno)d] ' +
+    '%(message)s')
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)

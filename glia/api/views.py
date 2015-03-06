@@ -117,7 +117,7 @@ def groups():
         db.session.add(group)
         db.session.commit()
         flash("Your new group is ready!")
-        return redirect(url_for('group', id=group_id))
+        return redirect(url_for('.group', id=group_id))
 
     return render_template("groups.html", form=form)
 
@@ -129,7 +129,7 @@ def group(id):
     group = Group.query.get(id)
     if not group:
         flash("Group not found")
-        return(redirect(url_for('groups')))
+        return(redirect(url_for('.groups')))
 
     session['name'] = current_user.active_persona.username
     session['room'] = group.username
@@ -170,7 +170,7 @@ def logout():
     db.session.add(user)
     db.session.commit()
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('.index'))
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -209,7 +209,7 @@ def signup():
 
         flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
 
-        return form.redirect(url_for('index'))
+        return form.redirect(url_for('.index'))
     return render_template('signup.html', form=form)
 
 

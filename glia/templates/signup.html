@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form method="POST" action="{{ url_for('signup') }}">
+<form method="POST" action="{{ url_for('.signup') }}">
     {{ form.hidden_tag() }}</p
     <p>{{ form.username.label }} {{ form.username(size=20) }} {{ form.username.errors }}</p>
     <p>{{ form.email.label }} {{ form.email(size=20) }} {{ form.email.errors }}</p>
