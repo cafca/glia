@@ -14,11 +14,10 @@ from flask import Flask
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
 from flask.ext.sqlalchemy import SQLAlchemy
-from real_ip_address import ProxiedRequest
 from humanize import naturaltime
 
 from .database import db
-from .helpers import setup_loggers
+from .helpers import setup_loggers, ProxiedRequest
 
 
 socketio = SocketIO()
