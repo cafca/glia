@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h1><a href="{{ url_for('web.index') }}">Home</a> > Signup for a new account</h1>
 <form method="POST" action="{{ url_for('.signup') }}">
     {{ form.hidden_tag() }}</p
     <p>{{ form.username.label }} {{ form.username(size=20) }} {{ form.username.errors }}</p>

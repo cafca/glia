@@ -11,16 +11,17 @@ import datetime
 
 from . import app
 from .. import db
-from flask import request, redirect, render_template, flash, url_for, session
-from flask.ext.login import login_user, logout_user, login_required, current_user
+from functools import wraps
+from flask import request, redirect, render_template, flash, url_for, session, current_app
+from flask.ext.login import login_user, logout_user, current_user, login_required
 from uuid import uuid4
 
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation
 from forms import LoginForm, SignupForm, CreateGroupForm
 
 
-@login_required
 @app.route('/', methods=["GET"])
+@login_required
 def index():
     """Front page"""
     groupform = CreateGroupForm()
@@ -29,8 +30,8 @@ def index():
     return render_template('index.html', groupform=groupform, groups=groups)
 
 
-@login_required
 @app.route('/groups/', methods=["GET", "POST"])
+@login_required
 def groups():
     """Create groups"""
     form = CreateGroupForm()
@@ -51,8 +52,8 @@ def groups():
     return render_template("groups.html", form=form)
 
 
-@login_required
 @app.route('/groups/<id>', methods=["GET"])
+@login_required
 def group(id):
     """Display a group's profile"""
     group = Group.query.get(id)

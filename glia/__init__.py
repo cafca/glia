@@ -18,7 +18,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from humanize import naturaltime
 
 from .database import db
-from .helpers import setup_loggers, ProxiedRequest
+from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 
 
 socketio = SocketIO()
@@ -48,8 +48,8 @@ def create_app(log_info=True):
     db.init_app(app)
     with app.app_context():
         if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
-            from nucleus.nucleus.models import *
-            from nucleus.nucleus.vesicle import *
+            import nucleus.nucleus.models
+            import nucleus.nucleus.vesicle
             app.logger.info("Initializing database")
             db.create_all()
 
@@ -58,9 +58,9 @@ def create_app(log_info=True):
 
     # Setup login manager
     login_manager.init_app(app)
-
-    # from glia.models import AnonymousPersona
-    # login_manager.anonymous_user = AnonymousPersona
+    login_manager.anonymous_user = AnonymousPersona
+    from flask import redirect, url_for
+    login_manager.unauthorized = lambda: redirect(url_for('web.login'))
 
     @login_manager.user_loader
     def load_user(userid):
