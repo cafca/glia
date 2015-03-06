@@ -8,6 +8,7 @@
     :copyright: (c) 2013 by Vincent Ahrend.
 """
 import logging
+import os
 
 from blinker import Namespace
 from flask import Flask
@@ -25,7 +26,7 @@ login_manager = LoginManager()
 notification_signals = Namespace()
 
 
-def create_app():
+def create_app(log_info=True):
     """Initialize Flask app"""
     app = Flask('glia')
     app.config.from_object("default_config")
@@ -73,10 +74,12 @@ def create_app():
 
     setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger])
 
-    # Log configuration info
-    app.logger.info(
-        "\n".join(["{:=^80}".format(" GLIA CONFIGURATION "),
-                  "{:>12}: {}".format("host", app.config['SERVER_NAME']),
-                  "{:>12}: {}".format("database", app.config['SQLALCHEMY_DATABASE_URI']), ]))
+    if log_info:
+        # Log configuration info
+        app.logger.info(
+            "\n".join(["{:=^80}".format(" GLIA CONFIGURATION "),
+                      "{:>12}: {}".format("host", app.config['SERVER_NAME']),
+                      "{:>12}: {}".format("database", app.config['SQLALCHEMY_DATABASE_URI']),
+                      "{:>12}: {}".format("config", os.environ["GLIA_CONFIG"]), ]))
 
     return app

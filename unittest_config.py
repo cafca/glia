@@ -15,9 +15,13 @@ from keyczar.keys import RsaPrivateKey
 # DEBUG = True
 
 # Define addresses
-SERVER_HOST = 'app.soma'
+SERVER_HOST = 'app.souma'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
+
+SQLALCHEMY_DATABASE_URI = "sqlite:///../unittest_server.db"
+TESTING = True
+DEBUG = True
 
 # Load server cert
 SERVER_KEY_FILE = "./server_private.key"

@@ -79,7 +79,7 @@ def authenticate():
             souma_id = request.headers.get("Glia-Souma", default="")
             souma = Souma.query.get(souma_id)
             if souma is None:
-                app.logger.info("Authentication failed: Souma {} not found.".format(souma_id))
+                app.logger.warning("Authentication failed: Souma {} not found.".format(souma_id))
                 rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
                 rsp.status = "401 Souma {} not found.".format(souma_id)
                 return rsp
@@ -529,9 +529,9 @@ def soumas():
             app.logger.warning("Error registering new Souma {}\n{}".format(souma, e))
             resp["meta"]["errors"].append(ERROR["INVALID_SIGNATURE"])
         else:
-            app.logger.info("Registered new {}".format(souma))
             db.session.add(souma)
             db.session.commit()
+            app.logger.info("Registered new {}".format(souma))
 
     return jsonify(resp)
 
