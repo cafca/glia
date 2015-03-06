@@ -5,7 +5,7 @@ var socket;
 $(document).ready(function(){
     socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
     socket.on('connect', function() {
-        socket.emit('joined', {});
+        socket.emit('joined', {path: location.pathname});
     });
     socket.on('status', function(data) {
         $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
@@ -20,7 +20,7 @@ $(document).ready(function(){
         if (code == 13) {
             text = $('#text').val();
             $('#text').val('');
-            socket.emit('text', {msg: text});
+            socket.emit('text', {msg: text, path: location.pathname});
         }
     });
 });
@@ -30,7 +30,7 @@ $(document).ready(function(){
 
 <h1>Group {{group.username}}</h1>
 
-<p>Admin: {{group.admin}}</p>
+<p>Admin: {{group.admin.username}}</p>
 
 <textarea id="chat" cols="80" rows="20"></textarea><br><br>
 <input id="text" size="80" placeholder="Enter your message here"><br><br>

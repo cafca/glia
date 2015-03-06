@@ -1,10 +1,12 @@
 import functools
+import re
 
 from flask import session, request
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
 
 from glia import app, socketio
+from glia.models import Group
 
 
 def socketio_authenticated_only(f):
@@ -17,14 +19,24 @@ def socketio_authenticated_only(f):
     return wrapped
 
 
+def get_group_from_path(path):
+    rx = "/groups/(.{32})"
+    rx_match = re.match(rx, path)
+    if rx_match:
+        group_id = rx_match.group(1)
+        rv = Group.query.get(group_id)
+    else:
+        rv = None
+    return rv
+
+
 @socketio_authenticated_only
 @socketio.on('joined', namespace='/groups')
 def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
-    room = session.get('room')
-    join_room(room)
-    emit('status', {'msg': session.get('name') + ' has entered the room.'}, room=room)
+    join_room(message['path'])
+    emit('status', {'msg': session.get('name') + ' has entered the room.'}, room=message['path'])
 
 
 @socketio_authenticated_only
@@ -32,9 +44,8 @@ def joined(message):
 def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
-    room = session.get('room')
-    app.logger.debug("{}: {}".format(session.get('name'), message['msg']))
-    emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room)
+    app.logger.debug("{} {}: {}".format(message['path'], session.get('name'), message['msg']))
+    emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=message['path'])
 
 
 @socketio_authenticated_only
@@ -42,9 +53,8 @@ def text(message):
 def left(message):
     """Sent by clients when they leave a room.
     A status message is broadcast to all people in the room."""
-    room = session.get('room')
-    leave_room(room)
-    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=room)
+    leave_room(message['path'])
+    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=message['path'])
 
 
 @socketio.on_error(namespace='/groups')
