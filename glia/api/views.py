@@ -138,7 +138,7 @@ def find_personas():
     # TODO: Verify correct hash format
 
     # Find corresponding personas
-    result = Persona.query.filter_by(email_hash=email_hash).all()
+    result = Persona.query.filter_by(email=email_hash).all()
 
     resp = {'personas': list()}
     if result:
@@ -149,11 +149,8 @@ def find_personas():
                 "id",
                 "username",
                 "modified",
-                "host",
-                "port",
                 "crypt_public",
-                "sign_public",
-                "connectable"])
+                "sign_public"])
             p_dict["email_hash"] = email_hash
             resp['personas'].append(p_dict)
     else:
@@ -176,8 +173,6 @@ def personas(persona_id):
             resp["personas"] = list()
             resp["personas"].append(p.export(include=[
                 "id",
-                "host",
-                "port",
                 "username",
                 "modified",
                 "crypt_public",
@@ -231,16 +226,13 @@ def personas(persona_id):
             modified=modified,
             sign_public=new_persona["sign_public"],
             crypt_public=new_persona["crypt_public"],
-            email_hash=new_persona["email_hash"],
-            host=request.remote_addr,
-            port=new_persona["reply_to"],
+            email=new_persona["email_hash"],
         )
         p.reset()
         db.session.add(p)
         db.session.commit()
 
-        app.logger.info("New {} registered from {}:{}".format(
-            p, p.host, p.port))
+        app.logger.info("New {} registered".format(p))
 
         return jsonify({
             "sessions": [{
@@ -402,8 +394,8 @@ def session_lookup():
             resp["sessions"].append({
                 "id": p_id,
                 "soumas": [{
-                    "host": p.host if p else None,
-                    "port": p.port if p else None
+                    "host": None,
+                    "port": None
                 }]
             })
             if p:
@@ -449,8 +441,6 @@ def session_lookup():
         # Create new session
         session_id = p.reset()
         p.last_connected = datetime.datetime.now()
-        p.host = request.remote_addr
-        p.port = data['reply_to']
         db.session.add(p)
         db.session.commit()
 

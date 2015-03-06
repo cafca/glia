@@ -69,7 +69,7 @@ def create_app():
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
-    # app.register_blueprint(api_blueprint)
+    app.register_blueprint(api_blueprint)
     app.register_blueprint(web_blueprint)
 
     setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger])
