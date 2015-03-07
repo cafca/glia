@@ -39,10 +39,13 @@ def groups():
     # Create a group
     if form.validate_on_submit():
         group_id = uuid4().hex
+        group_created = datetime.datetime.utcnow()
         group = Group(
             id=group_id,
             username=form.name.data,
-            admin=current_user.active_persona)
+            admin=current_user.active_persona,
+            created=group_created,
+            modified=group_created)
         db.session.add(group)
         db.session.commit()
         flash("Your new group is ready!")

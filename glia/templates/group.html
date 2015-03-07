@@ -32,7 +32,10 @@ $(document).ready(function(){
 
 <p>Admin: {{group.admin.username}}</p>
 
-<textarea id="chat" cols="80" rows="20"></textarea><br><br>
+<textarea id="chat" cols="80" rows="20">
+{% for star in group.profile.index %}{{ star.author.username }}: {{ star.text }}
+{% endfor %}
+</textarea><br><br>
 <input id="text" size="80" placeholder="Enter your message here"><br><br>
 <a href="{{ url_for('.index') }}" onclick="socket.emit('left', {});">Leave this room</a>
 
