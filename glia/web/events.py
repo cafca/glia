@@ -1,13 +1,15 @@
 import functools
 import re
 
+from datetime import datetime
 from flask import session, request
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
+from uuid import uuid4
 
 from . import app
-from .. import socketio
-from nucleus.nucleus.models import Group
+from .. import socketio, db
+from nucleus.nucleus.models import Group, Star
 
 
 def socketio_authenticated_only(f):
@@ -45,6 +47,25 @@ def joined(message):
 def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
+
+    star_created = datetime.utcnow()
+    star_id = uuid4().hex
+    # import pdb; pdb.set_trace()
+    star = Star(
+        id=star_id,
+        text=message['msg'],
+        author=current_user.active_persona,
+        created=star_created,
+        modified=star_created)
+    db.session.add(star)
+
+    group = get_group_from_path(message["path"])
+    assert isinstance(group, Group)
+    group.profile.index.append(star)
+    db.session.add(group)
+
+    db.session.commit()
+
     app.logger.debug("{} {}: {}".format(message['path'], session.get('name'), message['msg']))
     emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=message['path'])
 
