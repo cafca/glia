@@ -9,12 +9,18 @@
 """
 import datetime
 import iso8601
+import re
 
-from glia import app, db
-from flask import request, jsonify, abort, redirect
+from flask import request, jsonify, abort, redirect, current_app
 from sqlalchemy import func
-from models import Persona, Souma, DBVesicle
-from nucleus import ERROR
+
+from nucleus.nucleus.models import Persona, Souma, Group
+from nucleus.nucleus.vesicle import Vesicle
+from nucleus.nucleus import ERROR
+
+from .. import db
+
+from . import app
 
 
 def error_message(errors):
@@ -55,32 +61,35 @@ def valid_souma(souma_id):
 def authenticate():
     """Validate request has secure connection and valid souma"""
 
-    # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
-    # header is set to 'https'
-    if not any([app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
-            url = request.url
-            secure_url = url.replace("http://", "https://")
-            app.logger.info("Redirecting from {} to {}".format(url, secure_url))
-            return redirect(secure_url, code=301)
+    # Match API requests
+    rx = "/v0/"
+    if re.match(rx, request.path):
+        # HTTPS requests are not visible as such from within Heroku. Instead, the HTTP_X_FORWARDED_PROTO
+        # header is set to 'https'
+        if not any([current_app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
+                url = request.url
+                secure_url = url.replace("http://", "https://")
+                app.logger.info("Redirecting from {} to {}".format(url, secure_url))
+                return redirect(secure_url, code=301)
 
-    if (request.path == '/v0/soumas/' and request.method == "POST"):
-        # Allowed to access this resource without known souma id
-        pass
-    else:
-        souma_id = request.headers.get("Glia-Souma", default="")
-        souma = Souma.query.get(souma_id)
-        if souma is None:
-            app.logger.info("Authentication failed: Souma {} not found.".format(souma_id))
-            rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
-            rsp.status = "401 Souma {} not found.".format(souma_id)
-            return rsp
+        if (request.path == '/v0/soumas/' and request.method == "POST"):
+            # Allowed to access this resource without known souma id
+            pass
+        else:
+            souma_id = request.headers.get("Glia-Souma", default="")
+            souma = Souma.query.get(souma_id)
+            if souma is None:
+                app.logger.warning("Authentication failed: Souma {} not found.".format(souma_id))
+                rsp = error_message([ERROR["SOUMA_NOT_FOUND"](souma_id)])
+                rsp.status = "401 Souma {} not found.".format(souma_id)
+                return rsp
 
-        try:
-            souma.authentic_request(request)
-        except ValueError as e:
-            app.logger.warning("Request failed authentication: {}\n{}".format(request, e))
-            if app.config["AUTH_ENABLED"]:
-                abort(401)
+            try:
+                souma.authentic_request(request)
+            except ValueError as e:
+                app.logger.warning("Request failed authentication: {}\n{}".format(request, e))
+                if app.config["AUTH_ENABLED"]:
+                    abort(401)
 
 
 @app.route('/v0/', methods=["GET"])
@@ -96,7 +105,7 @@ def index():
     soumas_online = -1
     personas_registered = db.session.query(func.count(Persona.id)).first()[0]
 
-    vesicles_stored = db.session.query(func.count(DBVesicle.id)).first()[0]
+    vesicles_stored = db.session.query(func.count(Vesicle.id)).first()[0]
 
     resp = {
         "server_status": [{
@@ -129,7 +138,7 @@ def find_personas():
     # TODO: Verify correct hash format
 
     # Find corresponding personas
-    result = Persona.query.filter_by(email_hash=email_hash).all()
+    result = Persona.query.filter_by(email=email_hash).all()
 
     resp = {'personas': list()}
     if result:
@@ -140,11 +149,8 @@ def find_personas():
                 "id",
                 "username",
                 "modified",
-                "host",
-                "port",
                 "crypt_public",
-                "sign_public",
-                "connectable"])
+                "sign_public"])
             p_dict["email_hash"] = email_hash
             resp['personas'].append(p_dict)
     else:
@@ -167,8 +173,6 @@ def personas(persona_id):
             resp["personas"] = list()
             resp["personas"].append(p.export(include=[
                 "id",
-                "host",
-                "port",
                 "username",
                 "modified",
                 "crypt_public",
@@ -222,16 +226,13 @@ def personas(persona_id):
             modified=modified,
             sign_public=new_persona["sign_public"],
             crypt_public=new_persona["crypt_public"],
-            email_hash=new_persona["email_hash"],
-            host=request.remote_addr,
-            port=new_persona["reply_to"],
+            email=new_persona["email_hash"],
         )
         p.reset()
         db.session.add(p)
         db.session.commit()
 
-        app.logger.info("New {} registered from {}:{}".format(
-            p, p.host, p.port))
+        app.logger.info("New {} registered".format(p))
 
         return jsonify({
             "sessions": [{
@@ -242,6 +243,137 @@ def personas(persona_id):
 
     elif request.method == "DELETE":
         pass
+
+
+@app.route('/v0/groups/', methods=["GET", "POST"])
+def find_groups():
+    """Return top groups or group search results
+
+    The 'POST'-method expects a JSON formatted request body with a key 'query'
+    containing a search term at least three characters long.
+    """
+
+    errors = list()
+    results = None
+
+    if request.method == "GET":
+        # ------------------------
+        # --- Retrieve top groups
+
+        app.logger.info("Returning top groups")
+
+        results = Group.query.limit(10).all()
+
+    elif request.method == "POST":
+        # ------------------------
+        # --- Validate query
+
+        if "query" not in request.json or len(request.json['query']) == 0:
+            errors.append(ERROR["MISSING_PARAMETER"]("search query"))
+            app.logger.warning("Group search request missing query parameter")
+
+        query = request.json['query'][0]
+
+        if not isinstance(query, basestring) or len(query) < 3:
+            errors.append(ERROR["INVALID_VALUE"]("search query too short"))
+            app.logger.info("Group search query too short (was '{}')".format(query))
+
+        else:
+            app.logger.info("Group search request for query '{}'".format(query))
+
+            if query == "null":
+                query = None
+
+            # ------------------------
+            # --- Retrieve results
+
+            results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
+
+    # ------------------------
+    # --- Compile return value
+
+    if errors:
+        return jsonify({"meta": {"errors": errors}})
+    else:
+        results = [result.export() for result in results]
+        return jsonify({"groups": results})
+
+
+@app.route('/v0/groups/<group_id>/', methods=["GET", "PUT"])
+def groups(group_id):
+    """Access and modify group records on the server"""
+
+    if request.method == "GET":
+        # Return group info
+        g = Group.query.get(group_id)
+        resp = dict()
+        if g:
+            resp["groups"] = list()
+            resp["groups"].append(g.export(include=[
+                "id",
+                "username",
+                "description",
+                "created",
+                "admin_id"]))
+        else:
+            resp["meta"] = dict()
+            resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](group_id), ]
+
+        return jsonify(resp)
+
+    elif request.method == "PUT":
+        # Store new group record on server
+
+        # Validate request data
+        if "groups" not in request.json or not isinstance(request.json["groups"], list):
+            app.logger.error("Malformed request: {}".format(request.json))
+            return error_message([ERROR["MISSING_KEY"]("groups")])
+
+        new_group = request.json['groups'][0]
+
+        # Check required fields
+        required_fields = [
+            'group_id', 'username', 'description', 'admin_id']
+        errors = list()
+        for field in required_fields:
+            if field not in new_group:
+                errors.append(ERROR["MISSING_KEY"](field))
+
+        # Check for duplicate identifier
+        if "group_id" in new_group:
+            g_existing = Group.query.get(new_group["group_id"])
+            if g_existing:
+                errors.append(ERROR["DUPLICATE_ID"](new_group["group_id"]))
+
+        # Retrieve admin record
+        admin = Persona.query.get(new_group["admin_id"])
+        if admin is None:
+            errors.append(ERROR["DUPLICATE_ID"](new_group["admin_id"]))
+
+        # Return in case of errors
+        if errors:
+            return error_message(errors)
+
+        # Register new group
+        g = Group(
+            id=new_group["group_id"],
+            username=new_group["username"],
+            description=new_group["description"],
+            admin=admin,
+        )
+        db.session.add(g)
+        db.session.commit()
+
+        app.logger.info("New group '{}' registered".format(g.username.encode('utf-8')))
+
+        return jsonify({
+            "groups": [{
+                "id": g.id,
+                "username": g.username,
+                "description": g.description,
+                "created": g.created.isoformat()
+            }]
+        })
 
 
 @app.route('/v0/sessions/', methods=["GET", "POST"])
@@ -262,8 +394,8 @@ def session_lookup():
             resp["sessions"].append({
                 "id": p_id,
                 "soumas": [{
-                    "host": p.host if p else None,
-                    "port": p.port if p else None
+                    "host": None,
+                    "port": None
                 }]
             })
             if p:
@@ -309,8 +441,6 @@ def session_lookup():
         # Create new session
         session_id = p.reset()
         p.last_connected = datetime.datetime.now()
-        p.host = request.remote_addr
-        p.port = data['reply_to']
         db.session.add(p)
         db.session.commit()
 
@@ -399,9 +529,9 @@ def soumas():
             app.logger.warning("Error registering new Souma {}\n{}".format(souma, e))
             resp["meta"]["errors"].append(ERROR["INVALID_SIGNATURE"])
         else:
-            app.logger.info("Registered new {}".format(souma))
             db.session.add(souma)
             db.session.commit()
+            app.logger.info("Registered new {}".format(souma))
 
     return jsonify(resp)
 

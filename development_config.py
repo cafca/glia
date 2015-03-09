@@ -14,7 +14,8 @@ import os
 from keyczar.keys import RsaPrivateKey
 
 DEBUG = True
-LOG_LEVEL = logging.INFO
+USE_DEBUG_SERVER = True
+LOG_LEVEL = logging.DEBUG
 
 # Define addresses
 SERVER_HOST = 'app.souma.io'

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
     run_server
@@ -7,18 +8,21 @@
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
-#!/usr/bin/python
 
-from glia import app, db
+from gevent import monkey
+monkey.patch_all()
+
+from glia import create_app, socketio
 from gevent.wsgi import WSGIServer
-from sqlalchemy.exc import OperationalError
+from socketio.server import SocketIOServer
 
-# Initialize database
-if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
-    app.logger.info("Initializing database")
-    db.create_all()
+app = create_app()
 
-app.logger.info("Starting glia server on port {}".format(app.config['SERVER_PORT']))
-app.logger.info("Authentification is {}".format("enabled" if app.config["AUTH_ENABLED"] else "disabled"))
-glia_server = WSGIServer(('0.0.0.0', app.config['SERVER_PORT']), app)
-glia_server.serve_forever()
+
+if __name__ == '__main__':
+    if app.config['USE_DEBUG_SERVER']:
+        # flask development server
+        socketio.run(app, host=app.config['SERVER_HOST'], port=app.config['SERVER_PORT'], use_reloader=True)
+    else:
+        glia_server = SocketIOServer(('0.0.0.0', app.config['SERVER_PORT']), app)
+        glia_server.serve_forever()
