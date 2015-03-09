@@ -80,6 +80,7 @@ def create_app(log_info=True):
             "\n".join(["{:=^80}".format(" GLIA CONFIGURATION "),
                       "{:>12}: {}".format("host", app.config['SERVER_NAME']),
                       "{:>12}: {}".format("database", app.config['SQLALCHEMY_DATABASE_URI']),
-                      "{:>12}: {}".format("config", os.environ["GLIA_CONFIG"]), ]))
+                      "{:>12}: {}".format("config", os.environ["GLIA_CONFIG"]),
+                      "{:>12}: {}".format("debug_serv", app.config["USE_DEBUG_SERVER"]), ]))
 
     return app
