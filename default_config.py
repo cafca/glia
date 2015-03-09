@@ -10,5 +10,6 @@
 import datetime
 
 DEBUG = False
+USE_DEBUG_SERVER = False
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
