@@ -15,6 +15,7 @@ from functools import wraps
 from flask import request, redirect, render_template, flash, url_for, session, current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from uuid import uuid4
+from sqlalchemy.exc import IntegrityError
 
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation
 from forms import LoginForm, SignupForm, CreateGroupForm
@@ -64,9 +65,6 @@ def group(id):
         flash("Group not found")
         app.logger.warning("Group '{}' not found. User: {}".format(id, current_user))
         return(redirect(url_for('.groups')))
-
-    session['name'] = current_user.active_persona.username
-    session['room'] = group.username
 
     return render_template('group.html', group=group)
 
@@ -138,12 +136,18 @@ def signup():
 
         association = PersonaAssociation(user=user, persona=persona, active=True)
         db.session.add(association)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError, e:
+            app.logger.error("Error during signup: {}".format(e))
+            db.session.rollback()
+            flash("Sorry! There was an error creating your account. Please try again.", "error")
+            return render_template('signup.html', form=form)
+        else:
+            login_user(user, remember=True)
 
-        login_user(user, remember=True)
-
-        flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
-        app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
+            flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
+            app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         return form.redirect(url_for('.index'))
     return render_template('signup.html', form=form)

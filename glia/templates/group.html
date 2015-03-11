@@ -1,29 +1,9 @@
 {% extends "base.html" %}
 
 {% block script %}
-var socket;
-$(document).ready(function(){
-    socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
-    socket.on('connect', function() {
-        socket.emit('joined', {path: location.pathname});
-    });
-    socket.on('status', function(data) {
-        $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
-        $('#chat').scrollTop($('#chat')[0].scrollHeight);
-    });
-    socket.on('message', function(data) {
-        $('#chat').val($('#chat').val() + data.msg + '\n');
-        $('#chat').scrollTop($('#chat')[0].scrollHeight);
-    });
-    $('#text').keypress(function(e) {
-        var code = e.keyCode || e.which;
-        if (code == 13) {
-            text = $('#text').val();
-            $('#text').val('');
-            socket.emit('text', {msg: text, path: location.pathname});
-        }
-    });
-});
+window.room_id = "{{ group.profile.id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
 {% endblock %}
 
 {% block content %}
@@ -32,13 +12,26 @@ $(document).ready(function(){
 
 <p>Admin: {{group.admin.username}}</p>
 
-<textarea id="chat" cols="80" rows="20">
-{% for star in group.profile.index %}{{ star.author.username }}: {{ star.text }}
-{% endfor %}
-</textarea><br><br>
-<input id="text" size="80" placeholder="Enter your message here"><br><br>
-<a href="{{ url_for('.index') }}" onclick="socket.emit('left', {});">Leave this room</a>
+<div id="chat">
+    <div id="connecting">
+        <div class="wrap">Connecting to socket.io server</div>
+    </div>
 
-<p><a href="{{ url_for('.index') }}">Back to index</a></p>
+    <div id="messages">
+        <div id="nicknames"><span>Online:</span></div>
+        <div id="lines">
+            {% for star in group.profile.index %}
+            <p>{{ star.author.username }}: {{ star.text }}</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <form id="send-message">
+        <input id="message">
+        <button>Send</button>
+    </form>
+</div>
+
+<p><a href="{{ url_for('web.index') }}">Back to index</a></p>
 
 {% endblock %}
