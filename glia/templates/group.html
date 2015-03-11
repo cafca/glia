@@ -13,8 +13,8 @@ window.user_name = "{{  current_user.active_persona.username }}";
     <p>Admin: {{group.admin.username}}</p>
 </section>
 
-<section id="chat" class="row2 col8 w4 h4">
-    <h3>Talk</h3>
+<section id="chat" class="row2 col8 w5 h4">
+    <h3>Talk with {{ group.username }}</h3>
     <div id="connecting">
         <div class="wrap">Connecting to socket.io server</div>
     </div>
@@ -23,7 +23,7 @@ window.user_name = "{{  current_user.active_persona.username }}";
         <div id="nicknames"><span>Online:</span></div>
         <div id="lines" class="h3">
             {% for star in group.profile.index %}
-            <p>{{ star.author.username }}: {{ star.text }}</p>
+            <p><span>{{ star.author.username }}:</span>{{ star.text }}</p>
             {% endfor %}
         </div>
     </div>

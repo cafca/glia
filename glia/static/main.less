@@ -144,11 +144,18 @@ article {
         #lines {
             overflow: scroll;
             background-color: white;
+
+            // Author name in chat
+            p > span {
+                font-weight: bold;
+                color: grey;
+                margin-right: 5px;
+            }
         }
 
         #send-message {
             margin-top: 3px;
-            width: @4cols;
+            width: @5cols;
 
             button {
                 width: @1cols;
@@ -156,7 +163,7 @@ article {
             }
 
             #message {
-                width: @3cols;
+                width: @4cols;
             }
         }
     }

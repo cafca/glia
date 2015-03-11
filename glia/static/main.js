@@ -46,11 +46,11 @@ $(document).ready(function(){
     });
 
     socket.on('message', function(data) {
-        append_timeline(data.msg);
+        append_timeline(data.username, data.msg);
     });
 
     function append_timeline (from, msg) {
-        $('#lines').append($('<p>').append($('<b>').text(from), msg));
+        $('#lines').append($('<p>').append($('<span>').text(from), msg));
         scroll();
     }
 

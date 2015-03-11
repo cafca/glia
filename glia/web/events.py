@@ -83,7 +83,10 @@ def text(message):
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info("{} {}: {}".format(map, current_user.active_persona.username, star.text))
-            emit('message', {'msg': current_user.active_persona.username + ':' + message['msg']}, room=message["room_id"])
+            data = {
+                'username': current_user.active_persona.username,
+                'msg': message['msg']}
+            emit('message', data, room=message["room_id"])
 
     if errors:
         emit('error', errors)
