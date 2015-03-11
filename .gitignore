@@ -3,5 +3,6 @@ server.db
 server_private.key
 .env
 *.pyc
+*.css
 
 secret_key

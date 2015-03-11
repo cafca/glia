@@ -1,15 +1,25 @@
+# -*- coding: utf-8 -*-
+"""
+    glia.events
+    ~~~~~
+
+    Socket.IO server for event handling
+
+    :copyright: (c) 2015 by Vincent Ahrend.
+"""
+
 import functools
-import re
 
 from datetime import datetime
-from flask import session, request
+from flask import request
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
 from uuid import uuid4
+from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
-from nucleus.nucleus.models import Group, Star
+from nucleus.nucleus.models import Starmap, Star
 
 
 def socketio_authenticated_only(f):
@@ -22,24 +32,18 @@ def socketio_authenticated_only(f):
     return wrapped
 
 
-def get_group_from_path(path):
-    rx = "/groups/(.{32})"
-    rx_match = re.match(rx, path)
-    if rx_match:
-        group_id = rx_match.group(1)
-        rv = Group.query.get(group_id)
-    else:
-        rv = None
-    return rv
-
-
 @socketio_authenticated_only
 @socketio.on('joined', namespace='/groups')
 def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
-    join_room(message['path'])
-    emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message['path'])
+    if "room_id" not in message:
+        message["room_id"] = "base"
+
+    join_room(message["room_id"])
+    app.logger.info("{} joined group chat {}".format(current_user.active_persona, message['room_id']))
+    emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
+    emit('nicknames', [current_user.active_persona.username, ], room=message["room_id"])
 
 
 @socketio_authenticated_only
@@ -50,7 +54,15 @@ def text(message):
 
     star_created = datetime.utcnow()
     star_id = uuid4().hex
-    # import pdb; pdb.set_trace()
+    errors = ""
+
+    if len(message['msg']) == 0:
+        errors += "Can't send empty message. "
+
+    map = Starmap.query.get(message["room_id"])
+    if map is None:
+        errors += "Chat room could not be found. "
+
     star = Star(
         id=star_id,
         text=message['msg'],
@@ -59,15 +71,25 @@ def text(message):
         modified=star_created)
     db.session.add(star)
 
-    group = get_group_from_path(message["path"])
-    assert isinstance(group, Group)
-    group.profile.index.append(star)
-    db.session.add(group)
+    map.index.append(star)
+    db.session.add(map)
 
-    db.session.commit()
+    if errors == "":
+        try:
+            db.session.commit()
+        except SQLAlchemyError, e:
+            db.session.rollback()
+            app.logger.error("Error adding to chat starmap: {}".format(e))
+            errors += "An error occured saving your message. Please try again. "
+        else:
+            app.logger.info("{} {}: {}".format(map, current_user.active_persona.username, star.text))
+            data = {
+                'username': current_user.active_persona.username,
+                'msg': message['msg']}
+            emit('message', data, room=message["room_id"])
 
-    app.logger.debug("{} {}: {}".format(message['path'], session.get('name'), message['msg']))
-    emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=message['path'])
+    if errors:
+        emit('error', errors)
 
 
 @socketio_authenticated_only
@@ -75,10 +97,10 @@ def text(message):
 def left(message):
     """Sent by clients when they leave a room.
     A status message is broadcast to all people in the room."""
-    leave_room(message['path'])
-    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=message['path'])
+    leave_room(message['room_id'])
+    emit('status', {'msg': current_user.active_persona.username + ' has left the room.'}, room=message["room_id"])
 
 
 @socketio.on_error(namespace='/groups')
 def chat_error_handler(e):
-    print('An error has occurred: ' + str(e))
+    app.logger.error('An error has occurred: ' + str(e))
