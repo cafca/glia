@@ -128,6 +128,8 @@ article {
     }
 
     #chat {
+        background-color: darken(white, 7%);
+        padding: 3px;
 
         &.connected > #connecting {
             display: none;
@@ -140,10 +142,22 @@ article {
         }
 
         #lines {
-            height: 350px;
-            width: 500px;
             overflow: scroll;
-            border: 1px solid grey;
+            background-color: white;
+        }
+
+        #send-message {
+            margin-top: 3px;
+            width: @4cols;
+
+            button {
+                width: @1cols;
+                margin-left: 2px;
+            }
+
+            #message {
+                width: @3cols;
+            }
         }
     }
 }
