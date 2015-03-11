@@ -37,6 +37,9 @@ def socketio_authenticated_only(f):
 def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
+    if "room_id" not in message:
+        message["room_id"] = "base"
+
     join_room(message["room_id"])
     app.logger.info("{} joined group chat {}".format(current_user.active_persona, message['room_id']))
     emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
