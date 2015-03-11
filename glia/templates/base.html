@@ -1,7 +1,7 @@
 <!doctype html>
 <head>
     <title>{%block title %}glia{% endblock %}</title>
-    <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='main.less') }}">
+    <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
 </head>
 <body>
     <article class="{% block layout_name %}{% endblock %}">
@@ -12,9 +12,9 @@
         {% block content %}{% endblock %}
         </div>
     </article>
-    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='less.js') }}"></script>
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='main.js') }}"></script>
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script type="text/javascript" charset="utf-8">{% block script %}{% endblock %}</script>
 </body>
