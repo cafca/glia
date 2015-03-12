@@ -4,6 +4,7 @@
 window.room_id = "{{ group.profile.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
+window.group_id = "{{  group.id }}";
 {% endblock %}
 
 {% block content %}
@@ -23,7 +24,17 @@ window.user_name = "{{  current_user.active_persona.username }}";
             <div id="nicknames"><span>Online:</span></div>
             <div id="lines">
                 {% for star in group.profile.index %}
-                <p><span>{{ star.author.username }}:</span>{{ star.text }}</p>
+                <p>
+<!--                     <button id="rktik-upvote-{{star.id}}" type="button" class="btn btn-inverse btn-xs">
+                        <span class="glyphicon glyphicon-flash" aria-hidden="true"></span>
+                        <span class="rktik-upvote-count">{{star.upvote_count}}</span>
+                    </button> -->
+
+
+                    <button class="oneup btn btn-mini {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %}" id="oneup-{{star.id}}" type="button">
+                        <span class="oneup-count" id="oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+                    </button>
+                    <span>{{ star.author.username }}:</span>{{ star.text }}</p>
                 {% endfor %}
                 <p id="connecting">Connecting to Glia chat</p>
             </div>
