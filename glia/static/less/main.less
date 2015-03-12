@@ -18,13 +18,13 @@ html > body {
 }
 
 html, body, .main-container, .main-container > .row {
-    height: 100%;
+    // height: 100%;
 }
 
 .header {
     margin-top: 128px;
-    float: none;
-    display: table-cell;
+    // float: none;
+    // display: table-cell;
 
     ul {
         list-style: none;
@@ -61,36 +61,25 @@ html, body, .main-container, .main-container > .row {
 }
 
 .main {
-    float: none;
-    display: table-cell;
+    // float: none;
+    // display: table-cell;
 
-    section {
-
-        .connected > .connecting {
-            display: none;
-        }
+    .rktik-welcome {
+        margin: 0 0 2em !important;
     }
 
-    .welcome {
-        margin: 3em 0 2em !important;
-    }
-
-    #chat {
-        background-color: darken(white, 7%);
-
-        &.connected > #connecting {
-            display: none;
-        }
-
-        #connecting {
-            position: absolute;
-            top: 20px;
-            right: 50px;
-        }
+    .rktik-chat {
 
         #lines {
             overflow: scroll;
             background-color: white;
+            height: 20em;
+            border-top: 1px solid darken(white, 7%);
+            border-bottom: 1px solid darken(white, 7%);
+
+            p {
+                line-height: 10px;
+            }
 
             // Author name in chat
             p > span {
@@ -98,19 +87,18 @@ html, body, .main-container, .main-container > .row {
                 color: grey;
                 margin-right: 5px;
             }
+
+            &.connected > #connecting {
+                display: none;
+            }
         }
 
         #send-message {
-            margin-top: 3px;
-            // width: @5cols;
-
-            button {
-                // width: @1cols;
-                margin-left: 2px;
-            }
+            margin: .5em 0 .5em;
+            width: 100%;
 
             #message {
-                // width: @4cols;
+                width: 70%;
             }
         }
     }

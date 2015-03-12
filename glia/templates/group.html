@@ -7,31 +7,33 @@ window.user_name = "{{  current_user.active_persona.username }}";
 {% endblock %}
 
 {% block content %}
-
-<section class="row1 col1">
-    <h1><a href="{{ url_for('web.index') }}">Home</a> > Group {{group.username}}</h1>
-    <p>Admin: {{group.admin.username}}</p>
+<section class="row">
+    <div class="col-md-4">
+        <h1><a href="{{ url_for('web.index') }}">Home</a> > Group {{group.username}}</h1>
+        <p>Admin: {{group.admin.username}}</p>
+    </div>
 </section>
 
-<section id="chat" class="row2 col8 w5 h4">
-    <h3>Talk with {{ group.username }}</h3>
-    <div id="connecting">
-        <div class="wrap">Connecting to socket.io server</div>
-    </div>
+<section class="row">
+    <div class="rktik-chat panel panel-default col-md-3 col-md-push-8">
+        <h3>Talk with {{ group.username }}</h3>
 
-    <div id="messages">
-        <div id="nicknames"><span>Online:</span></div>
-        <div id="lines" class="h3">
-            {% for star in group.profile.index %}
-            <p><span>{{ star.author.username }}:</span>{{ star.text }}</p>
-            {% endfor %}
+
+        <div id="messages">
+            <div id="nicknames"><span>Online:</span></div>
+            <div id="lines">
+                {% for star in group.profile.index %}
+                <p><span>{{ star.author.username }}:</span>{{ star.text }}</p>
+                {% endfor %}
+                <p id="connecting">Connecting to Glia chat</p>
+            </div>
         </div>
-    </div>
 
-    <form id="send-message">
-        <input id="message" autocomplete="off">
-        <button>Send</button>
-    </form>
+        <form id="send-message" class="form-inline">
+            <input id="message" autocomplete="off" class="form-control input-sm">
+            <button class="btn btn-sm">Send</button>
+        </form>
+    </div>
 </section>
 
 {% endblock %}
