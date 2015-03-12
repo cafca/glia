@@ -1,20 +1,88 @@
-<!doctype html>
-<head>
-    <title>{%block title %}glia{% endblock %}</title>
-    <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='main.less') }}">
-</head>
-<body>
-    <article class="{% block layout_name %}{% endblock %}">
-        {% for message in get_flashed_messages() %}
-            <div class='flash'><span>{{message}}</span></div>
-        {% endfor %}
-        <div id="container">
-        {% block content %}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{%block title %}glia web{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- Glia Styles -->
+    <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    {% for message in get_flashed_messages() %}
+        <div class='flash'><span>{{message}}</span></div>
+    {% endfor %}
+
+    <div class="container-fluid main-container">
+        <div class="row">
+            <div class="header col-md-1">
+            <ul>
+                {% for as in current_user.associations %}
+                    <li>
+                        {% if as.right_id == current_user.active_persona.id %}
+                        <a href="#" class="active">
+                            <p><i class="fa fa-circle fa-2xd"></i> <span class="caption"><strong>{{as.persona.username}}</strong></span></p>
+                        </a>
+
+                        {% else %}
+                        <a href="#">
+                            <p><i class="fa fa-circle-blank fa-2xd"></i> <span class="caption"><strong>{{as.persona.username}}</strong></span></p>
+                        </a>
+                        {% endif %}
+                    </li>
+
+                    {% for group in as.persona.groups_followed %}
+                    <a href="{{ url_for('.group', id=group.id) }}"><li>{{group.username}}</li></a>
+                    {% endfor %}
+                {% endfor %}
+
+                <a href="#"><li>
+                    <p><i class="fa fa-cogs fa-2xd"></i> <span class="caption">Debug</span></p>
+                </li></a>
+                <a href="{{url_for('.logout')}}"><li>
+                    <p><i class="fa fa-power-off fa-2xd"></i> <span class="caption">Logout</span></p>
+                </li></a>
+            </ul>
+            </div>
+
+
+
+            <div class="main cold-md-11">
+            {% block content %}{% endblock %}
+            </div>
         </div>
-    </article>
-    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='less.js') }}"></script>
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    </div>
+
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <!-- Socket.IO -->
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='main.js') }}"></script>
-    <script type="text/javascript" charset="utf-8">{% block script %}{% endblock %}</script>
-</body>
+    <!-- Less Compiler -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
+    <!-- Glia JS -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="text/javascript" charset="utf-8">{% block script %}
+    window.room_id = "0";
+    window.user_id = "{{ current_user.active_persona.id }}";
+    window.user_name = "{{  current_user.active_persona.username }}";
+    {% endblock %}</script>
+  </body>
+</html>

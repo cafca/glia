@@ -13,7 +13,7 @@ $(document).ready(function(){
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/groups')
     socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
     socket.on('connect', function() {
-        $('#chat').addClass('connected');
+        $('#lines').addClass('connected');
         socket.emit('joined', {'room_id': window.room_id});
         scroll();
     });

@@ -1,24 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="rktik-welcome">
+  <h1>Hello {{ current_user.active_persona.username }}!</h1>
+  <form action="{{ url_for('.groups') }}" method="POST" class="form-inline">
+    {{ groupform.hidden_tag() }}
+    <span class="form-group>">
+      <input name="name" type="text" value="" class="form-control" />
+      {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
+    </span>
+    <button type="submit" class="btn">Go to new group</button>
+  </form>
+</div>
 
-
-{% if current_user.is_authenticated() %}
-    <h1>Hello {{ current_user.active_persona.username }}!</h1>
-    <p><a href="{{ url_for('.logout') }}">Logout</a></p>
-    <form action="{{ url_for('.groups') }}" method="POST">
-        {{ groupform.hidden_tag() }}
-        {{ groupform.name }} {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
-        <button type="submit" class="btn">Go to new group</button>
-    </form>
-{% else %}
-    <h1>Hello, why don't you <a href="{{ url_for('.login') }}">login</a>, or create a <a href="{{ url_for('.signup') }}">new account?</a></h1>
-{% endif %}
-
-<ul>
 {% for group in groups %}
-<li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a></li>
+<div class="row">
+  <div class="col-md-2">
+    <p><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a></h3>
+  </div>
+  <div class="col-md-2 follow-group">
+    <button id="follow-group-{{group.id}}" class="btn btn-default btn-sm">Follow</button>
+  </div>
+</div>
 {% endfor %}
-</ul>
 
 {% endblock %}

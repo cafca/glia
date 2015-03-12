@@ -1,0 +1,109 @@
+
+//
+//  MAIN STYLES
+//
+
+
+html > body {
+    font-family: Delicious;
+    background-color: darken(white, 1%);
+}
+
+.flash {
+    width: 100%;
+    background-color: rgba(161, 221, 255, 0.36);
+    border-bottom: 1px solid rgba(86, 120, 139, 0.28);
+
+    span { margin: 5px 10px; }
+}
+
+html, body, .main-container, .main-container > .row {
+    // height: 100%;
+}
+
+.header {
+    margin-top: 128px;
+    // float: none;
+    // display: table-cell;
+
+    ul {
+        list-style: none;
+        padding: 0;
+        line-height: 12px;
+        margin-bottom: .5em;
+        height: 100%;
+
+        .active a { color: white; }
+
+        li p { margin: 0 5px; }
+
+        a:hover li { background-color: darken(white, 1%); }
+    }
+
+    .caption {
+        // color: darken(white, 1%);
+        color: lighten(black, 60%);
+        transition: 1s;
+    }
+
+    :hover .caption {
+        color: lighten(black, 40%)
+    }
+
+    a {
+        color: lighten(black, 40%);
+        text-decoration: none;
+    }
+    a:hover {
+        color: black;
+        text-decoration: none;
+    }
+}
+
+.main {
+    // float: none;
+    // display: table-cell;
+
+    .rktik-welcome {
+        margin: 0 0 2em !important;
+    }
+
+    .rktik-chat {
+
+        #lines {
+            overflow: scroll;
+            background-color: white;
+            height: 20em;
+            border-top: 1px solid darken(white, 7%);
+            border-bottom: 1px solid darken(white, 7%);
+
+            p {
+                line-height: 10px;
+            }
+
+            // Author name in chat
+            p > span {
+                font-weight: bold;
+                color: grey;
+                margin-right: 5px;
+            }
+
+            &.connected > #connecting {
+                display: none;
+            }
+        }
+
+        #send-message {
+            margin: .5em 0 .5em;
+            width: 100%;
+
+            #message {
+                width: 80%;
+            }
+
+            button {
+                width: 18%;
+            }
+        }
+    }
+}
