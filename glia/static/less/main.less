@@ -9,11 +9,22 @@ html > body {
     background-color: darken(white, 1%);
 }
 
-header {
-    position: absolute;
-    width: 128px;
-    top: 128px;
-    bottom: 0;
+.flash {
+    width: 100%;
+    background-color: rgba(161, 221, 255, 0.36);
+    border-bottom: 1px solid rgba(86, 120, 139, 0.28);
+
+    span { margin: 5px 10px; }
+}
+
+html, body, .main-container, .main-container > .row {
+    height: 100%;
+}
+
+.header {
+    margin-top: 128px;
+    float: none;
+    display: table-cell;
 
     ul {
         list-style: none;
@@ -30,7 +41,8 @@ header {
     }
 
     .caption {
-        color: darken(white, 1%);
+        // color: darken(white, 1%);
+        color: lighten(black, 60%);
         transition: 1s;
     }
 
@@ -48,21 +60,19 @@ header {
     }
 }
 
-article {
-
-    .flash {
-        width: 100%;
-        background-color: rgba(161, 221, 255, 0.36);
-        border-bottom: 1px solid rgba(86, 120, 139, 0.28);
-
-        span { margin: 5px 10px; }
-    }
+.main {
+    float: none;
+    display: table-cell;
 
     section {
 
         .connected > .connecting {
             display: none;
         }
+    }
+
+    .welcome {
+        margin: 3em 0 2em !important;
     }
 
     #chat {
