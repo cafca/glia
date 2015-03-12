@@ -13,13 +13,17 @@ import functools
 from datetime import datetime
 from flask import request
 from flask.ext.login import current_user
-from flask.ext.socketio import emit, join_room, leave_room
+from flask.ext.socketio import emit, join_room, leave_room, send
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
 from nucleus.nucleus.models import Starmap, Star
+from nucleus.nucleus import notification_signals, PersonaNotFoundError
+
+# Create blinker signal namespace
+local_model_changed = notification_signals.signal('local-model-changed')
 
 
 def socketio_authenticated_only(f):
@@ -99,6 +103,63 @@ def left(message):
     A status message is broadcast to all people in the room."""
     leave_room(message['room_id'])
     emit('status', {'msg': current_user.active_persona.username + ' has left the room.'}, room=message["room_id"])
+
+
+@socketio_authenticated_only
+@socketio.on('upvote', namespace='/groups')
+def oneup(message):
+    """
+    Issue a 1up to a Star using the currently activated Persona
+
+    Args:
+        star_id (string): ID of the Star
+    """
+    error_message = ""
+    star_id = message.get('star_id')
+    group_id = message.get('group_id')
+
+    if star_id is None or group_id is None:
+        error_message += "Upvote event missing parameter. "
+
+    if len(error_message) == 0:
+        star = Star.query.get_or_404(star_id)
+        try:
+            oneup = star.toggle_oneup()
+        except PersonaNotFoundError:
+            error_message += "Please activate a Persona for upvoting. "
+            oneup = None
+
+    data = dict()
+    if len(error_message) > 0:
+        data = {
+            "meta": {
+                "oneup_count": star.oneup_count(),
+                "error_message": error_message
+            }
+        }
+    else:
+        data = {
+            "meta": {
+                "oneup_count": star.oneup_count(),
+            },
+            "oneups": [{
+                "id": oneup.id,
+                "author": oneup.author.id,
+                "state_value": oneup.state,
+                "state_name": oneup.get_state()
+            }]
+        }
+
+        message_oneup = {
+            "author_id": oneup.author.id,
+            "action": "insert" if len(oneup.vesicles) == 0 else "update",
+            "object_id": oneup.id,
+            "object_type": "Oneup",
+            "recipients": star.author.contacts.all() + [star.author, ]
+        }
+
+        local_model_changed.send(oneup, message=message_oneup)
+        send(data, room=group_id, json=True)
 
 
 @socketio.on_error(namespace='/groups')
