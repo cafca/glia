@@ -1,20 +1,45 @@
-<!doctype html>
-<head>
-    <title>{%block title %}glia{% endblock %}</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{%block title %}glia web{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+
+    <!-- Glia Styles -->
     <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
-</head>
-<body>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
     <article class="{% block layout_name %}{% endblock %}">
         {% for message in get_flashed_messages() %}
             <div class='flash'><span>{{message}}</span></div>
         {% endfor %}
-        <div id="container">
+        <div class="container">
         {% block content %}{% endblock %}
         </div>
     </article>
-    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <!-- Socket.IO -->
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <!-- Less Compiler -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
+    <!-- Glia JS -->
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script type="text/javascript" charset="utf-8">{% block script %}{% endblock %}</script>
-</body>
+  </body>
+</html>

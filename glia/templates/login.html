@@ -1,13 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1><a href="{{ url_for('web.index') }}">Home</a> > Login to your account</h1>
+<h1><a href="{{ url_for('web.index') }}">Home</a> > Login</h1>
+
+
+<div class="row">
+<div class="col-xs-4">
+
+<p class="lead">Go ahead. I am waiting for you.</p>
 
 <form method="POST" action="{{ url_for('.login') }}">
-    {{ form.hidden_tag() }}
-    {{ form.email.label }} {{ form.email(size=20) }} {% if form.email.errors %} {{ form.email.errors }} {% endif %}
-    {{ form.password.label }} {{ form.password(size=20) }}{% if form.password.errors %} {{ form.password.errors }} {% endif %}
-    <input type="submit" value="Go">
+  {{ form.hidden_tag() }}
+  <div class="form-group {% if form.email.errors %}has-error{% endif %}">
+    {% if form.email.errors %}
+      <label for="email">{% for error in form.email.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="email">Email address</label>
+    {% endif %}
+    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+  </div>
+
+  <div class="form-group {% if form.password.errors %}has-error{% endif %}">
+    {% if form.password.errors %}
+      <label for="password">{% for error in form.password.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="password">Password</label>
+    {% endif %}
+    <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+  </div>
+  <button type="submit" class="btn btn-default">Login now</button>
 </form>
-<p>No account? <a href="{{ url_for('web.signup') }}">get one</a>!</p>
+</div>
+<div class="col-xs-4">
+
+<p class="lead">No account? <a href="{{ url_for('web.signup') }}">Get one</a>, now!</p>
+
+</div>
+</div>
 {% endblock %}

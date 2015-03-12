@@ -2,7 +2,6 @@
 
 {% block content %}
 
-
 {% if current_user.is_authenticated() %}
     <h1>Hello {{ current_user.active_persona.username }}!</h1>
     <p><a href="{{ url_for('.logout') }}">Logout</a></p>
@@ -12,13 +11,11 @@
         <button type="submit" class="btn">Go to new group</button>
     </form>
 {% else %}
-    <h1>Hello, why don't you <a href="{{ url_for('.login') }}">login</a>, or create a <a href="{{ url_for('.signup') }}">new account?</a></h1>
 {% endif %}
 
-<ul>
-{% for group in groups %}
-<li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a></li>
-{% endfor %}
-</ul>
-
+    <ul>
+    {% for group in groups %}
+    <li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a></li>
+    {% endfor %}
+    </ul>
 {% endblock %}
