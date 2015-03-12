@@ -128,6 +128,10 @@ def signup():
             created=created_dt,
             modified=created_dt)
 
+        # Create keypairs
+        app.logger.info("Generating private keys for {}".format(persona))
+        persona.generate_keys(form.password.data)
+
         db.session.add(persona)
 
         ap = user.active_persona
