@@ -24,6 +24,36 @@
     <![endif]-->
   </head>
   <body>
+    <header>
+        <ul>
+            {% for as in current_user.associations %}
+                <li>
+                    {% if as.right_id == current_user.active_persona.id %}
+                    <a href="#" class="active">
+                        <p><i class="fa fa-circle fa-2xd"></i> <span class="caption"><strong>{{as.persona.username}}</strong></span></p>
+                    </a>
+
+                    {% else %}
+                    <a href="#">
+                        <p><i class="fa fa-circle-blank fa-2xd"></i> <span class="caption"><strong>{{as.persona.username}}</strong></span></p>
+                    </a>
+                    {% endif %}
+                </li>
+
+                {% for group in as.persona.groups_followed %}
+                <a href="{{ url_for('.group', id=group.id) }}"><li>{{group.username}}</li></a>
+                {% endfor %}
+            {% endfor %}
+
+            <a href="#"><li>
+                <p><i class="fa fa-cogs fa-2xd"></i> <span class="caption">Debug</span></p>
+            </li></a>
+            <a href="{{url_for('.logout')}}"><li>
+                <p><i class="fa fa-power-off fa-2xd"></i> <span class="caption">Logout</span></p>
+            </li></a>
+        </ul>
+    </header>
+
     <article class="{% block layout_name %}{% endblock %}">
         {% for message in get_flashed_messages() %}
             <div class='flash'><span>{{message}}</span></div>
