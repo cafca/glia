@@ -9,14 +9,14 @@ window.group_id = "{{  group.id }}";
 
 {% block content %}
 <section class="row">
-    <div class="col-md-4">
+    <div class="col-sm-4">
         <h1><a href="{{ url_for('web.index') }}">Home</a> > Group {{group.username}}</h1>
         <p>Admin: {{group.admin.username}}</p>
     </div>
 </section>
 
 <section class="row">
-    <div class="rktik-chat panel panel-default col-md-3 col-md-push-8">
+    <div class="rktik-chat panel panel-default col-sm-3 col-sm-push-8">
         <h3>Talk with {{ group.username }}</h3>
 
 
