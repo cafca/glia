@@ -17,7 +17,7 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 
-from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation
+from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star
 from forms import LoginForm, SignupForm, CreateGroupForm
 
 
@@ -66,7 +66,10 @@ def group(id):
         app.logger.warning("Group '{}' not found. User: {}".format(id, current_user))
         return(redirect(url_for('.groups')))
 
-    return render_template('group.html', group=group)
+    star_candidates = group.profile.index.filter(Star.oneup_count>0)
+    stars = sorted(star_candidates, key=Star.hot, reverse=True)[:15]
+
+    return render_template('group.html', group=group, stars=stars)
 
 
 @app.route('/stars/', methods=["POST"])

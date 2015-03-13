@@ -28,6 +28,17 @@ window.group_id = "{{  group.id }}";
             <button class="btn btn-sm">Send</button>
         </form>
     </div>
+
+    <div class="star-listing col-sm-7 col-sm-pull-2">
+    <ul>
+    {% for star in stars %}
+    <li>{{star.oneup_count()}} {{star.author.username}}: {{star.text}}</li>
+    {% endfor %}
+    </ul>
+
+    </div>
 </section>
+
+<section class
 
 {% endblock %}
