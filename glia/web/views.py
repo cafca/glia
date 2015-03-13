@@ -114,6 +114,7 @@ def logout():
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     """Signup a new user"""
+    import sendgrid
     from uuid import uuid4
     form = SignupForm()
 
@@ -132,6 +133,16 @@ def signup():
             username=form.username.data,
             created=created_dt,
             modified=created_dt)
+
+        # Send confirmation email
+        sg = sendgrid.SendGridClient('YOUR_SENDGRID_USERNAME', 'YOUR_SENDGRID_PASSWORD')
+
+        message = sendgrid.Mail()
+        message.add_to("{} <{}>".format(form.username.data, form.email.data))
+        message.set_subject('Please confirm your email address')
+        message.set_text(render_template("email/signup_confirmation.html", user=user))
+        message.set_from('RKTIK Email Confirmation')
+        status, msg = sg.send(message)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -160,3 +171,24 @@ def signup():
 
         return form.redirect(url_for('.index'))
     return render_template('signup.html', form=form)
+
+
+@login_required
+@app.route('/validate', methods=["GET", "POST"])
+def signup_validation():
+    """Validate a user's email adress"""
+
+    signup_code = request.args.get('signup_code')
+    if current_user.active:
+        flash("Your account is already activated. You're good to go.")
+    if not current_user.valid_signup_code(signup_code):
+        app.logger.error("User {} tried validating with invalid signup code {}.".format(current_user, signup_code))
+        current_user.send_validation_email()
+        flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
+    else:
+        app.logger.info("{} activated their account.".format(current_user))
+        current_user.active = True
+        current_user.signup_code = None
+        db.session.add(current_user)
+        db.session.commit()
+    return redirect('.index')
