@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% import "macros/chat.html" as chat_macros %}
+
 {% block script %}
 window.room_id = "{{ group.profile.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
@@ -19,23 +21,7 @@ window.group_id = "{{  group.id }}";
     <div class="rktik-chat panel panel-default col-sm-3 col-sm-push-8">
         <h3>Talk with {{ group.username }}</h3>
 
-
-        <div id="messages">
-            <div id="nicknames"><span>Online:</span></div>
-            <div id="lines">
-                {% for star in group.profile.index %}
-                <div class="line">
-                    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
-                        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-                    </button>
-                    <span>
-                        <span class="author_name">{{ star.author.username }}:</span>{{ star.text }}
-                    </span>
-                </div>
-                {% endfor %}
-                <p id="connecting">Connecting to Glia chat</p>
-            </div>
-        </div>
+        {{ chat_macros.chat(group.profile) }}
 
         <form id="send-message" class="form-inline">
             <input id="message" autocomplete="off" class="form-control input-sm">
