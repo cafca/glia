@@ -9,16 +9,16 @@
 """
 import datetime
 
-from . import app
-from .. import db
-from functools import wraps
 from flask import request, redirect, render_template, flash, url_for, session, current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from forms import LoginForm, SignupForm, CreateGroupForm
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 
+from . import app
+from .. import db
+from glia.web.helpers import send_validation_email
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star
-from forms import LoginForm, SignupForm, CreateGroupForm
 
 
 @app.route('/', methods=["GET"])
@@ -134,15 +134,7 @@ def signup():
             created=created_dt,
             modified=created_dt)
 
-        # Send confirmation email
-        sg = sendgrid.SendGridClient('YOUR_SENDGRID_USERNAME', 'YOUR_SENDGRID_PASSWORD')
-
-        message = sendgrid.Mail()
-        message.add_to("{} <{}>".format(form.username.data, form.email.data))
-        message.set_subject('Please confirm your email address')
-        message.set_text(render_template("email/signup_confirmation.html", user=user))
-        message.set_from('RKTIK Email Confirmation')
-        status, msg = sg.send(message)
+        send_validation_email(user)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -183,7 +175,7 @@ def signup_validation():
         flash("Your account is already activated. You're good to go.")
     if not current_user.valid_signup_code(signup_code):
         app.logger.error("User {} tried validating with invalid signup code {}.".format(current_user, signup_code))
-        current_user.send_validation_email()
+        send_validation_email(current_user)
         flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
     else:
         app.logger.info("{} activated their account.".format(current_user))
