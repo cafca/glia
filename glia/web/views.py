@@ -84,6 +84,7 @@ def login():
         db.session.add(form.user)
         db.session.commit()
         login_user(form.user, remember=True)
+        session["active_persona"] = form.user.active_persona.id
         flash("Welcome back, {}".format(form.user.active_persona.username))
         app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
         return form.redirect(url_for('.index'))
@@ -102,6 +103,7 @@ def logout():
     db.session.add(user)
     db.session.commit()
     logout_user()
+    session["active_persona"] = None
     app.logger.debug("{} logged out.".format(user))
     return redirect(url_for('.index'))
 
@@ -127,6 +129,10 @@ def signup():
             username=form.username.data,
             created=created_dt,
             modified=created_dt)
+
+        # Create keypairs
+        app.logger.info("Generating private keys for {}".format(persona))
+        persona.generate_keys(form.password.data)
 
         db.session.add(persona)
 

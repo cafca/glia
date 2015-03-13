@@ -20,6 +20,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import app
 from .. import socketio, db
 from nucleus.nucleus.models import Starmap, Star
+from nucleus.nucleus import notification_signals, PersonaNotFoundError
+
+# Create blinker signal namespace
+local_model_changed = notification_signals.signal('local-model-changed')
 
 
 def socketio_authenticated_only(f):
@@ -85,7 +89,10 @@ def text(message):
             app.logger.info("{} {}: {}".format(map, current_user.active_persona.username, star.text))
             data = {
                 'username': current_user.active_persona.username,
-                'msg': message['msg']}
+                'msg': message['msg'],
+                'star_id': star.id,
+                'vote_count': star.oneup_count()
+            }
             emit('message', data, room=message["room_id"])
 
     if errors:
@@ -99,6 +106,61 @@ def left(message):
     A status message is broadcast to all people in the room."""
     leave_room(message['room_id'])
     emit('status', {'msg': current_user.active_persona.username + ' has left the room.'}, room=message["room_id"])
+
+
+@socketio_authenticated_only
+@socketio.on('vote_request', namespace='/groups')
+def vote_request(message):
+    """
+    Issue a vote to a Star using the currently activated Persona
+
+    Args:
+        star_id (string): ID of the Star
+    """
+    error_message = ""
+    star_id = message.get('star_id')
+    group_id = message.get('group_id')
+    star = None
+
+    if star_id is None or group_id is None:
+        error_message += "Vote event missing parameter. "
+
+    if len(error_message) == 0:
+        star = Star.query.get_or_404(star_id)
+        try:
+            upvote = star.toggle_oneup()
+        except PersonaNotFoundError:
+            error_message += "Please activate a Persona for voting. "
+            upvote = None
+
+    data = dict()
+    if len(error_message) > 0:
+        app.logger.error("Error processing vote event from {} on {}: {}".format(current_user.active_persona, (star or "<Star {}>".format(star_id or "with unknown id")), error_message))
+        data = {
+            "meta": {
+                "error_message": error_message
+            }
+        }
+    else:
+        app.logger.debug("Processed vote by {} on {}".format(upvote.author, star))
+        data = {
+            "votes": [{
+                "star_id": star.id,
+                "vote_count": star.oneup_count(),
+                "author_id": upvote.author_id
+            }]
+        }
+
+        message_vote = {
+            "author_id": upvote.author_id,
+            "action": "insert" if len(upvote.vesicles) == 0 else "update",
+            "object_id": upvote.id,
+            "object_type": "Oneup",
+            "recipients": star.author.contacts.all() + [star.author, ]
+        }
+
+        local_model_changed.send(upvote, message=message_vote)
+        emit('vote', data, broadcast=True)
 
 
 @socketio.on_error(namespace='/groups')
