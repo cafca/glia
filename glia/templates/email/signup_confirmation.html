@@ -1,0 +1,21 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    </head>
+    <body>
+        <p>Hello,</p>
+
+        <p>Please <a href="{{ url_for('web.signup_validation', signup_code=user.signup_code) }}">click here</a> to confirm your email adress.</p>
+
+        <p>If the above link doesn't work, you can paste the following adress to your browser bar:</p>
+
+        <p><a href="{{ url_for('web.signup_validation', signup_code=user.signup_code) }}">{{ url_for('signup_validation', signup_code=user.signup_code) }}</a></p>
+
+        <p>You will be asked to login to your account at the linked location.</p>
+
+        <p>Thank you for using {{ app.config["PRODUCT_NAME"] }},</p>
+        <p>- The {{ app.config["PRODUCT_NAME"] }} Team</p>
+        <p><a href="{{ url_for('web.index') }}">{{ app.config["PRODUCT_NAME"] }}</a></p>
+    </body>
+</html>
