@@ -24,17 +24,14 @@ window.group_id = "{{  group.id }}";
             <div id="nicknames"><span>Online:</span></div>
             <div id="lines">
                 {% for star in group.profile.index %}
-                <p>
-<!--                     <button id="rktik-upvote-{{star.id}}" type="button" class="btn btn-inverse btn-xs">
-                        <span class="glyphicon glyphicon-flash" aria-hidden="true"></span>
-                        <span class="rktik-upvote-count">{{star.upvote_count}}</span>
-                    </button> -->
-
-
-                    <button class="oneup btn btn-mini {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %}" id="oneup-{{star.id}}" type="button">
-                        <span class="oneup-count" id="oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+                <div class="line">
+                    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+                        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
                     </button>
-                    <span>{{ star.author.username }}:</span>{{ star.text }}</p>
+                    <span>
+                        <span class="author_name">{{ star.author.username }}:</span>{{ star.text }}
+                    </span>
+                </div>
                 {% endfor %}
                 <p id="connecting">Connecting to Glia chat</p>
             </div>

@@ -13,7 +13,7 @@ import functools
 from datetime import datetime
 from flask import request
 from flask.ext.login import current_user
-from flask.ext.socketio import emit, join_room, leave_room, send
+from flask.ext.socketio import emit, join_room, leave_room
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -89,7 +89,10 @@ def text(message):
             app.logger.info("{} {}: {}".format(map, current_user.active_persona.username, star.text))
             data = {
                 'username': current_user.active_persona.username,
-                'msg': message['msg']}
+                'msg': message['msg'],
+                'star_id': star.id,
+                'vote_count': star.oneup_count()
+            }
             emit('message', data, room=message["room_id"])
 
     if errors:
@@ -106,10 +109,10 @@ def left(message):
 
 
 @socketio_authenticated_only
-@socketio.on('upvote', namespace='/groups')
-def oneup(message):
+@socketio.on('vote_request', namespace='/groups')
+def vote_request(message):
     """
-    Issue a 1up to a Star using the currently activated Persona
+    Issue a vote to a Star using the currently activated Persona
 
     Args:
         star_id (string): ID of the Star
@@ -117,49 +120,47 @@ def oneup(message):
     error_message = ""
     star_id = message.get('star_id')
     group_id = message.get('group_id')
+    star = None
 
     if star_id is None or group_id is None:
-        error_message += "Upvote event missing parameter. "
+        error_message += "Vote event missing parameter. "
 
     if len(error_message) == 0:
         star = Star.query.get_or_404(star_id)
         try:
-            oneup = star.toggle_oneup()
+            upvote = star.toggle_oneup()
         except PersonaNotFoundError:
-            error_message += "Please activate a Persona for upvoting. "
-            oneup = None
+            error_message += "Please activate a Persona for voting. "
+            upvote = None
 
     data = dict()
     if len(error_message) > 0:
+        app.logger.error("Error processing vote event from {} on {}: {}".format(current_user.active_persona, (star or "<Star {}>".format(star_id or "with unknown id")), error_message))
         data = {
             "meta": {
-                "oneup_count": star.oneup_count(),
                 "error_message": error_message
             }
         }
     else:
+        app.logger.debug("Processed vote by {} on {}".format(upvote.author, star))
         data = {
-            "meta": {
-                "oneup_count": star.oneup_count(),
-            },
-            "oneups": [{
-                "id": oneup.id,
-                "author": oneup.author.id,
-                "state_value": oneup.state,
-                "state_name": oneup.get_state()
+            "votes": [{
+                "star_id": star.id,
+                "vote_count": star.oneup_count(),
+                "author_id": upvote.author_id
             }]
         }
 
-        message_oneup = {
-            "author_id": oneup.author.id,
-            "action": "insert" if len(oneup.vesicles) == 0 else "update",
-            "object_id": oneup.id,
+        message_vote = {
+            "author_id": upvote.author_id,
+            "action": "insert" if len(upvote.vesicles) == 0 else "update",
+            "object_id": upvote.id,
             "object_type": "Oneup",
             "recipients": star.author.contacts.all() + [star.author, ]
         }
 
-        local_model_changed.send(oneup, message=message_oneup)
-        send(data, room=group_id, json=True)
+        local_model_changed.send(upvote, message=message_vote)
+        emit('vote', data, broadcast=True)
 
 
 @socketio.on_error(namespace='/groups')
