@@ -16,11 +16,12 @@ from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
+from hashlib import sha256
 
 from . import app
 from .. import socketio, db
 from glia.web.helpers import find_links
-from nucleus.nucleus.models import Starmap, Star
+from nucleus.nucleus.models import Starmap, Star, LinkPlanet, PlanetAssociation
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
@@ -60,6 +61,7 @@ def text(message):
     star_created = datetime.utcnow()
     star_id = uuid4().hex
     errors = ""
+    author = current_user.active_persona
 
     if len(message['msg']) == 0:
         errors += "Can't send empty message. "
@@ -68,22 +70,37 @@ def text(message):
     if map is None:
         errors += "Chat room could not be found. "
 
-    # Extract links
-    links, msg = find_links(message['msg'], app.logger)
+    # Extract links and replace in text
+    links, text = find_links(message['msg'], app.logger)
 
     for link in links:
         emit('status', {'msg': 'Link found: {}'.format(link.url)})
 
     star = Star(
         id=star_id,
-        text=message['msg'],
-        author=current_user.active_persona,
+        text=text,
+        author=author,
         created=star_created,
         modified=star_created)
     db.session.add(star)
 
     map.index.append(star)
     db.session.add(map)
+
+    for link in links:
+        link_hash = sha256(link.url).hexdigest()[:32]
+        planet = LinkPlanet.query.filter_by(id=link_hash).first()
+        if not planet:
+            app.logger.info("Storing new Link")
+            planet = LinkPlanet(
+                id=link_hash,
+                url=link.url)
+            db.session.add(planet)
+
+        assoc = PlanetAssociation(star=star, planet=planet, author=author)
+        star.planet_assocs.append(assoc)
+        app.logger.info("Attached {} to new {}".format(planet, star))
+        db.session.add(assoc)
 
     if errors == "":
         try:
