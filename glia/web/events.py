@@ -19,6 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
+from glia.web.helpers import find_links
 from nucleus.nucleus.models import Starmap, Star
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
@@ -66,6 +67,12 @@ def text(message):
     map = Starmap.query.get(message["room_id"])
     if map is None:
         errors += "Chat room could not be found. "
+
+    # Extract links
+    links, msg = find_links(message['msg'], app.logger)
+
+    for link in links:
+        emit('status', {'msg': 'Link found: {}'.format(link.url)})
 
     star = Star(
         id=star_id,
