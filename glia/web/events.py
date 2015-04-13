@@ -11,9 +11,10 @@
 import functools
 
 from datetime import datetime
-from flask import request
+from flask import request, current_app
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
+from flask.ext.misaka import markdown
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
 from hashlib import sha256
@@ -105,9 +106,12 @@ def text(message):
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info("{} {}: {}".format(map, author.username, star.text))
+
+            # Render using template
+            template = current_app.jinja_env.get_template('chatline.html')
             data = {
                 'username': author.username,
-                'msg': message['msg'],
+                'msg': template.render(star=star),
                 'star_id': star.id,
                 'vote_count': star.oneup_count()
             }

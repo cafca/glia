@@ -8,7 +8,7 @@
         <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
     </button>
     <span>
-        <span class="author_name">{{ star.author.username }}:</span>{{ star.text|markdown(autolink=True) }}
+        <span class="author_name">{{ star.author.username }}:</span>{{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
     </span>
 </div>
 {% for planet_assoc in star.planet_assocs %}
