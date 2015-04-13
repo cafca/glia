@@ -43,17 +43,20 @@ def find_links(text, logger):
     candidates = re.findall(expr, text)
 
     if candidates:
-        for c in candidates:
+        for i, c in enumerate(candidates):
             if c[:4] != "http":
-                c = "".join(["http://", c])
+                c_scheme = "".join(["http://", c])
+            else:
+                c_scheme = c
 
-            logger.info("Testing potential link '{}' for availability".format(c))
+            logger.info("Testing potential link '{}' for availability".format(c_scheme))
             try:
-                res = requests.head(c, timeout=3.0)
+                res = requests.head(c_scheme, timeout=3.0)
             except requests.exceptions.RequestException:
+                # The link failed
                 pass
             else:
                 if res and res.status_code < 400:
                     rv.append(res)
-                    text = text.replace(c, "")
+                    text = text.replace(c, "({})[{}]".format(c, res.url))
     return (rv, text)

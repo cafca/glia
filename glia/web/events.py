@@ -88,14 +88,8 @@ def text(message):
     db.session.add(map)
 
     for link in links:
-        link_hash = sha256(link.url).hexdigest()[:32]
-        planet = LinkPlanet.query.filter_by(id=link_hash).first()
-        if not planet:
-            app.logger.info("Storing new Link")
-            planet = LinkPlanet(
-                id=link_hash,
-                url=link.url)
-            db.session.add(planet)
+        planet = LinkPlanet.get_or_create(link.url)
+        db.session.add(planet)
 
         assoc = PlanetAssociation(star=star, planet=planet, author=author)
         star.planet_assocs.append(assoc)
@@ -110,9 +104,9 @@ def text(message):
             app.logger.error("Error adding to chat starmap: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
-            app.logger.info("{} {}: {}".format(map, current_user.active_persona.username, star.text))
+            app.logger.info("{} {}: {}".format(map, author.username, star.text))
             data = {
-                'username': current_user.active_persona.username,
+                'username': author.username,
                 'msg': message['msg'],
                 'star_id': star.id,
                 'vote_count': star.oneup_count()
