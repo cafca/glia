@@ -52,7 +52,7 @@ def find_links(text, logger):
             logger.info("Testing potential link '{}' for availability".format(c_scheme))
             try:
                 res = requests.head(c_scheme, timeout=3.0)
-            except requests.exceptions.RequestException:
+            except (requests.exceptions.RequestException, ValueError):
                 # The link failed
                 pass
             else:
