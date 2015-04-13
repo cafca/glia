@@ -58,5 +58,5 @@ def find_links(text, logger):
             else:
                 if res and res.status_code < 400:
                     rv.append(res)
-                    text = text.replace(c, "({})[{}]".format(c, res.url))
+                    text = text.replace(c, res.url)
     return (rv, text)

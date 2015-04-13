@@ -1,24 +1,32 @@
 {% import "macros/planet.html" as planet_macros %}
 
+
+{% macro chatline(star) %}
+
+<div class="line">
+    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+    </button>
+    <span>
+        <span class="author_name">{{ star.author.username }}:</span>{{ star.text|markdown(autolink=True) }}
+    </span>
+</div>
+{% for planet_assoc in star.planet_assocs %}
+<div class="line">
+    [{{ loop.index }}] {{ planet_macros.planet(planet_assoc.planet, True)}}
+</div>
+{% endfor %}
+
+{% endmacro %}
+
+
 {% macro chat(map) %}
 
 <div id="messages">
     <div id="nicknames"><span>Online:</span></div>
     <div id="lines">
         {% for star in map.index %}
-        <div class="line">
-            <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
-                <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-            </button>
-            <span>
-                <span class="author_name">{{ star.author.username }}:</span>{{ star.text }}
-            </span>
-        </div>
-        {% for planet_assoc in star.planet_assocs %}
-        <div class="line">
-            [{{ loop.index }}] {{ planet_macros.planet(planet_assoc.planet, True)}}
-        </div>
-        {% endfor %}
+        {{ chatline(star) }}
         {% endfor %}
         <p id="connecting">Connecting to Glia chat</p>
     </div>
