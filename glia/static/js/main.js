@@ -65,11 +65,12 @@ $(document).ready(function(){
         $(".oneup-count-"+star_id).text(vote_count);
     });
 
+    // DOM manipulation
     function append_timeline (from, msg, star_id, vote_count) {
         if (star_id === undefined) {
             $('#lines').append($('<p>').append($('<em>').text(msg)));
         } else {
-            $('#lines').append($('<div class="line">').append('<button class="oneup btn btn-xs btn-inverse oneup-'+star_id+'" data-id="'+star_id+'" type="button"><span class="oneup-count oneup-count-'+star_id+'">'+vote_count+'</span> <i class="fa fa-white fa-arrow-up"></i></button> ').append($('<span class="author_name">').text(from), msg));
+            $('#lines').append(msg);
             $('.oneup').click(function () {request_upvote(this.dataset.id);});
 
         }
@@ -85,7 +86,6 @@ $(document).ready(function(){
         socket.emit('vote_request', {'star_id': star_id, 'group_id': group_id});
     }
 
-    // DOM manipulation
     $(function () {
         $('#send-message').submit(function () {
             socket.emit('text', {'msg': $('#message').val(), 'room_id': window.room_id});

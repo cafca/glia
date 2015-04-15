@@ -15,6 +15,7 @@ from flask import Flask
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.misaka import Misaka
 from humanize import naturaltime
 
 from .database import db
@@ -66,6 +67,9 @@ def create_app(log_info=True):
     def load_user(userid):
         from nucleus.nucleus.models import User
         return User.query.get(userid)
+
+    # Setup markdown support for templates
+    Misaka(app)
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint

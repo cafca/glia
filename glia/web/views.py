@@ -122,7 +122,8 @@ def signup():
         user = User(
             email=form.email.data,
             created=created_dt,
-            modified=created_dt)
+            modified=created_dt,
+            active=True)
         user.set_password(form.password.data)
         db.session.add(user)
 
