@@ -36,8 +36,7 @@ def find_links(text, logger):
     import requests
 
     # Everything that looks remotely like a URL
-    # expr = "(https?://[\S]+)"
-    expr = "(.*\w+\.\w{2,3}/?.*)"
+    expr = "(\w+\.\w{2,3}/?)"
     rv = list()
 
     candidates = re.findall(expr, text)
