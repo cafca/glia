@@ -12,13 +12,6 @@ window.admin_id = "{{ group.admin.id }}";
 
 {% block content %}
 <section class="row">
-    <div class="col-sm-4">
-        <h1><a href="{{ url_for('web.index') }}">Home</a> > Group {{group.username}}</h1>
-        <p>Admin: {{group.admin.username}}</p>
-    </div>
-</section>
-
-<section class="row">
     <div class="rktik-chat panel panel-default col-sm-3 col-sm-push-8">
         <h3>{{ group.username }}</h3>
 
