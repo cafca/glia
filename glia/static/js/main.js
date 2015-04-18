@@ -23,10 +23,17 @@ $(document).ready(function(){
         append_timeline("System", msg['msg']);
     });
 
-    socket.on('nicknames', function (nicknames) {
+    socket.on('nicknames', function (data) {
+        var nicknames = data['nicknames'];
+        var ids = data['ids'];
+
         $('#nicknames').empty().append($('<span>Online: </span>'));
         for (var i in nicknames) {
-          $('#nicknames').append($('<b>').text(nicknames[i]));
+          if (ids[i] == window.admin_id) {
+            $('#nicknames').append($('<b>').text(nicknames[i] + " [a]"));
+          } else {
+            $('#nicknames').append($('<b>').text(nicknames[i]));
+          }
         }
     });
 

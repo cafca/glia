@@ -7,6 +7,7 @@ window.room_id = "{{ group.profile.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.group_id = "{{  group.id }}";
+window.admin_id = "{{ group.admin.id }}";
 {% endblock %}
 
 {% block content %}
@@ -19,7 +20,7 @@ window.group_id = "{{  group.id }}";
 
 <section class="row">
     <div class="rktik-chat panel panel-default col-sm-3 col-sm-push-8">
-        <h3>Talk with {{ group.username }}</h3>
+        <h3>{{ group.username }}</h3>
 
         {{ chat_macros.chat(group.profile) }}
 

@@ -50,7 +50,9 @@ def joined(message):
     join_room(message["room_id"])
     app.logger.info("{} joined group chat {}".format(current_user.active_persona, message['room_id']))
     emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
-    emit('nicknames', [current_user.active_persona.username, ], room=message["room_id"])
+
+    data = {'nicknames': [current_user.active_persona.username, ], 'ids': [current_user.active_persona.id, ]}
+    emit('nicknames', data, room=message["room_id"])
 
 
 @socketio_authenticated_only
