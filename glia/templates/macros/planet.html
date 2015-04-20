@@ -11,9 +11,9 @@
 {% elif planet.kind == 'link' %}
 <a class="rk-link" href="{{ planet.url }}" />
     {% if icon == True %}
-    <img class="rk-favicon" src="{{ planet.favicon_url() }}" />
+    <img class="rk-favicon" src="{{ planet.favicon_url() }}" /> &nbsp;
     {% endif %}
-    &nbsp; {{planet.url}}
+    {{planet.url}}
 </a>
 {% elif planet.kind == 'text' %}
 <span class="rk-text">

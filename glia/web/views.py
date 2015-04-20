@@ -26,9 +26,24 @@ from forms import LoginForm, SignupForm, CreateGroupForm
 def index():
     """Front page"""
     groupform = CreateGroupForm()
-    groups = Group.query.all()
 
-    return render_template('index.html', groupform=groupform, groups=groups)
+    # Collect data for TOC
+    groups = Group.query.limit(5)
+    group_data = []
+    for g in groups:
+        g_star_selection = g.profile.index
+        g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
+
+        group_data.append({
+            'group': g,
+            'top_posts': g_top_posts
+        })
+
+    # Collect main page content
+    star_selection = Star.query.all()
+    top_posts = sorted(star_selection, key=Star.hot, reverse=True)[:15]
+
+    return render_template('index.html', groupform=groupform, group_data=group_data, top_posts=top_posts)
 
 
 @app.route('/groups/', methods=["GET", "POST"])

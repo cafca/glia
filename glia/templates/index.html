@@ -1,27 +1,45 @@
 {% extends "base.html" %}
 
+{% import "macros/star.html" as star_macros %}
+
 {% block content %}
-<div class="rktik-welcome">
-  <h1>Hello {{ current_user.active_persona.username }}!</h1>
-  <form action="{{ url_for('.groups') }}" method="POST" class="form-inline">
-    {{ groupform.hidden_tag() }}
-    <span class="form-group>">
-      <input name="name" type="text" value="" class="form-control" />
-      {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
-    </span>
-    <button type="submit" class="btn">Go to new group</button>
-  </form>
-</div>
+<div class="row" id="rk-index">
+  <div class="rk-toc panel panel-default col-sm-3 col-sm-push-8">
+    <h1>RKTIK Contents</h1>
+    <div class="rk-toc-groups">
+      {% for g in group_data %}
+        <h3>
+          <a href="{{ url_for('.group', id=g.group.id) }}">{{ g.group.username }}</a>
+          <button id="follow-group-{{g.group.id}}" class="btn btn-default btn-sm">Follow</button>
+        </h3>
+        <ul>
+        {% for star in g.top_posts %}
+          <li><a href="{{ url_for('.star', id=star.id) }}">{{ star.text }}</a></li>
+        {% endfor %}
+        </ul>
+      {% endfor %}
+    </div> <!-- ./ group list -->
 
-{% for group in groups %}
-<div class="row">
-  <div class="col-md-2">
-    <p><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a></h3>
-  </div>
-  <div class="col-md-2 follow-group">
-    <button id="follow-group-{{group.id}}" class="btn btn-default btn-sm">Follow</button>
-  </div>
-</div>
-{% endfor %}
+    <form action="{{ url_for('.groups') }}" method="POST" class="form-inline">
+      {{ groupform.hidden_tag() }}
+      <span class="form-group>">
+        <input name="name" type="text" value="" class="form-control" />
+        {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
+      </span>
+      <button type="submit" class="btn">Go to new group</button>
+    </form>
+  </div> <!-- ./rktik-toc -->
 
+
+  <div class="rk-frontpage col-sm-7 col-sm-pull-2">
+    {% for star in top_posts %}
+      {% if loop.first %}
+        {{ star_macros.star_lead(star, controlled_personas) }}
+      {% else %}
+        {{ star_macros.star_line(star, controlled_personas) }}
+      {% endif %}
+    {% endfor %}
+  </div> <!-- ./ row -->
+
+</div> <!-- ./ index -->
 {% endblock %}

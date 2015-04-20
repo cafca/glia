@@ -26,7 +26,7 @@ window.admin_id = "{{ group.admin.id }}";
 
     <div class="star-listing col-sm-7 col-sm-pull-2">
     {% for star in stars %}
-        {% if loop.index == 1 %}
+        {% if loop.first %}
             {{ star_macros.star_lead(star, controlled_personas) }}
         {% else %}
             {{ star_macros.star_line(star, controlled_personas) }}
