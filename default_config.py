@@ -13,3 +13,5 @@ DEBUG = False
 USE_DEBUG_SERVER = False
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
+
+TIMEZONE = 'Europe/Berlin'

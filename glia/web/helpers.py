@@ -1,4 +1,5 @@
 import re
+import pytz
 
 from nucleus.nucleus.models import Group
 
@@ -59,3 +60,16 @@ def find_links(text, logger):
                     rv.append(res)
                     text = text.replace(c, res.url)
     return (rv, text)
+
+
+def localtime(value, tzval="UTC"):
+    """Convert tz-naive UTC datetime into tz-naive local datetime
+
+    Args:
+        value (datetime): timezone naive UTC datetime
+        tz (sting): timezone e.g. 'Europe/Berlin' (see pytz references)
+    """
+    value = value.replace(tzinfo=pytz.utc)  # assuming value is utc time
+    value = value.astimezone(pytz.timezone(tzval))  # convert to local time (tz-aware)
+    value = value.replace(tzinfo=None)  # make tz-naive again
+    return value

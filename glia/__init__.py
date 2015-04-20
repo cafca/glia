@@ -19,7 +19,7 @@ from flask.ext.misaka import Misaka
 from humanize import naturaltime
 
 from .database import db
-from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
+from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona, localtime
 
 
 socketio = SocketIO()
@@ -37,9 +37,6 @@ def create_app(log_info=True):
         logging.warning("Only default_config was loaded. User the GLIA_CONFIG"
                         + " environment variable to specify additional options.")
         logging.warning('>> export GLIA_CONFIG="./development_config.py"')
-
-    # naturaltime allows templates to render human readable time
-    app.jinja_env.filters['naturaltime'] = naturaltime
 
     # For Heroku: ProxiedRequest replaces request.remote_addr which the real one
     # instead of their internal IP
@@ -70,6 +67,11 @@ def create_app(log_info=True):
 
     # Setup markdown support for templates
     Misaka(app)
+
+    # Setup time filter
+    app.jinja_env.filters['naturaltime'] = naturaltime
+    app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
+
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
