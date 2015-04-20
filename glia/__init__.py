@@ -14,13 +14,11 @@ from blinker import Namespace
 from flask import Flask
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
-from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.misaka import Misaka
 from humanize import naturaltime
 
 from .database import db
-from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona, localtime
-
+from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -69,9 +67,10 @@ def create_app(log_info=True):
     Misaka(app)
 
     # Setup time filter
+    # - Import here to avoid circular import
+    from web.helpers import localtime
     app.jinja_env.filters['naturaltime'] = naturaltime
     app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
-
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint

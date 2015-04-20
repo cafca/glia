@@ -33,7 +33,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">RKTIK</a>
+          <a class="navbar-brand" href="{{ url_for('.index') }}">RKTIK</a>
         </div>
 
         <!-- Navbar contents below this will be toggled on mobile -->
@@ -70,7 +70,7 @@
     </nav>
 
     {% for message in get_flashed_messages() %}
-        <div class='flash'><span>{{message}}</span></div>
+        <div class='alert alert-success' role="alert"><span>{{message}}</span></div>
     {% endfor %}
 
     <div class="container-fluid main-container">

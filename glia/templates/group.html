@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% import "macros/chat.html" as chat_macros %}
+{% import "macros/star.html" as star_macros %}
 
 {% block script %}
 window.room_id = "{{ group.profile.id }}";
@@ -24,12 +25,13 @@ window.admin_id = "{{ group.admin.id }}";
     </div>
 
     <div class="star-listing col-sm-7 col-sm-pull-2">
-    <ul>
     {% for star in stars %}
-    <li>{{star.oneup_count()}} {{star.author.username}}: {{star.text}}</li>
+        {% if loop.index == 1 %}
+            {{ star_macros.star_lead(star, controlled_personas) }}
+        {% else %}
+            {{ star_macros.star_line(star, controlled_personas) }}
+        {% endif %}
     {% endfor %}
-    </ul>
-
     </div>
 </section>
 

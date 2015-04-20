@@ -56,6 +56,16 @@ def groups():
     return render_template("groups.html", form=form)
 
 
+@app.route('/star/<id>/')
+def star(id=None):
+    pass
+
+
+@app.route('/persona/<id>/')
+def persona(id=None):
+    pass
+
+
 @app.route('/groups/<id>', methods=["GET"])
 @login_required
 def group(id):
