@@ -143,10 +143,9 @@ def vote_request(message):
     """
     error_message = ""
     star_id = message.get('star_id')
-    group_id = message.get('group_id')
     star = None
 
-    if star_id is None or group_id is None:
+    if star_id is None:
         error_message += "Vote event missing parameter. "
 
     if len(error_message) == 0:

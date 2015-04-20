@@ -90,7 +90,7 @@ $(document).ready(function(){
 
     function request_upvote(star_id) {
         console.log("Voting Star "+star_id);
-        socket.emit('vote_request', {'star_id': star_id, 'group_id': group_id});
+        socket.emit('vote_request', {'star_id': star_id});
     }
 
     $(function () {
