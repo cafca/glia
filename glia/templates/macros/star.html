@@ -1,0 +1,92 @@
+{% import "macros/planet.html" as planet_macros %}
+
+{% macro star_lead(star, controlled_personas) %}
+
+<!-- STAR {{star.id}} -->
+<div class="rk-star rk-star-lead">
+  <span class="rk-star-title">
+    <h2>{{ star.text }}</h2>
+  </span>
+
+  <!-- Attachments -->
+  {% for planet_assoc in star.planet_assocs %}
+  <div class="rk-planet">
+    {{ planet_macros.planet(planet_assoc.planet, True)}}
+  </div>
+  {% endfor %}
+
+  <!-- Meta -->
+  <div class="rk-star-meta">
+    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+    </button>
+
+    <span>
+        <button data-target="#comment-modal-{{star.id}}" role="button" class="btn btn-xs" id="comments-{{star.id}}" type="button" data-toggle="modal">
+            <span class="oneup-count" id="comment-count-{{star.id}}">{{star.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
+        </button>
+    </span>
+
+    <span>
+        <span class="caption">
+            <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">{{star.created|localtime|naturaltime}}</a>
+        </span>
+    </span>
+
+    <span class="inline-semantic"> by </span>
+
+    <span class="attribute">
+        <i class="fa fa-circle"></i>
+        <span class="caption">
+            <a href="{{ url_for('.persona', id=star.author.id) }}">{{ star.author.username}}</a>
+        </span>
+    </span>
+  </div>
+</div>
+{% endmacro %}
+
+
+
+{% macro star_line(star, controlled_personas) %}
+
+<!-- STAR {{star.id}} -->
+<div class="rk-star rk-star-line">
+  <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+      <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+  </button>
+
+  <div class="rk-line-container">
+    <div class="rk-star-title">
+      {{ star.text }}
+    </div>
+
+    <!-- Attachments -->
+    {% for planet_assoc in star.planet_assocs %}
+    <div class="rk-planet">
+      {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=False)}}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro star_box(star, controlled_personas) %}
+
+<!-- STAR {{star.id}} -->
+<div class="rk-star rk-star-box col-md-3">
+  <div class="panel">
+    <div>
+      <p>{{ star.text}}</p>
+    </div>
+  </div>
+  <p>
+    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+    </button>
+
+    <span class="caption">
+        <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">{{star.created|localtime|naturaltime}}</a>
+    </span>
+  </p>
+</div>
+{% endmacro %}
