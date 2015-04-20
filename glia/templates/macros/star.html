@@ -69,3 +69,24 @@
   </div>
 </div>
 {% endmacro %}
+
+{% macro star_box(star, controlled_personas) %}
+
+<!-- STAR {{star.id}} -->
+<div class="rk-star rk-star-box col-md-3">
+  <div class="panel">
+    <div>
+      <p>{{ star.text}}</p>
+    </div>
+  </div>
+  <p>
+    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+    </button>
+
+    <span class="caption">
+        <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">{{star.created|localtime|naturaltime}}</a>
+    </span>
+  </p>
+</div>
+{% endmacro %}

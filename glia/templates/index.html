@@ -32,12 +32,12 @@
 
 
   <div class="rk-frontpage col-sm-7 col-sm-pull-2">
-    {% for star in top_posts %}
-      {% if loop.first %}
-        {{ star_macros.star_lead(star, controlled_personas) }}
-      {% else %}
-        {{ star_macros.star_line(star, controlled_personas) }}
-      {% endif %}
+    {{ star_macros.star_lead(top_posts[0], controlled_personas) }}
+
+    {% for star in top_posts[1:] %}
+      {% if loop.index0 is divisibleby 4 %}<div class="row">{% endif %}
+      {{ star_macros.star_box(star, controlled_personas) }}
+      {% if loop.index is divisibleby 4 or loop.last %}</div>{% endif %}
     {% endfor %}
   </div> <!-- ./ row -->
 
