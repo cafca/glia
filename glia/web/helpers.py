@@ -31,6 +31,24 @@ def get_group_from_path(path):
         return Group.query.get(group_id)
 
 
+def send_email(message):
+    """Send Email using Sendgrid service
+
+    Args:
+        message (Sendgrid Message): Readily configured message object
+
+    Raises:
+        SendGridClientError
+        SendGridServerError
+    """
+    from flask import current_app
+
+    sg_user = os.environ.get('SENDGRID_USERNAME') or current_app.config["SENDGRID_USERNAME"]
+    sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
+    sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
+    return sg.send(message)
+
+
 def send_validation_email(user, db):
     """Send validation email using sendgrid, resetting the signup code.
 
@@ -42,12 +60,6 @@ def send_validation_email(user, db):
         ValueError: If active user has no name or email address
     """
     from .. import db
-    from flask import current_app
-
-    sg_user = os.environ.get('SENDGRID_USERNAME') or current_app.config["SENDGRID_USERNAME"]
-    sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
-    logger.info("Length: {} {}".format(len(sg_user), len(sg_pass)))
-    sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
 
     user.signup_code = uuid4().hex
     db.session.add(user)
@@ -66,7 +78,7 @@ def send_validation_email(user, db):
     message.set_from('RKTIK Email Confirmation')
 
     try:
-        status, msg = sg.send(message)
+        status, msg = send_email(message)
     except SendGridClientError, e:
         logger.error("Client error sending confirmation email: {}".format(e))
     except SendGridServerError, e:

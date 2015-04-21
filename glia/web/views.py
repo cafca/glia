@@ -219,7 +219,6 @@ def signup_validation(id, signup_code):
         login_user(user, remember=False)
         session["active_persona"] = user.active_persona.id
         user.active = True
-        user.signup_code = None
         db.session.add(user)
         db.session.commit()
         app.logger.info("{} activated their account.".format(user))
