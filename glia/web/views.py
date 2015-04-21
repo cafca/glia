@@ -46,8 +46,13 @@ def index():
         })
 
     # Collect main page content
-    star_selection = Star.query.limit(9)
-    top_posts = sorted(star_selection, key=Star.hot, reverse=True)
+    star_selection = Star.query.all()
+    star_selection = sorted(star_selection, key=Star.hot, reverse=True)
+    top_posts = []
+    while len(top_posts) < min([9, len(star_selection)]):
+        candidate = star_selection.pop(0)
+        if candidate.oneup_count() > 0:
+            top_posts.append(candidate)
 
     return render_template('index.html', groupform=groupform, group_data=group_data, top_posts=top_posts)
 
@@ -97,10 +102,15 @@ def group(id):
         app.logger.warning("Group '{}' not found. User: {}".format(id, current_user))
         return(redirect(url_for('.groups')))
 
-    star_candidates = group.profile.index.filter(Star.oneup_count>0).limit(10)
-    stars = sorted(star_candidates, key=Star.hot, reverse=True)
+    star_selection = group.profile.index
+    star_selection = sorted(star_selection, key=Star.hot, reverse=True)
+    top_posts = []
+    while len(top_posts) < min([15, len(star_selection)]):
+        candidate = star_selection.pop(0)
+        if candidate.oneup_count() > 0:
+            top_posts.append(candidate)
 
-    return render_template('group.html', group=group, stars=stars)
+    return render_template('group.html', group=group, stars=top_posts)
 
 
 @app.route('/stars/', methods=["POST"])
