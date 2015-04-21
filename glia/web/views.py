@@ -199,11 +199,11 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-@app.route('/validate/<user_id>/<signup_code>', methods=["GET"])
-def signup_validation(user_id, signup_code):
+@app.route('/validate/<id>/<signup_code>', methods=["GET"])
+def signup_validation(id, signup_code):
     """Validate a user's email adress"""
 
-    user = User.query.get(user_id)
+    user = User.query.get(id)
 
     if user is None:
         flash("This signup link is invalid.")
