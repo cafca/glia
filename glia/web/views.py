@@ -217,7 +217,7 @@ def signup_validation(id, signup_code):
         flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
     else:
         login_user(user, remember=False)
-        session["active_persona"] = form.user.active_persona.id
+        session["active_persona"] = user.active_persona.id
         user.active = True
         user.signup_code = None
         db.session.add(user)
