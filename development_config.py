@@ -27,6 +27,7 @@ AUTH_ENABLED = False
 # Define database setup
 DATABASE_FILE = '../server.db'
 SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
+SQLALCHEMY_RECORD_QUERIES = False
 
 # Load server cert
 SERVER_KEY_FILE = "./server_private.key"

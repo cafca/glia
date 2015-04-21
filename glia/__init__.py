@@ -15,6 +15,7 @@ from flask import Flask
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
 from flask.ext.misaka import Misaka
+from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
 
 from .database import db
@@ -71,6 +72,10 @@ def create_app(log_info=True):
     from web.helpers import localtime
     app.jinja_env.filters['naturaltime'] = naturaltime
     app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
+
+    # Setup debug toolbar
+    toolbar = DebugToolbarExtension()
+    toolbar.init_app(app)
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
