@@ -1,8 +1,10 @@
 import re
 import sendgrid
+import os
 
 from nucleus.nucleus.models import Group
 from flask import render_template
+from uuid import uuid4
 
 
 class UnauthorizedError(Exception):
@@ -23,19 +25,32 @@ def get_group_from_path(path):
         return Group.query.get(group_id)
 
 
-def send_validation_email(user):
-    """Send validation email using sendgrid
+def send_validation_email(user, db):
+    """Send validation email using sendgrid, resetting the signup code.
 
     Args:
         user (User): Nucleus user object
+        db (SQLAlchemy): Database used to store user's new signup code
 
     """
-    from .. import app
+    from .. import db
 
-    sg = sendgrid.SendGridClient(app.config['SENDGRID_USERNAME'], app.config['SENDGRID_PASSWORD'])
+    sg_user = os.environ.get('SENDGRID_USERNAME')
+    sg_pass = os.environ.get('SENDGRID_PASSWORD')
+    sg = sendgrid.SendGridClient(sg_user, sg_pass)
+
+    user.signup_code = uuid4().hex
+    db.session.add(user)
+    db.session.commit()
+
+    name = user.active_persona.username
+    email = user.email
+
+    if name is None or email is None:
+        raise ValueError("Username and email can't be empty")
 
     message = sendgrid.Mail()
-    message.add_to("{} <{}>".format(user.active_persona.username, user.email))
+    message.add_to("{} <{}>".format(name, email))
     message.set_subject('Please confirm your email address')
     message.set_text(render_template("email/signup_confirmation.html", user=user))
     message.set_from('RKTIK Email Confirmation')

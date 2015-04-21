@@ -9,7 +9,7 @@
 """
 import datetime
 
-from flask import request, redirect, render_template, flash, url_for, session, current_app
+from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateGroupForm
 from uuid import uuid4
@@ -19,6 +19,12 @@ from . import app
 from .. import db
 from glia.web.helpers import send_validation_email
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star
+
+
+@app.before_request
+def account_notifications():
+    if not current_user.is_anonymous and not current_user.is_active:
+        flash("Your account is not activated. Please click the link in the email that we sent you.")
 
 
 @app.route('/', methods=["GET"])
@@ -86,10 +92,13 @@ def login():
         form.user.authenticated = True
         db.session.add(form.user)
         db.session.commit()
-        login_user(form.user, remember=True)
-        session["active_persona"] = form.user.active_persona.id
-        flash("Welcome back, {}".format(form.user.active_persona.username))
-        app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
+        if not form.user.active:
+            flash("Please click the link in the validation email we just sent you to activate your account.")
+        else:
+            login_user(form.user, remember=True)
+            session["active_persona"] = form.user.active_persona.id
+            flash("Welcome back, {}".format(form.user.active_persona.username))
+            app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
         return form.redirect(url_for('.index'))
     elif request.method == "POST":
         app.logger.error("Invalid password for email '{}'".format(form.email.data))
@@ -114,13 +123,13 @@ def logout():
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     """Signup a new user"""
-    import sendgrid
     from uuid import uuid4
     form = SignupForm()
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
         user = User(
+            id=uuid4().hex,
             email=form.email.data,
             created=created_dt,
             modified=created_dt)
@@ -133,8 +142,6 @@ def signup():
             username=form.username.data,
             created=created_dt,
             modified=created_dt)
-
-        send_validation_email(user)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -156,6 +163,7 @@ def signup():
             flash("Sorry! There was an error creating your account. Please try again.", "error")
             return render_template('signup.html', form=form)
         else:
+            # send_validation_email(user, db)
             login_user(user, remember=True)
 
             flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
@@ -166,8 +174,8 @@ def signup():
 
 
 @login_required
-@app.route('/validate', methods=["GET", "POST"])
-def signup_validation():
+@app.route('/validate/<signup_code>', methods=["GET"])
+def signup_validation(signup_code):
     """Validate a user's email adress"""
 
     signup_code = request.args.get('signup_code')
@@ -175,7 +183,7 @@ def signup_validation():
         flash("Your account is already activated. You're good to go.")
     if not current_user.valid_signup_code(signup_code):
         app.logger.error("User {} tried validating with invalid signup code {}.".format(current_user, signup_code))
-        send_validation_email(current_user)
+        send_validation_email(current_user, db)
         flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
     else:
         app.logger.info("{} activated their account.".format(current_user))

@@ -10,12 +10,12 @@
 
         <p>If the above link doesn't work, you can paste the following adress to your browser bar:</p>
 
-        <p><a href="{{ url_for('web.signup_validation', signup_code=user.signup_code) }}">{{ url_for('signup_validation', signup_code=user.signup_code) }}</a></p>
+        <p><a href="{{ url_for('web.signup_validation', signup_code=user.signup_code) }}">{{ url_for('web.signup_validation', signup_code=user.signup_code) }}</a></p>
 
         <p>You will be asked to login to your account at the linked location.</p>
 
-        <p>Thank you for using {{ app.config["PRODUCT_NAME"] }},</p>
-        <p>- The {{ app.config["PRODUCT_NAME"] }} Team</p>
-        <p><a href="{{ url_for('web.index') }}">{{ app.config["PRODUCT_NAME"] }}</a></p>
+        <p>Thank you for using RKTIK,</p>
+        <p>- The RKTIK Team</p>
+        <p><a href="{{ url_for('web.index') }}">RKTIK</a></p>
     </body>
 </html>
