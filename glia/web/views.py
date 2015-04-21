@@ -189,7 +189,7 @@ def signup():
             flash("Sorry! There was an error creating your account. Please try again.", "error")
             return render_template('signup.html', form=form)
         else:
-            # send_validation_email(user, db)
+            send_validation_email(user, db)
             login_user(user, remember=True)
 
             flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))

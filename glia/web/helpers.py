@@ -1,11 +1,16 @@
-import re
-import sendgrid
+import logging
 import os
 import pytz
+import re
+import sendgrid
 
 from nucleus.nucleus.models import Group
-from flask import render_template
 from uuid import uuid4
+from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
+
+from flask import render_template
+
+logger = logging.getLogger('web')
 
 
 class UnauthorizedError(Exception):
@@ -33,12 +38,16 @@ def send_validation_email(user, db):
         user (User): Nucleus user object
         db (SQLAlchemy): Database used to store user's new signup code
 
+    Throws:
+        ValueError: If active user has no name or email address
     """
     from .. import db
+    from flask import current_app
 
-    sg_user = os.environ.get('SENDGRID_USERNAME')
-    sg_pass = os.environ.get('SENDGRID_PASSWORD')
-    sg = sendgrid.SendGridClient(sg_user, sg_pass)
+    sg_user = os.environ.get('SENDGRID_USERNAME') or current_app.config["SENDGRID_USERNAME"]
+    sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
+    logger.info("Length: {} {}".format(len(sg_user), len(sg_pass)))
+    sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
 
     user.signup_code = uuid4().hex
     db.session.add(user)
@@ -55,7 +64,13 @@ def send_validation_email(user, db):
     message.set_subject('Please confirm your email address')
     message.set_text(render_template("email/signup_confirmation.html", user=user))
     message.set_from('RKTIK Email Confirmation')
-    status, msg = sg.send(message)
+
+    try:
+        status, msg = sg.send(message)
+    except SendGridClientError, e:
+        logger.error("Client error sending confirmation email: {}".format(e))
+    except SendGridServerError, e:
+        logger.error("Server error sending confirmation email: {}".format(e))
 
 
 def find_links(text, logger):

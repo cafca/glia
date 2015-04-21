@@ -6,3 +6,4 @@ server_private.key
 *.css
 
 secret_key
+sendgrid.auth
