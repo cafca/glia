@@ -62,7 +62,7 @@ def send_validation_email(user, db):
     message = sendgrid.Mail()
     message.add_to("{} <{}>".format(name, email))
     message.set_subject('Please confirm your email address')
-    message.set_text(render_template("email/signup_confirmation.html", user=user))
+    message.set_html(render_template("email/signup_confirmation.html", user=user))
     message.set_from('RKTIK Email Confirmation')
 
     try:

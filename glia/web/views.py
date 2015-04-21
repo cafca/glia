@@ -204,7 +204,6 @@ def signup():
 def signup_validation(signup_code):
     """Validate a user's email adress"""
 
-    signup_code = request.args.get('signup_code')
     if current_user.active:
         flash("Your account is already activated. You're good to go.")
     if not current_user.valid_signup_code(signup_code):
