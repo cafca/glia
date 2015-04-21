@@ -21,6 +21,10 @@ html, body, .main-container, .main-container > .row {
     // height: 100%;
 }
 
+//
+// HEADER
+//
+
 .header {
     margin-top: 128px;
     // float: none;
@@ -60,54 +64,112 @@ html, body, .main-container, .main-container > .row {
     }
 }
 
-.main {
-    // float: none;
-    // display: table-cell;
+.rktik-welcome {
+    margin: 0 0 2em !important;
+}
 
-    .rktik-welcome {
-        margin: 0 0 2em !important;
-    }
+//
+// CHAT
+//
 
-    .rktik-chat {
+.rktik-chat {
 
-        #lines {
-            overflow: scroll;
-            background-color: white;
-            height: 20em;
-            border-top: 1px solid darken(white, 7%);
-            border-bottom: 1px solid darken(white, 7%);
+    #lines {
+        overflow: scroll;
+        background-color: white;
+        height: 20em;
+        border-top: 1px solid darken(white, 7%);
+        border-bottom: 1px solid darken(white, 7%);
 
-            .line {
-                margin-top:5px;
-            }
-
-            .upvote {
-                float: left;
-                width: 32px;
-            }
-
-            .author_name {
-                font-weight: bold;
-                color: grey;
-                margin-right: 5px;
-            }
-
-            &.connected > #connecting {
-                display: none;
-            }
+        .line {
+            margin-top:5px;
         }
 
-        #send-message {
-            margin: .5em 0 .5em;
-            width: 100%;
+        .upvote {
+            float: left;
+            width: 32px;
+        }
 
-            #message {
-                width: 80%;
-            }
+        .author_name {
+            font-weight: bold;
+            color: grey;
+            margin-right: 5px;
+        }
 
-            button {
-                width: 18%;
-            }
+        &.connected > #connecting {
+            display: none;
         }
     }
+
+    #send-message {
+        margin: .5em 0 .5em;
+        width: 100%;
+
+        #message {
+            width: 80%;
+        }
+
+        button {
+            width: 18%;
+        }
+    }
+}
+
+//
+// TABLE OF CONTENTS
+//
+
+.rk-toc {
+    padding-bottom: 1em;
+}
+
+//
+// STARS
+//
+
+.rk-star-lead {
+    margin-bottom: 2.5em;
+}
+
+.rk-star-line {
+    margin-bottom: 1em;
+
+    .oneup {
+        float: left;
+        margin-right: .5em;
+    }
+
+    .rk-line-container {
+        // margin-left: 36px;
+    }
+}
+
+.rk-star-box {
+    .caption {
+        font-size: 12px;
+    }
+
+    .panel > div {
+        padding: 2px;
+    }
+}
+
+//
+// PLANETS
+//
+
+.rk-planet {
+    margin: .5em 0;
+}
+
+.rk-link {
+    border: 1px dotted #eee;
+    background-color: #fafafa;
+    height: 28px;
+    padding: 2px;
+}
+
+.rk-favicon {
+    width: 24px;
+    height: 24px;
 }

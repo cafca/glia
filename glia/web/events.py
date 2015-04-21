@@ -11,15 +11,18 @@
 import functools
 
 from datetime import datetime
-from flask import request
+from flask import request, current_app
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
+from flask.ext.misaka import markdown
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
+from hashlib import sha256
 
 from . import app
 from .. import socketio, db
-from nucleus.nucleus.models import Starmap, Star
+from glia.web.helpers import find_links
+from nucleus.nucleus.models import Starmap, Star, LinkPlanet, PlanetAssociation
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
@@ -47,7 +50,9 @@ def joined(message):
     join_room(message["room_id"])
     app.logger.info("{} joined group chat {}".format(current_user.active_persona, message['room_id']))
     emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
-    emit('nicknames', [current_user.active_persona.username, ], room=message["room_id"])
+
+    data = {'nicknames': [current_user.active_persona.username, ], 'ids': [current_user.active_persona.id, ]}
+    emit('nicknames', data, room=message["room_id"])
 
 
 @socketio_authenticated_only
@@ -59,6 +64,7 @@ def text(message):
     star_created = datetime.utcnow()
     star_id = uuid4().hex
     errors = ""
+    author = current_user.active_persona
 
     if len(message['msg']) == 0:
         errors += "Can't send empty message. "
@@ -67,16 +73,31 @@ def text(message):
     if map is None:
         errors += "Chat room could not be found. "
 
+    # Extract links and replace in text
+    links, text = find_links(message['msg'], app.logger)
+
+    for link in links:
+        emit('status', {'msg': 'Link found: {}'.format(link.url)})
+
     star = Star(
         id=star_id,
-        text=message['msg'],
-        author=current_user.active_persona,
+        text=text,
+        author=author,
         created=star_created,
         modified=star_created)
     db.session.add(star)
 
     map.index.append(star)
     db.session.add(map)
+
+    for link in links:
+        planet = LinkPlanet.get_or_create(link.url)
+        db.session.add(planet)
+
+        assoc = PlanetAssociation(star=star, planet=planet, author=author)
+        star.planet_assocs.append(assoc)
+        app.logger.info("Attached {} to new {}".format(planet, star))
+        db.session.add(assoc)
 
     if errors == "":
         try:
@@ -86,10 +107,13 @@ def text(message):
             app.logger.error("Error adding to chat starmap: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
-            app.logger.info("{} {}: {}".format(map, current_user.active_persona.username, star.text))
+            app.logger.info("{} {}: {}".format(map, author.username, star.text))
+
+            # Render using template
+            template = current_app.jinja_env.get_template('chatline.html')
             data = {
-                'username': current_user.active_persona.username,
-                'msg': message['msg'],
+                'username': author.username,
+                'msg': template.render(star=star),
                 'star_id': star.id,
                 'vote_count': star.oneup_count()
             }
@@ -119,10 +143,9 @@ def vote_request(message):
     """
     error_message = ""
     star_id = message.get('star_id')
-    group_id = message.get('group_id')
     star = None
 
-    if star_id is None or group_id is None:
+    if star_id is None:
         error_message += "Vote event missing parameter. "
 
     if len(error_message) == 0:
