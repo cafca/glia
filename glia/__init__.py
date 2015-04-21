@@ -55,8 +55,8 @@ def create_app(log_info=True):
     # Setup login manager
     login_manager.init_app(app)
     login_manager.anonymous_user = AnonymousPersona
-    from flask import redirect, url_for
-    login_manager.unauthorized = lambda: redirect(url_for('web.login'))
+    login_manager.login_view = "web.login"
+    login_manager.login_message = "Please login to continue browsing RKTIK"
 
     @login_manager.user_loader
     def load_user(userid):

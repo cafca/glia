@@ -142,7 +142,7 @@ def logout():
     logout_user()
     session["active_persona"] = None
     app.logger.debug("{} logged out.".format(user))
-    return redirect(url_for('.index'))
+    return redirect(url_for('.login'))
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -192,29 +192,36 @@ def signup():
             send_validation_email(user, db)
             login_user(user, remember=True)
 
-            flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
+            flash("Just one more step: Check your email and click on the confirmation link in the message we just sent you.".format(form.username.data))
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         return form.redirect(url_for('.index'))
     return render_template('signup.html', form=form)
 
 
-@login_required
-@app.route('/validate/<signup_code>', methods=["GET"])
-def signup_validation(signup_code):
+@app.route('/validate/<user_id>/<signup_code>', methods=["GET"])
+def signup_validation(user_id, signup_code):
     """Validate a user's email adress"""
 
-    if current_user.active:
+    user = User.query.get(user_id)
+
+    if user is None:
+        flash("This signup link is invalid.")
+
+    elif user.active:
         flash("Your account is already activated. You're good to go.")
 
-    elif not current_user.valid_signup_code(signup_code):
-        app.logger.error("User {} tried validating with invalid signup code {}.".format(current_user, signup_code))
-        send_validation_email(current_user, db)
+    elif not user.valid_signup_code(signup_code):
+        app.logger.error("User {} tried validating with invalid signup code {}.".format(user, signup_code))
+        send_validation_email(user, db)
         flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
     else:
-        app.logger.info("{} activated their account.".format(current_user))
-        current_user.active = True
-        current_user.signup_code = None
-        db.session.add(current_user)
+        login_user(user, remember=False)
+        session["active_persona"] = form.user.active_persona.id
+        user.active = True
+        user.signup_code = None
+        db.session.add(user)
         db.session.commit()
+        app.logger.info("{} activated their account.".format(user))
+        flash("Yay! Welcome to RKTIK.")
     return redirect(url_for('.index'))
