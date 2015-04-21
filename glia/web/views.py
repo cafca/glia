@@ -158,7 +158,7 @@ def signup():
             email=form.email.data,
             created=created_dt,
             modified=created_dt,
-            active=True)
+            active=False)
         user.set_password(form.password.data)
         db.session.add(user)
 
@@ -206,7 +206,8 @@ def signup_validation(signup_code):
 
     if current_user.active:
         flash("Your account is already activated. You're good to go.")
-    if not current_user.valid_signup_code(signup_code):
+
+    elif not current_user.valid_signup_code(signup_code):
         app.logger.error("User {} tried validating with invalid signup code {}.".format(current_user, signup_code))
         send_validation_email(current_user, db)
         flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
@@ -216,4 +217,4 @@ def signup_validation(signup_code):
         current_user.signup_code = None
         db.session.add(current_user)
         db.session.commit()
-    return redirect('.index')
+    return redirect(url_for('.index'))
