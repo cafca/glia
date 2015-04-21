@@ -1,7 +1,16 @@
-import re
+import logging
+import os
 import pytz
+import re
+import sendgrid
 
 from nucleus.nucleus.models import Group
+from uuid import uuid4
+from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
+
+from flask import render_template
+
+logger = logging.getLogger('web')
 
 
 class UnauthorizedError(Exception):
@@ -20,6 +29,60 @@ def get_group_from_path(path):
     if rx_match:
         group_id = rx_match.group(1)
         return Group.query.get(group_id)
+
+
+def send_email(message):
+    """Send Email using Sendgrid service
+
+    Args:
+        message (Sendgrid Message): Readily configured message object
+
+    Raises:
+        SendGridClientError
+        SendGridServerError
+    """
+    from flask import current_app
+
+    sg_user = os.environ.get('SENDGRID_USERNAME') or current_app.config["SENDGRID_USERNAME"]
+    sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
+    sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
+    return sg.send(message)
+
+
+def send_validation_email(user, db):
+    """Send validation email using sendgrid, resetting the signup code.
+
+    Args:
+        user (User): Nucleus user object
+        db (SQLAlchemy): Database used to store user's new signup code
+
+    Throws:
+        ValueError: If active user has no name or email address
+    """
+    from .. import db
+
+    user.signup_code = uuid4().hex
+    db.session.add(user)
+    db.session.commit()
+
+    name = user.active_persona.username
+    email = user.email
+
+    if name is None or email is None:
+        raise ValueError("Username and email can't be empty")
+
+    message = sendgrid.Mail()
+    message.add_to("{} <{}>".format(name, email))
+    message.set_subject('Please confirm your email address')
+    message.set_html(render_template("email/signup_confirmation.html", user=user))
+    message.set_from('RKTIK Email Confirmation')
+
+    try:
+        status, msg = send_email(message)
+    except SendGridClientError, e:
+        logger.error("Client error sending confirmation email: {}".format(e))
+    except SendGridServerError, e:
+        logger.error("Server error sending confirmation email: {}".format(e))
 
 
 def find_links(text, logger):

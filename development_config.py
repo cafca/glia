@@ -48,3 +48,13 @@ except IOError:
     SECRET_KEY = os.urandom(24)
     with open('secret_key', 'wb') as f:
         f.write(SECRET_KEY)
+
+# Get sendgrid credentials
+try:
+    with open('sendgrid.auth', 'r') as f:
+        sg_auth = f.read()
+except IOError:
+    logging.warning("""Sendgrid configuration could not be read. Please create
+        ./sendgrid.auth file with contents 'username:password'.""")
+else:
+    SENDGRID_USERNAME, SENDGRID_PASSWORD = sg_auth.split(":", 1)

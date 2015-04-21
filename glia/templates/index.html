@@ -30,7 +30,7 @@
     </form>
   </div> <!-- ./rktik-toc -->
 
-
+  {% if top_posts|length > 0 %}
   <div class="rk-frontpage col-sm-7 col-sm-pull-2">
     {{ star_macros.star_lead(top_posts[0], controlled_personas) }}
 
@@ -40,6 +40,9 @@
       {% if loop.index is divisibleby 4 or loop.last %}</div>{% endif %}
     {% endfor %}
   </div> <!-- ./ row -->
+  {% else %}
+  <h1>Join some groups >>></h1>
+  {% endif %}
 
 </div> <!-- ./ index -->
 {% endblock %}

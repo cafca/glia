@@ -9,16 +9,22 @@
 """
 import datetime
 
-from . import app
-from .. import db
-from functools import wraps
-from flask import request, redirect, render_template, flash, url_for, session, current_app
+from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from forms import LoginForm, SignupForm, CreateGroupForm
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 
+from . import app
+from .. import db
+from glia.web.helpers import send_validation_email
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star
-from forms import LoginForm, SignupForm, CreateGroupForm
+
+
+@app.before_request
+def account_notifications():
+    if not current_user.is_anonymous and not current_user.is_active:
+        flash("Your account is not activated. Please click the link in the email that we sent you.")
 
 
 @app.route('/', methods=["GET"])
@@ -111,10 +117,13 @@ def login():
         form.user.authenticated = True
         db.session.add(form.user)
         db.session.commit()
-        login_user(form.user, remember=True)
-        session["active_persona"] = form.user.active_persona.id
-        flash("Welcome back, {}".format(form.user.active_persona.username))
-        app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
+        if not form.user.active:
+            flash("Please click the link in the validation email we just sent you to activate your account.")
+        else:
+            login_user(form.user, remember=True)
+            session["active_persona"] = form.user.active_persona.id
+            flash("Welcome back, {}".format(form.user.active_persona.username))
+            app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
         return form.redirect(url_for('.index'))
     elif request.method == "POST":
         app.logger.error("Invalid password for email '{}'".format(form.email.data))
@@ -133,7 +142,7 @@ def logout():
     logout_user()
     session["active_persona"] = None
     app.logger.debug("{} logged out.".format(user))
-    return redirect(url_for('.index'))
+    return redirect(url_for('.login'))
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -145,10 +154,11 @@ def signup():
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
         user = User(
+            id=uuid4().hex,
             email=form.email.data,
             created=created_dt,
             modified=created_dt,
-            active=True)
+            active=False)
         user.set_password(form.password.data)
         db.session.add(user)
 
@@ -179,10 +189,38 @@ def signup():
             flash("Sorry! There was an error creating your account. Please try again.", "error")
             return render_template('signup.html', form=form)
         else:
+            send_validation_email(user, db)
             login_user(user, remember=True)
 
-            flash("Hello {}, you now have your own RKTIK account!".format(form.username.data))
+            flash("Just one more step: Check your email and click on the confirmation link in the message we just sent you.".format(form.username.data))
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         return form.redirect(url_for('.index'))
     return render_template('signup.html', form=form)
+
+
+@app.route('/validate/<id>/<signup_code>', methods=["GET"])
+def signup_validation(id, signup_code):
+    """Validate a user's email adress"""
+
+    user = User.query.get(id)
+
+    if user is None:
+        flash("This signup link is invalid.")
+
+    elif user.active:
+        flash("Your account is already activated. You're good to go.")
+
+    elif not user.valid_signup_code(signup_code):
+        app.logger.error("User {} tried validating with invalid signup code {}.".format(user, signup_code))
+        send_validation_email(user, db)
+        flash("Oops! Invalid signup code. We have sent you another confirmation email. Please try clicking the link in that new email. ", "error")
+    else:
+        login_user(user, remember=False)
+        session["active_persona"] = user.active_persona.id
+        user.active = True
+        db.session.add(user)
+        db.session.commit()
+        app.logger.info("{} activated their account.".format(user))
+        flash("Yay! Welcome to RKTIK.")
+    return redirect(url_for('.index'))
