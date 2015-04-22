@@ -1,26 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-    testing_config
+    production_config
     ~~~~~
 
-    Configuration for testing on the Heruko server.
+    Production configuration on the Heruko server.
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
-import datetime
-import logging
 import os
+import datetime
 
 from keyczar.keys import RsaPrivateKey
 
 # On Heroku, the port bound to is not the same port the app will be accessible at from the outside
 # this means that we bind to os.environ['PORT'] (>1000) but are actually visible at port 80
-SERVER_HOST = 'glia-dev.herokuapp.com'
+SERVER_HOST = 'glia.herokuapp.com'
 SERVER_PORT = int(os.environ['PORT'])
 AUTH_ENABLED = bool(os.environ['SOUMA_AUTH'])
-
-DEBUG = True
-LOG_LEVEL = logging.DEBUG
 
 SERVER_NAME = SERVER_HOST
 

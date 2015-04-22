@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 
 from . import app
 from .. import db
+from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star
 
@@ -29,6 +30,7 @@ def account_notifications():
 
 @app.route('/', methods=["GET"])
 @login_required
+@http_auth.login_required
 def index():
     """Front page"""
     groupform = CreateGroupForm()
@@ -59,6 +61,7 @@ def index():
 
 @app.route('/groups/', methods=["GET", "POST"])
 @login_required
+@http_auth.login_required
 def groups():
     """Create groups"""
     form = CreateGroupForm()
@@ -83,17 +86,20 @@ def groups():
 
 
 @app.route('/star/<id>/')
+@http_auth.login_required
 def star(id=None):
     pass
 
 
 @app.route('/persona/<id>/')
+@http_auth.login_required
 def persona(id=None):
     pass
 
 
 @app.route('/groups/<id>', methods=["GET"])
 @login_required
+@http_auth.login_required
 def group(id):
     """Display a group's profile"""
     group = Group.query.get(id)
@@ -114,12 +120,14 @@ def group(id):
 
 
 @app.route('/stars/', methods=["POST"])
+@http_auth.login_required
 def create_star():
     """Post a new Star"""
     pass
 
 
 @app.route('/login', methods=["GET", "POST"])
+@http_auth.login_required
 def login():
     """Login a user"""
     form = LoginForm()
@@ -141,8 +149,9 @@ def login():
     return render_template('login.html', form=form)
 
 
-@login_required
 @app.route('/logout', methods=["GET", "POST"])
+@login_required
+@http_auth.login_required
 def logout():
     """Logout a user"""
     user = current_user
@@ -156,6 +165,7 @@ def logout():
 
 
 @app.route('/signup', methods=["GET", "POST"])
+@http_auth.login_required
 def signup():
     """Signup a new user"""
     from uuid import uuid4
@@ -210,6 +220,7 @@ def signup():
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])
+@http_auth.login_required
 def signup_validation(id, signup_code):
     """Validate a user's email adress"""
 
