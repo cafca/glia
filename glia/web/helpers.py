@@ -8,7 +8,9 @@ from nucleus.nucleus.models import Group
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 
-from flask import render_template
+from functools import wraps
+from flask import render_template, request, Response
+from flask.ext.login import login_user
 
 logger = logging.getLogger('web')
 
@@ -60,6 +62,7 @@ def send_validation_email(user, db):
         ValueError: If active user has no name or email address
     """
     from .. import db
+    from flask import current_app
 
     user.signup_code = uuid4().hex
     db.session.add(user)
@@ -77,12 +80,24 @@ def send_validation_email(user, db):
     message.set_html(render_template("email/signup_confirmation.html", user=user))
     message.set_from('RKTIK Email Confirmation')
 
+    # Override activation step if email can't be sent in dev environment
+    def activate_user():
+        logger.warning("User is being auto-activated in dev environment")
+        login_user(user, remember=False)
+        user.active = True
+        db.session.add(user)
+        db.session.commit()
+
     try:
         status, msg = send_email(message)
     except SendGridClientError, e:
         logger.error("Client error sending confirmation email: {}".format(e))
+        if current_app.config.get('DEBUG') is True:
+            activate_user()
     except SendGridServerError, e:
         logger.error("Server error sending confirmation email: {}".format(e))
+        if current_app.config.get('DEBUG') is True:
+            activate_user()
 
 
 def find_links(text, logger):
