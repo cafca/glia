@@ -7,8 +7,9 @@
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
-import os
 import datetime
+import logging
+import os
 
 from keyczar.keys import RsaPrivateKey
 
@@ -17,6 +18,9 @@ from keyczar.keys import RsaPrivateKey
 SERVER_HOST = 'glia-dev.herokuapp.com'
 SERVER_PORT = int(os.environ['PORT'])
 AUTH_ENABLED = bool(os.environ['SOUMA_AUTH'])
+
+DEBUG = True
+LOG_LEVEL = logging.DEBUG
 
 SERVER_NAME = SERVER_HOST
 
