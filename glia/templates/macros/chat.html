@@ -2,34 +2,47 @@
 
 
 {% macro chatline(star) %}
-
-<div class="line">
+<li class="list-group-item">
     <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
         <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
     </button>
     <span>
         <span class="author_name">{{ star.author.username }}:</span>{{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
     </span>
-</div>
+</li>
+
 {% for planet_assoc in star.planet_assocs %}
-<div class="line">
-    [{{ loop.index }}] {{ planet_macros.planet(planet_assoc.planet, True)}}
-</div>
+<li class="list-group-item">
+    <i class="fa fa-paperclip"></i> {{ planet_macros.planet(planet_assoc.planet, True)}}
+</li>
 {% endfor %}
 
 {% endmacro %}
 
 
-{% macro chat(map) %}
+{% macro chat(map, title="Chat") %}
+<div class="rk-chat panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ title }}</h3>
+    </div>
 
-<div id="messages">
-    <div id="nicknames"><span>Online:</span></div>
-    <div id="lines">
+    <div class="panel-body" id="rk-chat-meta">
+        <div id="nicknames"><span>Online:</span></div>
+        <p id="rk-chat-connecting">Connecting to Glia chat</p>
+    </div>
+
+    <ul class="list-group" id="rk-chat-lines">
         {% for star in map.index %}
         {{ chatline(star) }}
         {% endfor %}
-        <p id="connecting">Connecting to Glia chat</p>
+    </ul>
+
+    <div class="panel-footer">
+    <form id="send-message" class="form-inline">
+        <input id="message" autocomplete="off" class="form-control input-sm">
+        <button class="btn btn-sm">Send</button>
+    </form>
     </div>
-</div>
+</div> <!-- ./ panel -->
 
 {% endmacro%}

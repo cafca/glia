@@ -21,6 +21,10 @@ html, body, .main-container, .main-container > .row {
     // height: 100%;
 }
 
+a > .fa:hover {
+    text-decoration: none;
+}
+
 //
 // HEADER
 //
@@ -72,23 +76,19 @@ html, body, .main-container, .main-container > .row {
 // CHAT
 //
 
-.rktik-chat {
+.rk-chat {
+    #rk-chat-meta {
+        &.rk-chat-connected > #rk-chat-connecting {
+            display: none;
+        }
+    }
 
-    #lines {
+
+    #rk-chat-lines {
         overflow: scroll;
-        background-color: white;
-        height: 20em;
+        height: 25em;
         border-top: 1px solid darken(white, 7%);
         border-bottom: 1px solid darken(white, 7%);
-
-        .line {
-            margin-top:5px;
-
-            p {
-                line-height: 1.1;
-                margin-top: 3px;
-            }
-        }
 
         .upvote {
             float: left;
@@ -101,8 +101,9 @@ html, body, .main-container, .main-container > .row {
             margin-right: 5px;
         }
 
-        &.connected > #connecting {
-            display: none;
+        .rk-favicon {
+            width: 16px;
+            height: 16px;
         }
     }
 
@@ -182,8 +183,6 @@ html, body, .main-container, .main-container > .row {
 }
 
 .rk-link {
-    border: 1px dotted #eee;
-    background-color: #fafafa;
     height: 28px;
     padding: 2px;
 }

@@ -14,15 +14,15 @@ from datetime import datetime
 from flask import request, current_app
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
-from flask.ext.misaka import markdown
+from goose import Goose
 from uuid import uuid4
+from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
-from hashlib import sha256
 
 from . import app
 from .. import socketio, db
 from glia.web.helpers import find_links
-from nucleus.nucleus.models import Starmap, Star, LinkPlanet, PlanetAssociation
+from nucleus.nucleus.models import Starmap, Star, LinkPlanet, TextPlanet, PlanetAssociation
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
@@ -94,13 +94,32 @@ def text(message):
     db.session.add(map)
 
     for link in links:
-        planet = LinkPlanet.get_or_create(link.url)
-        db.session.add(planet)
+        linkplanet = LinkPlanet.get_or_create(link.url)
 
-        assoc = PlanetAssociation(star=star, planet=planet, author=author)
+        g = Goose()
+        page = g.extract(url=link.url)
+
+        # Add metadata if planet object is newly created
+        if inspect(linkplanet).transient is True:
+            linkplanet.title = page.title
+
+        db.session.add(linkplanet)
+
+        assoc = PlanetAssociation(star=star, planet=linkplanet, author=author)
         star.planet_assocs.append(assoc)
-        app.logger.info("Attached {} to new {}".format(planet, star))
+        app.logger.info("Attached {} to new {}".format(linkplanet, star))
         db.session.add(assoc)
+
+        if len(page.cleaned_text) > 150:
+            textplanet = TextPlanet.get_or_create(page.cleaned_text)
+            textplanet.source = link.url
+
+            db.session.add(textplanet)
+
+            assoc = PlanetAssociation(star=star, planet=textplanet, author=author)
+            star.planet_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(textplanet, star))
+            db.session.add(assoc)
 
     if errors == "":
         try:
