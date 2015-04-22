@@ -109,34 +109,38 @@ def find_links(text, logger):
     Returns:
         tuple:
             list: List of response objects for found URLs
-            str: Text with all link occurrences removed
+            str: Text with links removed if they occur at the end
     """
     import re
     import requests
 
     # Everything that looks remotely like a URL
-    expr = "(\w+\.\w{2,3}/?)"
+    expr = "((?:https?://)?\S+\.\w{2,3}\S*)"
     rv = list()
 
     candidates = re.findall(expr, text)
 
     if candidates:
-        for i, c in enumerate(candidates):
+        logging.info(candidates)
+        for i, c in enumerate(candidates[::-1]):
+            logging.info("{} {}".format(i, c))
             if c[:4] != "http":
-                c_scheme = "".join(["http://", c])
+                c_schemed = "".join(["http://", c])
             else:
-                c_scheme = c
+                c_schemed = c
 
-            logger.info("Testing potential link '{}' for availability".format(c_scheme))
+            logger.info("Testing potential link '{}' for availability".format(c_schemed))
             try:
-                res = requests.head(c_scheme, timeout=3.0)
+                res = requests.head(c_schemed, timeout=3.0)
             except (requests.exceptions.RequestException, ValueError):
                 # The link failed
                 pass
             else:
                 if res and res.status_code < 400:
                     rv.append(res)
-                    text = text.replace(c, res.url)
+                    # Only remove link if it occurs at the end of text
+                    if (text.index(c) + len(c)) == len(text.rstrip()):
+                        text = text.replace(c, "")
     return (rv, text)
 
 

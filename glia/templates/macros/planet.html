@@ -9,7 +9,7 @@
     <img src="{{ planet.url }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
 </span>
 {% elif planet.kind == 'link' %}
-<a class="rk-link" href="{{ planet.url }}" />
+<a class="rk-link" href="{{ planet.url }}">
     {% if icon == True %}
     <img class="rk-favicon" src="{{ planet.favicon_url() }}" /> &nbsp;
     {% endif %}
