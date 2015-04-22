@@ -94,7 +94,7 @@ def text(message):
     db.session.add(map)
 
     for link in links:
-        planet = LinkPlanet.get_or_create(link.url)
+        planet = LinkPlanet.get_or_create(link.url, title=link.title)
         db.session.add(planet)
 
         assoc = PlanetAssociation(star=star, planet=planet, author=author)
