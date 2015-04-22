@@ -59,9 +59,9 @@ def index():
     return render_template('index.html', groupform=groupform, group_data=group_data, top_posts=top_posts)
 
 
-@http_auth.login_required
 @app.route('/groups/', methods=["GET", "POST"])
 @login_required
+@http_auth.login_required
 def groups():
     """Create groups"""
     form = CreateGroupForm()
@@ -85,21 +85,21 @@ def groups():
     return render_template("groups.html", form=form)
 
 
-@http_auth.login_required
 @app.route('/star/<id>/')
+@http_auth.login_required
 def star(id=None):
     pass
 
 
-@http_auth.login_required
 @app.route('/persona/<id>/')
+@http_auth.login_required
 def persona(id=None):
     pass
 
 
-@http_auth.login_required
 @app.route('/groups/<id>', methods=["GET"])
 @login_required
+@http_auth.login_required
 def group(id):
     """Display a group's profile"""
     group = Group.query.get(id)
@@ -119,15 +119,15 @@ def group(id):
     return render_template('group.html', group=group, stars=top_posts)
 
 
-@http_auth.login_required
 @app.route('/stars/', methods=["POST"])
+@http_auth.login_required
 def create_star():
     """Post a new Star"""
     pass
 
 
-@http_auth.login_required
 @app.route('/login', methods=["GET", "POST"])
+@http_auth.login_required
 def login():
     """Login a user"""
     form = LoginForm()
@@ -149,9 +149,9 @@ def login():
     return render_template('login.html', form=form)
 
 
-@http_auth.login_required
-@login_required
 @app.route('/logout', methods=["GET", "POST"])
+@login_required
+@http_auth.login_required
 def logout():
     """Logout a user"""
     user = current_user
@@ -164,8 +164,8 @@ def logout():
     return redirect(url_for('.login'))
 
 
-@http_auth.login_required
 @app.route('/signup', methods=["GET", "POST"])
+@http_auth.login_required
 def signup():
     """Signup a new user"""
     from uuid import uuid4
@@ -219,8 +219,8 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-@http_auth.login_required
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])
+@http_auth.login_required
 def signup_validation(id, signup_code):
     """Validate a user's email adress"""
 
