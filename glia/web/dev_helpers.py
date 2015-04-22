@@ -18,8 +18,9 @@ from flask.ext.httpauth import HTTPDigestAuth
 
 http_auth = HTTPDigestAuth()
 
-if os.environ['RK_HTTPAUTH_ADMIN'] is None:
+if os.environ.get('RK_HTTPAUTH_ADMIN') is None:
     # Fallback for local dev environment
+    logging.warning("Using hardcoded HTTPAuth credentials")
     http_auth_users = {
         "admin_user": "coaltarp1010",  # mm so nice to type
         "testing_user": "PVi&OSpRNqRSghJ62W0@dcMAdYl#MVBx"
