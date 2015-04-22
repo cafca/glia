@@ -13,7 +13,7 @@ $(document).ready(function(){
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/groups')
     socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
     socket.on('connect', function() {
-        $('#lines').addClass('connected');
+        $('#rk-chat-meta').addClass('rk-chat-connected');
         socket.emit('joined', {'room_id': window.room_id});
         scroll();
     });
@@ -75,9 +75,11 @@ $(document).ready(function(){
     // DOM manipulation
     function append_timeline (from, msg, star_id, vote_count) {
         if (star_id === undefined) {
-            $('#lines').append($('<p>').append($('<em>').text(msg)));
+            // Server message
+            $('#rk-chat-lines').append($('<li class="list-group-item">').append($('<em>').text(msg)));
         } else {
-            $('#lines').append(msg);
+            // Star post
+            $('#rk-chat-lines').append(msg);
             $('.oneup').click(function () {request_upvote(this.dataset.id);});
 
         }
@@ -85,7 +87,7 @@ $(document).ready(function(){
     }
 
     function scroll() {
-        $('#lines').get(0).scrollTop = 10000000;
+        $('#rk-chat-lines').get(0).scrollTop = 10000000;
     }
 
     function request_upvote(star_id) {

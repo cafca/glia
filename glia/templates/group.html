@@ -13,18 +13,11 @@ window.admin_id = "{{ group.admin.id }}";
 
 {% block content %}
 <section class="row">
-    <div class="rktik-chat panel panel-default col-sm-3 col-sm-push-8">
-        <h3>{{ group.username }}</h3>
+    <div class=" col-sm-4 col-sm-push-8">
+            {{ chat_macros.chat(group.profile, title=group.username) }}
+    </div> <!-- ./ chat column -->
 
-        {{ chat_macros.chat(group.profile) }}
-
-        <form id="send-message" class="form-inline">
-            <input id="message" autocomplete="off" class="form-control input-sm">
-            <button class="btn btn-sm">Send</button>
-        </form>
-    </div>
-
-    <div class="star-listing col-sm-7 col-sm-pull-2">
+    <div class="star-listing col-sm-7 col-sm-pull-3">
     {% for star in stars %}
         {% if loop.first %}
             {{ star_macros.star_lead(star, controlled_personas) }}
@@ -32,7 +25,7 @@ window.admin_id = "{{ group.admin.id }}";
             {{ star_macros.star_line(star, controlled_personas) }}
         {% endif %}
     {% endfor %}
-    </div>
+    </div> <!-- ./ star listing -->
 </section>
 
 <section class

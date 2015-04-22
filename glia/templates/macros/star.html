@@ -29,7 +29,8 @@
 
     <span>
         <span class="caption">
-            <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">{{star.created|localtime|naturaltime}}</a>
+            <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">
+            <i class="fa fa-star"></i> {{star.created|localtime|naturaltime}}</a>
         </span>
     </span>
 
@@ -85,7 +86,8 @@
     </button>
 
     <span class="caption">
-        <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">{{star.created|localtime|naturaltime}}</a>
+        <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">
+        <i class="fa fa-star"></i> {{star.created|localtime|naturaltime}}</a>
     </span>
   </p>
 </div>
