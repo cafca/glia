@@ -110,7 +110,7 @@ def text(message):
             app.logger.error("Error adding to chat starmap: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
-            app.logger.info("{} {}: {}".format(map, author.username, star.text))
+            app.logger.info(u"{} {}: {}".format(map, author.username, star.text))
 
             # Render using template
             template = current_app.jinja_env.get_template('chatline.html')
