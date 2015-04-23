@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/star.html" as star_macros %}
+
+{% block content %}
+<section class="row">
+    <div class="star-listing col-sm-7 col-sm-push-1">
+        {% if star.parent %}
+        <blockquote>
+        {{ star_macros.star_line(star.parent, controlled_personas) }}
+        </blockquote>
+        {% endif %}
+
+        {{ star_macros.star_lead(star, controlled_personas, truncate=False) }}
+    </div> <!-- ./ star listing -->
+
+    <div class="col-sm-3 col-sm-push-1">
+        <h3>Posted on</h3>
+        <ul>
+        {% for map in star.starmaps %}
+            {% for identity in map.contexts %}
+                {% set map_template = "web.{}".format(identity.kind) %}
+                <li><a href="{{ url_for(map_template, id=identity.id) }}">{{ identity.username }}</a></li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{% endblock %}

@@ -6,7 +6,7 @@
 </button>
 {% endmacro %}
 
-{% macro star_lead(star, controlled_personas) %}
+{% macro star_lead(star, controlled_personas, truncate=True) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-lead">
@@ -17,18 +17,18 @@
   <!-- Attachments -->
   {% for planet_assoc in star.planet_assocs %}
   <div class="rk-planet">
-    {{ planet_macros.planet(planet_assoc.planet, True)}}
+    {{ planet_macros.planet(planet_assoc.planet, True, truncate=truncate)}}
   </div>
   {% endfor %}
 
   <!-- Meta -->
   <div class="rk-star-meta">
     {{ oneup(star) }}
-    <span>
+    <!-- <span>
         <button data-target="#comment-modal-{{star.id}}" role="button" class="btn btn-xs" id="comments-{{star.id}}" type="button" data-toggle="modal">
             <span class="oneup-count" id="comment-count-{{star.id}}">{{star.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
         </button>
-    </span>
+    </span> -->
 
     <span>
         <span class="caption">

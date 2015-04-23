@@ -19,7 +19,7 @@ from . import app
 from .. import db
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
-from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star
+from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star, Starmap
 
 
 @app.before_request
@@ -88,7 +88,11 @@ def groups():
 @app.route('/star/<id>/')
 @http_auth.login_required
 def star(id=None):
-    pass
+    star = Star.query.get_or_404(id)
+
+    # backrefs = Starmap.query.join(Star).filter(Star.id == star.id)
+
+    return render_template("star.html", star=star)
 
 
 @app.route('/persona/<id>/')

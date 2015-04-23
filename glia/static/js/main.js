@@ -65,7 +65,7 @@ $(document).ready(function(){
         console.log("Star "+star_id+" now has "+vote_count+" votes.");
 
         if (author_id == window.user_id) {
-            $(".oneup-"+star_id).toggleClass("btn-primary");
+            $(".oneup-"+star_id).toggleClass("btn-default");
             $(".oneup-"+star_id).toggleClass("btn-inverse");
         }
 
