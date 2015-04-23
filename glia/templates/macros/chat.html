@@ -1,11 +1,10 @@
 {% import "macros/planet.html" as planet_macros %}
+{% import "macros/star.html" as star_macros %}
 
 
 {% macro chatline(star) %}
 <li class="list-group-item">
-    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
-        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-    </button>
+    {{ star_macros.oneup(star) }}
     <span>
         <span class="author_name">{{ star.author.username }}:</span>{{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
     </span>
@@ -13,7 +12,7 @@
 
 {% for planet_assoc in star.planet_assocs %}
 <li class="list-group-item">
-    <i class="fa fa-paperclip"></i> {{ planet_macros.planet(planet_assoc.planet, scale=True, size=small)}}
+    {{ planet_macros.planet(planet_assoc.planet, scale=True, size='small') }}
 </li>
 {% endfor %}
 

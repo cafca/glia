@@ -21,6 +21,7 @@
 </a>
 {% elif planet.kind == 'text' %}
 <span class="rk-text">
+    <p><i class="fa fa-file-text-o"></i>  read {{ planet.reading_time()|naturaldelta }}</p>
     {% if truncate %}
     {{ planet.text|truncate()|markdown}}
     {% else %}
@@ -44,7 +45,9 @@
     <img class="rk-favicon-small" src="{{ planet.favicon_url() }}" />
 </button>
 {% elif planet.kind == 'text' %}
-<button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-file-text-o"></i></button>
+<button disabled="disabled" href="#" class="btn btn-xs">
+    <i class="fa fa-file-text-o"></i> read {{ planet.reading_time()|naturaldelta }}
+</button>
 {% endif %}
 
 {% endmacro %}

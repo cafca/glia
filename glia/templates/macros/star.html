@@ -1,5 +1,11 @@
 {% import "macros/planet.html" as planet_macros %}
 
+{% macro oneup(star) %}
+<button class="oneup btn btn-xs {% if star.oneupped() %}btn-inverse{% else %}btn-default{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
+  <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+</button>
+{% endmacro %}
+
 {% macro star_lead(star, controlled_personas) %}
 
 <!-- STAR {{star.id}} -->
@@ -17,10 +23,7 @@
 
   <!-- Meta -->
   <div class="rk-star-meta">
-    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
-        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-    </button>
-
+    {{ oneup(star) }}
     <span>
         <button data-target="#comment-modal-{{star.id}}" role="button" class="btn btn-xs" id="comments-{{star.id}}" type="button" data-toggle="modal">
             <span class="oneup-count" id="comment-count-{{star.id}}">{{star.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
@@ -52,9 +55,7 @@
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-line">
-  <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
-      <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-  </button>
+  {{ oneup(star) }}
 
   <div class="rk-line-container">
     <div class="rk-star-title">
@@ -64,7 +65,7 @@
     <!-- Attachments -->
     {% for planet_assoc in star.planet_assocs %}
     <div class="rk-planet">
-      {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=False)}}
+      {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
     </div>
     {% endfor %}
   </div>
@@ -84,9 +85,7 @@
     </div>
   </div>
   <p>
-    <button class="oneup btn btn-xs {% if star.oneupped() %}btn-primary{% else %}btn-inverse{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
-        <span class="oneup-count oneup-count-{{star.id}}">{{star.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-    </button>
+    {{ oneup(star) }}
 
     <span class="caption">
         <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">

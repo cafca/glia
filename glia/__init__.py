@@ -17,6 +17,7 @@ from flask.ext.login import LoginManager
 from flask.ext.misaka import Misaka
 from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
+from humanize.time import naturaldelta
 
 from .database import db
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
@@ -71,6 +72,7 @@ def create_app(log_info=True):
     # - Import here to avoid circular import
     from web.helpers import localtime
     app.jinja_env.filters['naturaltime'] = naturaltime
+    app.jinja_env.filters['naturaldelta'] = naturaldelta
     app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
 
     # Setup debug toolbar
