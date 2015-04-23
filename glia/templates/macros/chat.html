@@ -13,7 +13,7 @@
 
 {% for planet_assoc in star.planet_assocs %}
 <li class="list-group-item">
-    <i class="fa fa-paperclip"></i> {{ planet_macros.planet(planet_assoc.planet, True)}}
+    <i class="fa fa-paperclip"></i> {{ planet_macros.planet(planet_assoc.planet, scale=True, size=small)}}
 </li>
 {% endfor %}
 

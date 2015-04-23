@@ -78,6 +78,9 @@
   <div class="panel">
     <div class="rk-star-box-content">
       <p>{{ star.text}}</p>
+      <p>{% for planet_assoc in star.planet_assocs %}
+      {{ planet_macros.planet_icon(planet_assoc.planet)}}
+      {% endfor %}</p>
     </div>
   </div>
   <p>
