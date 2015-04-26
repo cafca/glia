@@ -160,10 +160,10 @@ def process_attachments(text):
 
     links, text = find_links(text)
     for link in links:
-        linkplanet = LinkPlanet.get_or_create(link.url)
-        planets.append(linkplanet)
-
-        if not isinstance(linkplanet, LinkedPicturePlanet):
+        if "content-type" in link.headers and link.headers["content-type"][:5] == "image":
+            linkplanet = LinkedPicturePlanet.get_or_create(link.url)
+        else:
+            linkplanet = LinkPlanet.get_or_create(link.url)
             page = g.extract(url=link.url)
 
             # Add metadata if planet object is newly created
@@ -176,6 +176,8 @@ def process_attachments(text):
                 textplanet.source = link.url
 
                 planets.append(textplanet)
+
+        planets.append(linkplanet)
 
     return (text, planets)
 
