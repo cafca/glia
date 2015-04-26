@@ -14,15 +14,13 @@ from datetime import datetime
 from flask import request, current_app
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
-from goose import Goose
 from uuid import uuid4
-from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
-from glia.web.helpers import find_links
-from nucleus.nucleus.models import Starmap, Star, LinkPlanet, TextPlanet, PlanetAssociation
+from glia.web.helpers import process_attachments
+from nucleus.nucleus.models import Starmap, Star, PlanetAssociation
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
@@ -74,51 +72,29 @@ def text(message):
 
     map = Starmap.query.get(message["room_id"])
     if map is None:
-        errors += "Chat room could not be found. "
+        errors += "The Starmap you're trying to post into could not be found. "
 
-    # Extract links and replace in text
-    links, text = find_links(message['msg'], app.logger)
+    if errors == "":
+        star = Star(
+            id=star_id,
+            text=message['msg'],
+            author=author,
+            created=star_created,
+            modified=star_created)
+        db.session.add(star)
 
-    for link in links:
-        emit('status', {'msg': 'Link found: {}'.format(link.url)})
+        map.index.append(star)
+        db.session.add(map)
 
-    star = Star(
-        id=star_id,
-        text=text,
-        author=author,
-        created=star_created,
-        modified=star_created)
-    db.session.add(star)
+        text, planets = process_attachments(star.text)
+        star.text = text
 
-    map.index.append(star)
-    db.session.add(map)
+        for planet in planets:
+            db.session.add(planet)
 
-    for link in links:
-        linkplanet = LinkPlanet.get_or_create(link.url)
-
-        g = Goose()
-        page = g.extract(url=link.url)
-
-        # Add metadata if planet object is newly created
-        if inspect(linkplanet).transient is True:
-            linkplanet.title = page.title
-
-        db.session.add(linkplanet)
-
-        assoc = PlanetAssociation(star=star, planet=linkplanet, author=author)
-        star.planet_assocs.append(assoc)
-        app.logger.info("Attached {} to new {}".format(linkplanet, star))
-        db.session.add(assoc)
-
-        if len(page.cleaned_text) > 150:
-            textplanet = TextPlanet.get_or_create(page.cleaned_text)
-            textplanet.source = link.url
-
-            db.session.add(textplanet)
-
-            assoc = PlanetAssociation(star=star, planet=textplanet, author=author)
+            assoc = PlanetAssociation(star=star, planet=planet, author=author)
             star.planet_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(textplanet, star))
+            app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
 
     if errors == "":

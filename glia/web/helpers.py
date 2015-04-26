@@ -4,13 +4,14 @@ import pytz
 import re
 import sendgrid
 
-from nucleus.nucleus.models import Group
+from flask import render_template
+from flask.ext.login import login_user
+from goose import Goose
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
+from sqlalchemy import inspect
 
-from functools import wraps
-from flask import render_template, request, Response
-from flask.ext.login import login_user
+from nucleus.nucleus.models import Group, LinkPlanet, LinkedPicturePlanet, TextPlanet
 
 logger = logging.getLogger('web')
 
@@ -100,7 +101,7 @@ def send_validation_email(user, db):
             activate_user()
 
 
-def find_links(text, logger):
+def find_links(text):
     """Given a text, find all alive links inside
 
     Args:
@@ -121,9 +122,7 @@ def find_links(text, logger):
     candidates = re.findall(expr, text)
 
     if candidates:
-        logging.info(candidates)
         for i, c in enumerate(candidates[::-1]):
-            logging.info("{} {}".format(i, c))
             if c[:4] != "http":
                 c_schemed = "".join(["http://", c])
             else:
@@ -142,6 +141,43 @@ def find_links(text, logger):
                     if (text.index(c) + len(c)) == len(text.rstrip()):
                         text = text.replace(c, "")
     return (rv, text)
+
+
+def process_attachments(text):
+    """Given some text a user entered, extract all attachments
+    hinted at and return user message plus a list of Planet objects
+
+    Args:
+        text (String): Message entered by user
+
+    Return:
+        Tuple
+            0: Message with some attachment hints removed (URLs)
+            1: List of Planet instances extracted from text
+    """
+    g = Goose()
+    planets = list()
+
+    links, text = find_links(text)
+    for link in links:
+        linkplanet = LinkPlanet.get_or_create(link.url)
+        planets.append(linkplanet)
+
+        if not isinstance(linkplanet, LinkedPicturePlanet):
+            page = g.extract(url=link.url)
+
+            # Add metadata if planet object is newly created
+            if inspect(linkplanet).transient is True:
+                linkplanet.title = page.title
+
+            # Extract article contents as new Planet
+            if len(page.cleaned_text) > 300:
+                textplanet = TextPlanet.get_or_create(page.cleaned_text)
+                textplanet.source = link.url
+
+                planets.append(textplanet)
+
+    return (text, planets)
 
 
 def localtime(value, tzval="UTC"):
