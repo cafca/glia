@@ -97,7 +97,10 @@ $(document).ready(function(){
 
     $(function () {
         $('#send-message').submit(function () {
-            socket.emit('text', {'msg': $('#message').val(), 'room_id': window.room_id});
+            var $btn = $('.rk-chat-button').button('loading');
+            socket.emit('text', {'msg': $('#message').val(), 'room_id': window.room_id}, function() {
+                $btn.button('reset');
+            });
             clear();
             return false;
         });
