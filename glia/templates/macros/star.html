@@ -15,7 +15,7 @@
   </span>
 
   <!-- Attachments -->
-  {% for planet_assoc in star.planet_assocs %}
+  {% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
   <div class="rk-planet">
     {{ planet_macros.planet(planet_assoc.planet, True, truncate=truncate)}}
   </div>
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Attachments -->
-    {% for planet_assoc in star.planet_assocs %}
+    {% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
     <div class="rk-planet">
       {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
     </div>
@@ -71,6 +71,8 @@
   </div>
 </div>
 {% endmacro %}
+
+
 
 {% macro star_box(star, controlled_personas) %}
 
@@ -80,9 +82,9 @@
     <a href="{{ url_for('.star', id=star.id) }}">
       <div class="rk-star-box-content">
         <p>{{ star.text}}</p>
-        <p>{% for planet_assoc in star.planet_assocs %}
+        <div class="rk-star-box-planets">{% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
         {{ planet_macros.planet_icon(planet_assoc.planet)}}
-        {% endfor %}</p>
+        {% endfor %}</div>
       </div>
     </a>
   </div>
