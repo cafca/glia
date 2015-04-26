@@ -5,8 +5,8 @@
     <img src="{{ url_for('attachment', filename=planet.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
 </span>
 {% elif planet.kind == 'linkedpicture' %}
-<span class="rk-imagewrap">
-    <img src="{{ planet.url }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
+<span class="rk-image">
+    <img src="{{ planet.url }}" class="img-responsive img-rounded" alt="{{ planet.title }}"/>
 </span>
 {% elif planet.kind == 'link' %}
 <a class="rk-link" href="{{ planet.url }}">
@@ -21,10 +21,16 @@
 </a>
 {% elif planet.kind == 'text' %}
 <span class="rk-text">
-    <p><i class="fa fa-file-text-o"></i>  read {{ planet.reading_time()|naturaldelta }}</p>
     {% if truncate %}
+    <p>
+        <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
+    </p>
     {{ planet.text|truncate()|markdown}}
     {% else %}
+    <p>
+        <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
+        <i class="fa fa-link"></i>  Source {{ planet.source|urlize }}
+    </p>
     {{ planet.text|markdown}}
     {% endif %}
 </span>

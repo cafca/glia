@@ -15,11 +15,20 @@
   </span>
 
   <!-- Attachments -->
-  {% for planet_assoc in star.planet_assocs %}
   <div class="rk-planet">
-    {{ planet_macros.planet(planet_assoc.planet, True, truncate=truncate)}}
+    <div class="row">
+    {% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
+      {% if planet_assoc.planet.kind == "linkedpicture" %}
+      <div class="col-sm-4">
+        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+      {% else %}
+      <div class="col-sm-12">
+        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+      {% endif %}
+      </div>
+    {% endfor %}
+    </div>
   </div>
-  {% endfor %}
 
   <!-- Meta -->
   <div class="rk-star-meta">
@@ -63,14 +72,25 @@
     </div>
 
     <!-- Attachments -->
-    {% for planet_assoc in star.planet_assocs %}
     <div class="rk-planet">
-      {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+      <div class="row">
+      {% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
+        {% if planet_assoc.planet.kind == "linkedpicture" %}
+        <div class="col-sm-4">
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {% else %}
+        <div class="col-sm-12">
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {% endif %}
+        </div>
+      {% endfor %}
+      </div>
     </div>
-    {% endfor %}
   </div>
 </div>
 {% endmacro %}
+
+
 
 {% macro star_box(star, controlled_personas) %}
 
@@ -80,9 +100,9 @@
     <a href="{{ url_for('.star', id=star.id) }}">
       <div class="rk-star-box-content">
         <p>{{ star.text}}</p>
-        <p>{% for planet_assoc in star.planet_assocs %}
+        <div class="rk-star-box-planets">{% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
         {{ planet_macros.planet_icon(planet_assoc.planet)}}
-        {% endfor %}</p>
+        {% endfor %}</div>
       </div>
     </a>
   </div>
