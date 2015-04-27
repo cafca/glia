@@ -8,6 +8,7 @@
     :copyright: (c) 2013 by Vincent Ahrend.
 """
 import datetime
+import traceback
 
 from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, current_user, login_required
@@ -17,15 +18,36 @@ from sqlalchemy.exc import IntegrityError
 
 from . import app
 from .. import db
+from glia.web.forms import DeleteStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
-from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star, Starmap
+from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star, Starmap, Planet
 
 
 @app.before_request
 def account_notifications():
     if not current_user.is_anonymous and not current_user.is_active:
         flash("Your account is not activated. Please click the link in the email that we sent you.")
+
+
+@app.route('/debug/')
+@http_auth.login_required
+def debug():
+    """ Display raw data """
+    stars = Star.query.all()
+    planets = Planet.query.all()
+    groups = Group.query.all()
+    starmaps = Starmap.query.all()
+    users = User.query.all()
+
+    return render_template(
+        'debug.html',
+        stars=stars,
+        users=users,
+        planets=planets,
+        groups=groups,
+        starmaps=starmaps
+    )
 
 
 @app.route('/', methods=["GET"])
@@ -39,7 +61,7 @@ def index():
     groups = Group.query.limit(5)
     group_data = []
     for g in groups:
-        g_star_selection = g.profile.index
+        g_star_selection = g.profile.index.filter(Star.state >= 0)
         g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
 
         group_data.append({
@@ -48,7 +70,7 @@ def index():
         })
 
     # Collect main page content
-    star_selection = Star.query.all()
+    star_selection = Star.query.filter(Star.state >= 0)
     star_selection = sorted(star_selection, key=Star.hot, reverse=True)
     top_posts = []
     while len(top_posts) < min([9, len(star_selection)]):
@@ -90,9 +112,43 @@ def groups():
 def star(id=None):
     star = Star.query.get_or_404(id)
 
-    # backrefs = Starmap.query.join(Star).filter(Star.id == star.id)
+    if star.state < 0 and not star.author.controlled():
+        flash("This Star is currently unavailable.")
+        return(redirect(request.referrer or url_for('.index')))
 
     return render_template("star.html", star=star)
+
+
+@app.route('/star/<id>/delete', methods=["GET", "POST"])
+@http_auth.login_required
+def delete_star(id=None):
+    star = Star.query.get_or_404(id)
+    form = DeleteStarForm()
+
+    if not star.author.controlled():
+        flash("You are not allowed to change {}'s Stars".format(star.author.username))
+        app.logger.error("Tried to change visibility of {}'s Stars".format(star.author))
+        return redirect(request.referrer or url_for('.index'))
+
+    if form.validate_on_submit():
+        if star.state == -2:
+            star.set_state(0)
+        else:
+            star.set_state(-2)
+
+        try:
+            db.session.add(star)
+            db.session.commit()
+        except:
+            app.logger.error("Error setting publish state of {}\n{}".format(star, traceback.format_exc()))
+            db.session.rollback()
+        else:
+            flash("Updated visibility of {}".format(star))
+
+            app.logger.info("Star {} set to publish state {}".format(id, star.state))
+            return(redirect(url_for(".star", id=star.id)))
+
+    return render_template("delete_star.html", star=star, form=form)
 
 
 @app.route('/persona/<id>/')
@@ -112,7 +168,7 @@ def group(id):
         app.logger.warning("Group '{}' not found. User: {}".format(id, current_user))
         return(redirect(url_for('.groups')))
 
-    star_selection = group.profile.index
+    star_selection = group.profile.index.filter(Star.state >= 0)
     star_selection = sorted(star_selection, key=Star.hot, reverse=True)
     top_posts = []
     while len(top_posts) < min([15, len(star_selection)]):
@@ -140,7 +196,7 @@ def login():
         db.session.add(form.user)
         db.session.commit()
         if not form.user.active:
-            flash("Please click the link in the validation email we just sent you to activate your account.")
+            flash("Please click the link in the validation email we sent you to activate your account.")
         else:
             login_user(form.user, remember=True)
             session["active_persona"] = form.user.active_persona.id

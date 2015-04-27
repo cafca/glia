@@ -2,7 +2,7 @@ import logging
 import sys
 
 from colorlog import ColoredFormatter
-from flask import Request
+from flask import Request, session
 
 formatter = ColoredFormatter(
     "%(log_color)s%(name)s :: %(module)s [%(filename)s:%(lineno)d]%(reset)s %(message)s",
@@ -88,3 +88,12 @@ class ProxiedRequest(Request):
 # from real_ip_address import ProxiedRequest
 # app = [...]
 # app.request_class = ProxiedRequest
+
+
+def get_active_persona():
+    """ Return the currently active persona. """
+    from nucleus.nucleus.models import Persona
+    if session.get("active_persona"):
+        return Persona.query.get(session['active_persona'])
+    else:
+        return None

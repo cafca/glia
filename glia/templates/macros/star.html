@@ -23,7 +23,7 @@
         {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
       {% else %}
       <div class="col-sm-12">
-        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
       {% endif %}
       </div>
     {% endfor %}

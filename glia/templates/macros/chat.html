@@ -27,12 +27,12 @@
     </div>
 
     <div class="panel-body" id="rk-chat-meta">
-        <div id="nicknames"><span>Online:</span></div>
+        <!-- <div id="rk-chat-nicknames"></div> -->
         <p id="rk-chat-connecting">Connecting to Glia chat</p>
     </div>
 
     <ul class="list-group" id="rk-chat-lines">
-        {% for star in map.index %}
+        {% for star in map.index.filter_by(state=0) %}
         {{ chatline(star) }}
         {% endfor %}
     </ul>

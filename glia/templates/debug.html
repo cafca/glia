@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ controlled_personas }}
+<h1>Stars</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Message</th>
+            <th>Author</th>
+            <th>Modified</th>
+            <th>Created</th>
+            <th>State</th>
+            <th>Parent</th>
+            <th>Vesicles</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for star in stars %}
+      <tr>
+        <td>{{ star.id }}</td>
+        <td>{{ star.text }}</td>
+        <td>{{ star.author.username}}</td>
+        <td>{{ star.modified | localtime|naturaltime }}</td>
+        <td>{{ star.created | localtime|naturaltime}} </td>
+        <td>{{ star.get_state()}}</td>
+        <td>{{ star.parent_id }}</td>
+        <td>{{ star.vesicles | length }}</td>
+        {% if star.get_state() >= 0 and star.author.controlled() %}
+            <td><form action="{{url_for('.delete_star', id=star.id)}}" method="POST">
+                <button class="btn" type="submit">Delete</a>
+            </form></td>
+        {% else %}
+            <td>&nbsp;</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+<h1>Starmaps</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Kind</th>
+            <th>Author</th>
+            <th>Modified</th>
+            <th>State</th>
+            <th>Stars</th>
+            <th>Vesicles</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for starmap in starmaps %}
+      <tr>
+        <td>{{ starmap.id }}</td>
+        <td>{{ starmap.kind }}</td>
+        <td>{{ starmap.author.username}}</td>
+        <td>{{ starmap.modified | localtime|naturaltime }}</td>
+        <td>{{ starmap.get_state()}}</td>
+        <td>{% for star in starmap.index %}{{star}}<br />{% endfor %}</td>
+        <td>{{ starmap.vesicles | length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+<h1>Users</h1>
+{% for user in users %}
+<h3>{{ user.email }}</h3>
+<dl class="dl-horizontal">
+  <dt>Active</dt>
+  <dd>{{user.active}}</dd>
+  <dt>Authenticated</dt>
+  <dd>{{user.authenticated}}</dd>
+  <dt>Created</dt>
+  <dd>{{user.created|localtime|naturaltime}}</dd>
+  <dt>Modified</dt>
+  <dd>{{user.modified|localtime|naturaltime}}</dd>
+  <dt>Email</dt>
+  <dd>{{user.email}}</dd>
+  <dt>ID</dt>
+  <dd>{{user.id}}</dd>
+</dl>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Persona ID</id>
+            <th>Username</th>
+            <th>Email-Address</th>
+            <th>Modified</th>
+            <th>Vesicles</th>
+            <th>Private Key</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for asc in user.associations %}
+      {% set persona=asc.persona %}
+      <tr>
+        <td>{{ persona.id }}{% if persona.stub %} (stub){% endif %}</td>
+        <td>{{ persona.username }}</td>
+        <td>{{ persona.email }}</td>
+        <td>{{ persona.modified }}</td>
+        <td>{{ persona.vesicles | length }}</td>
+        <td>{% if persona.crypt_private %}<i class="icon-key"></i>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+
+<h1>Planets</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</id>
+            <th>Title</th>
+            <th>Kind</th>
+            <th>Created</th>
+            <th>Modified</th>
+            <th>Source</th>
+            <th>Vesicles</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for planet in planets %}
+      <tr>
+        <td>{{ planet.id }}</td>
+        <td>{{ planet.kind }}</td>
+        <td>{{ planet.title }}</td>
+        <td>{{ planet.created }}</td>
+        <td>{{ planet.modified }}</td>
+        <td>{{ planet.source }}</td>
+        <td>{{ planet.vesicles | length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+<h1>Groups</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</id>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Profile</th>
+            <th>Vesicles</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for group in groups %}
+      <tr>
+        <td>{{ group.id }}</td>
+        <td>{{ group.username }}</td>
+        <td>{{ group.description }}</td>
+        <td>{{ group.profile }}</td>
+        <td>{{ group.vesicles | length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+{%endblock%}

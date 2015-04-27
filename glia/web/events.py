@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments
-from nucleus.nucleus.models import Starmap, Star, PlanetAssociation
+from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, LinkPlanet, LinkedPicturePlanet
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
@@ -68,7 +68,7 @@ def text(message):
     author = current_user.active_persona
 
     if len(message['msg']) == 0:
-        errors += "Can't send empty message. "
+        errors += "You were about to say something?"
 
     map = Starmap.query.get(message["room_id"])
     if map is None:
