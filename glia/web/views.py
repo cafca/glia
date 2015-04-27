@@ -112,7 +112,7 @@ def groups():
 def star(id=None):
     star = Star.query.get_or_404(id)
 
-    if star.state < 0:
+    if star.state < 0 and not star.author.controlled():
         flash("This Star is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
