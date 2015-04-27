@@ -91,6 +91,9 @@ class ProxiedRequest(Request):
 
 
 def get_active_persona():
-    """ Return the currently active persona or 0 if there is no controlled persona. """
+    """ Return the currently active persona. """
     from nucleus.nucleus.models import Persona
-    return Persona.query.get(session['active_persona'])
+    if session.get("active_persona"):
+        return Persona.query.get(session['active_persona'])
+    else:
+        return None
