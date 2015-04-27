@@ -114,7 +114,7 @@ def star(id=None):
 
     if star.state < 0:
         flash("This Star is currently unavailable.")
-        return(redirect(request.referrer))
+        return(redirect(request.referrer or url_for('.index')))
 
     return render_template("star.html", star=star)
 
@@ -126,9 +126,9 @@ def delete_star(id=None):
     form = DeleteStarForm()
 
     if not star.author.controlled():
-        flash("You are not allowed to change {}'s Stars".format(star.author))
+        flash("You are not allowed to change {}'s Stars".format(star.author.username))
         app.logger.error("Tried to change visibility of {}'s Stars".format(star.author))
-        return redirect(request.referrer)
+        return redirect(request.referrer or url_for('.index'))
 
     if form.validate_on_submit():
         if star.state == -2:
