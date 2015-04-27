@@ -71,7 +71,7 @@ def create_app(log_info=True):
         """Makes controlled_personas available in templates"""
         return dict(
             controlled_personas=Persona.list_controlled(),
-            active_persona=Persona.query.get(get_active_persona())
+            active_persona=get_active_persona()
         )
 
     # Setup markdown support for templates
