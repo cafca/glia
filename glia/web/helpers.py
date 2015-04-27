@@ -145,7 +145,11 @@ def find_links(text):
 
 def process_attachments(text):
     """Given some text a user entered, extract all attachments
-    hinted at and return user message plus a list of Planet objects
+    hinted at and return user message plus a list of Planet objects.
+
+    All trailing links in user message are removed. If, as a result of this,
+    the message becomes empty, the first linked planet's page title is set as
+    the new user message.
 
     Args:
         text (String): Message entered by user
@@ -162,6 +166,10 @@ def process_attachments(text):
     for link in links:
         if "content-type" in link.headers and link.headers["content-type"][:5] == "image":
             linkplanet = LinkedPicturePlanet.get_or_create(link.url)
+
+            # Use picture filename as user message if empty
+            if len(text) == 0:
+                text = link.url[(link.url.rfind('/') + 1):]
         else:
             linkplanet = LinkPlanet.get_or_create(link.url)
             page = g.extract(url=link.url)
@@ -177,6 +185,8 @@ def process_attachments(text):
 
                 planets.append(textplanet)
 
+            if len(text) == 0:
+                text = page.title
         planets.append(linkplanet)
 
     return (text, planets)
