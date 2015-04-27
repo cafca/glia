@@ -21,6 +21,10 @@ def get_redirect_target():
             return target
 
 
+class DeleteStarForm(Form):
+    star_id = HiddenField()
+
+
 class RedirectForm(Form):
     next = HiddenField()
 
