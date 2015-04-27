@@ -23,19 +23,19 @@ $(document).ready(function(){
         append_timeline("System", msg['msg']);
     });
 
-    socket.on('nicknames', function (data) {
-        var nicknames = data['nicknames'];
-        var ids = data['ids'];
+    // socket.on('nicknames', function (data) {
+    //     var nicknames = data['nicknames'];
+    //     var ids = data['ids'];
 
-        $('#nicknames').empty().append($('<span>Online: </span>'));
-        for (var i in nicknames) {
-          if (ids[i] == window.admin_id) {
-            $('#nicknames').append($('<b>').text(nicknames[i] + " [a]"));
-          } else {
-            $('#nicknames').append($('<b>').text(nicknames[i]));
-          }
-        }
-    });
+    //     $('#rk-chat-nicknames').empty().append($('<span>Online: </span>'));
+    //     for (var i in nicknames) {
+    //       if (ids[i] == window.admin_id) {
+    //         $('#rk-chat-nicknames').append($('<b>').text(nicknames[i] + " [a]"));
+    //       } else {
+    //         $('#rk-chat-nicknames').append($('<b>').text(nicknames[i]));
+    //       }
+    //     }
+    // });
 
     socket.on('msg_to_room', append_timeline);
 
