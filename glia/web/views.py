@@ -21,13 +21,33 @@ from .. import db
 from glia.web.forms import DeleteStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
-from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star, Starmap
+from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star, Starmap, Planet
 
 
 @app.before_request
 def account_notifications():
     if not current_user.is_anonymous and not current_user.is_active:
         flash("Your account is not activated. Please click the link in the email that we sent you.")
+
+
+@app.route('/debug/')
+@http_auth.login_required
+def debug():
+    """ Display raw data """
+    stars = Star.query.all()
+    planets = Planet.query.all()
+    groups = Group.query.all()
+    starmaps = Starmap.query.all()
+    users = User.query.all()
+
+    return render_template(
+        'debug.html',
+        stars=stars,
+        users=users,
+        planets=planets,
+        groups=groups,
+        starmaps=starmaps
+    )
 
 
 @app.route('/', methods=["GET"])
@@ -172,7 +192,7 @@ def login():
         db.session.add(form.user)
         db.session.commit()
         if not form.user.active:
-            flash("Please click the link in the validation email we just sent you to activate your account.")
+            flash("Please click the link in the validation email we sent you to activate your account.")
         else:
             login_user(form.user, remember=True)
             session["active_persona"] = form.user.active_persona.id
