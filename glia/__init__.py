@@ -20,7 +20,8 @@ from humanize import naturaltime
 from humanize.time import naturaldelta
 
 from .database import db
-from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
+from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona, get_active_persona
+from nucleus.nucleus.models import Persona
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -64,6 +65,14 @@ def create_app(log_info=True):
     def load_user(userid):
         from nucleus.nucleus.models import User
         return User.query.get(userid)
+
+    @app.context_processor
+    def persona_context():
+        """Makes controlled_personas available in templates"""
+        return dict(
+            controlled_personas=Persona.list_controlled(),
+            active_persona=Persona.query.get(get_active_persona())
+        )
 
     # Setup markdown support for templates
     Misaka(app)
