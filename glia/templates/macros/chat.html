@@ -32,7 +32,7 @@
     </div>
 
     <ul class="list-group" id="rk-chat-lines">
-        {% for star in map.index %}
+        {% for star in map.index.filter_by(state=0) %}
         {{ chatline(star) }}
         {% endfor %}
     </ul>

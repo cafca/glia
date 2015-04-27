@@ -112,6 +112,10 @@ def groups():
 def star(id=None):
     star = Star.query.get_or_404(id)
 
+    if star.state < 0:
+        flash("This Star is currently unavailable.")
+        return(redirect(request.referrer))
+
     return render_template("star.html", star=star)
 
 
