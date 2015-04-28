@@ -18,7 +18,7 @@ from nucleus.nucleus.models import Persona, Souma, Group
 from nucleus.nucleus.vesicle import Vesicle
 from nucleus.nucleus import ERROR
 
-from .. import db
+from nucleus.nucleus.database import db
 
 from . import app
 

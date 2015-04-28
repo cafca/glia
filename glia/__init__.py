@@ -12,7 +12,6 @@ import os
 
 from blinker import Namespace
 from flask import Flask
-from flask.ext.cache import Cache
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
 from flask.ext.misaka import Misaka
@@ -20,14 +19,13 @@ from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
 from humanize.time import naturaldelta
 
-from .database import db
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona, get_active_persona
+from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona
 
 socketio = SocketIO()
 login_manager = LoginManager()
 notification_signals = Namespace()
-cache = Cache()
 
 
 def create_app(log_info=True):

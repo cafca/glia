@@ -62,7 +62,7 @@ def send_validation_email(user, db):
     Throws:
         ValueError: If active user has no name or email address
     """
-    from .. import db
+    from nucleus.nucleus.database import db
     from flask import current_app
 
     user.signup_code = uuid4().hex
