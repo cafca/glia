@@ -14,7 +14,7 @@ window.admin_id = "{{ group.admin.id }}";
 {% block content %}
 <section class="row">
     <div class=" col-sm-4 col-sm-push-8">
-            {{ chat_macros.chat(group.profile, stars=chat_index, title=group.username) }}
+            {{ chat_macros.chat(group.profile, title=group.username) }}
     </div> <!-- ./ chat column -->
 
     <div class="star-listing col-sm-7 col-sm-pull-3">

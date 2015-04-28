@@ -10,12 +10,14 @@
 var socket;
 
 $(document).ready(function(){
+    $('#rk-chat-more-button').button('loading');
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/groups')
     socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
     socket.on('connect', function() {
         $('#rk-chat-meta').addClass('rk-chat-connected');
         socket.emit('joined', {'room_id': window.room_id});
-        scroll();
+        load_more_chatlines();
+        $('#rk-chat-more-button').button('reset');
     });
 
     socket.on('status', function (msg) {
@@ -95,6 +97,21 @@ $(document).ready(function(){
         socket.emit('vote_request', {'star_id': star_id});
     }
 
+    function load_more_chatlines() {
+        $.ajax($('#rk-chat-more-button').attr('href'))
+            .done(function(data) {
+                $('#rk-chat-more').after(data['html']);
+                if (data['end_reached'] == true) {
+                    $('#rk-chat-more-button').remove();
+                } else {
+                    $('#rk-chat-more-button').attr('href', data['next_url']);
+                }
+                $(document).ready(function() {
+                    scroll();
+                });
+            });
+    }
+
     $(function () {
         $('#send-message').submit(function () {
             var $btn = $('.rk-chat-button').button('loading');
@@ -105,22 +122,12 @@ $(document).ready(function(){
             return false;
         });
 
-        // Asycn chat backlog loading
         $('#rk-chat-more-button').click(function() {
             var $btn = $('#rk-chat-more-button').button('loading');
             var $top_line = $('#rk-chat-lines li:nth-child(2)');
-            $.ajax($('#rk-chat-more-button').attr('href'))
-                .done(function(data) {
-                    $('#rk-chat-more').after(data['html']);
-                    if (data['end_reached'] == true) {
-                        $btn.remove()
-                        $('#rk-chat-more').html("<i class='fa fa-smile-o'></i> Okay, you have read everything. You can go outside now.")
-                    } else {
-                        $('#rk-chat-more-button').attr('href', data['next_url'])
-                        $btn.button('reset');
-                    }
-                    $('#rk-chat-lines').scrollTop($top_line.offset().top - 150);
-                });
+            data = load_more_chatlines();
+            $('#rk-chat-lines').scrollTop($top_line.offset().top - 150);
+            $btn.button('reset');
             return false;
         })
 
