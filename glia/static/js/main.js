@@ -17,7 +17,6 @@ $(document).ready(function(){
         $('#rk-chat-meta').addClass('rk-chat-connected');
         socket.emit('joined', {'room_id': window.room_id});
         load_more_chatlines();
-        $('#rk-chat-more-button').button('reset');
     });
 
     socket.on('status', function (msg) {
@@ -98,6 +97,7 @@ $(document).ready(function(){
     }
 
     function load_more_chatlines() {
+        $('#rk-chat-more-button').button('loading');
         $.ajax($('#rk-chat-more-button').attr('href'))
             .done(function(data) {
                 $('#rk-chat-more').after(data['html']);
@@ -108,6 +108,7 @@ $(document).ready(function(){
                 }
                 $(document).ready(function() {
                     scroll();
+                    $('#rk-chat-more-button').button('reset');
                 });
             });
     }
@@ -123,11 +124,9 @@ $(document).ready(function(){
         });
 
         $('#rk-chat-more-button').click(function() {
-            var $btn = $('#rk-chat-more-button').button('loading');
             var $top_line = $('#rk-chat-lines li:nth-child(2)');
             data = load_more_chatlines();
             $('#rk-chat-lines').scrollTop($top_line.offset().top - 150);
-            $btn.button('reset');
             return false;
         })
 
