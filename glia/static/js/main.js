@@ -105,6 +105,25 @@ $(document).ready(function(){
             return false;
         });
 
+        // Asycn chat backlog loading
+        $('#rk-chat-more-button').click(function() {
+            var $btn = $('#rk-chat-more-button').button('loading');
+            var $top_line = $('#rk-chat-lines li:nth-child(2)');
+            $.ajax($('#rk-chat-more-button').attr('href'))
+                .done(function(data) {
+                    $('#rk-chat-more').after(data['html']);
+                    if (data['end_reached'] == true) {
+                        $btn.remove()
+                        $('#rk-chat-more').html("<i class='fa fa-smile-o'></i> Okay, you have read everything. You can go outside now.")
+                    } else {
+                        $('#rk-chat-more-button').attr('href', data['next_url'])
+                        $btn.button('reset');
+                    }
+                    $('#rk-chat-lines').scrollTop($top_line.offset().top - 150);
+                });
+            return false;
+        })
+
         function clear () {
             $('#message').val('').focus();
         }

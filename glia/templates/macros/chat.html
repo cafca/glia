@@ -20,7 +20,7 @@
 {% endmacro %}
 
 
-{% macro chat(map, title="Chat") %}
+{% macro chat(map, stars=None, title="Chat") %}
 <div class="rk-chat panel panel-default">
     <div class="panel-heading">
         <h3 class="panel-title">{{ title }}</h3>
@@ -32,7 +32,17 @@
     </div>
 
     <ul class="list-group" id="rk-chat-lines">
-        {% for star in map.index.filter_by(state=0) %}
+        {% if stars == None %}
+        {% set stars=map.index.filter_by(state=0) %}
+        {% endif %}
+
+        {% if stars|length > 50 %}
+        <li class="list-group-item text-center" id="rk-chat-more">
+            <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.backlog', starmap_id=map.id, index_id=stars[0].id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
+        </li>
+        {% endif %}
+
+        {% for star in stars[:50] %}
         {{ chatline(star) }}
         {% endfor %}
     </ul>

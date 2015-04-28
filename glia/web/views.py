@@ -176,7 +176,9 @@ def group(id):
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('group.html', group=group, stars=top_posts)
+    chat_index = group.profile.index.filter_by(state=0).order_by(Star.created.desc()).limit(51)[::-1]
+
+    return render_template('group.html', group=group, stars=top_posts, chat_index=chat_index)
 
 
 @app.route('/stars/', methods=["POST"])

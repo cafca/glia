@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments
-from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, LinkPlanet, LinkedPicturePlanet
+from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Group
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
