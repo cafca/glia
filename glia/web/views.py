@@ -18,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 
 from . import app
 from .. import db
+from glia import cache
 from glia.web.forms import DeleteStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
@@ -68,6 +69,9 @@ def index():
             'group': g,
             'top_posts': g_top_posts
         })
+
+    cache.set('a', 1)
+    app.logger.info("Cache: {}".format(cache.get('a')))
 
     # Collect main page content
     star_selection = Star.query.filter(Star.state >= 0)

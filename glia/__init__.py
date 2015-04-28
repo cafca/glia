@@ -12,6 +12,7 @@ import os
 
 from blinker import Namespace
 from flask import Flask
+from flask.ext.cache import Cache
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager
 from flask.ext.misaka import Misaka
@@ -26,6 +27,7 @@ from nucleus.nucleus.models import Persona
 socketio = SocketIO()
 login_manager = LoginManager()
 notification_signals = Namespace()
+cache = Cache()
 
 
 def create_app(log_info=True):
@@ -54,6 +56,14 @@ def create_app(log_info=True):
 
     # Setup websockets
     socketio.init_app(app)
+
+    # Setup Memcache
+    cache_config = {k: app.config[k] for k in app.config.keys() if k.startswith('CACHE')}
+    if app.config['HEROKU']:
+        cache_config['CACHE_MEMCACHED_SERVERS'] = [os.getenv('MEMCACHIER_SERVERS')]
+        cache_config['CACHE_MEMCACHED_USERNAME'] = os.getenv('MEMCACHIER_USERNAME')
+        cache_config['CACHE_MEMCACHED_PASSWORD'] = os.getenv('MEMCACHIER_PASSWORD')
+    cache.init_app(app, config=cache_config)
 
     # Setup login manager
     login_manager.init_app(app)

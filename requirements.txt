@@ -1,5 +1,6 @@
 Flask==0.10.1
 Flask-DebugToolbar==0.10.0
+Flask-Cache==0.13.1
 Flask-HTTPAuth==2.4.0
 Flask-Login==0.2.11
 Flask-Misaka==0.3.0
@@ -24,6 +25,7 @@ itsdangerous==0.24
 psycopg2
 pyasn1==0.1.7
 pycrypto==2.6.1
+pylibmc>=1.2.3
 python-dateutil==2.2
 python-keyczar==0.71c
 pytz==2014.2

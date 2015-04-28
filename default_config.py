@@ -11,6 +11,9 @@ import datetime
 
 DEBUG = False
 USE_DEBUG_SERVER = False
+HEROKU = False
+
+CACHE_TYPE = 'simple'
 
 # Don't let Flask Debug Toolbar interrupt redirects (BREAKS HTTPAUTH)
 DEBUG_TB_INTERCEPT_REDIRECTS = False

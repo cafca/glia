@@ -29,6 +29,10 @@ DATABASE_FILE = '../server.db'
 SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
 SQLALCHEMY_RECORD_QUERIES = False
 
+# Memcache config
+CACHE_TYPE = "memcached"
+CACHE_MEMCACHED_SERVERS = ["127.0.0.1", ]
+
 # Load server cert
 SERVER_KEY_FILE = "./server_private.key"
 try:

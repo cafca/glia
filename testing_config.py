@@ -18,9 +18,13 @@ from keyczar.keys import RsaPrivateKey
 SERVER_HOST = 'dev.rktik.com'
 SERVER_PORT = int(os.environ['PORT'])
 AUTH_ENABLED = bool(os.environ['SOUMA_AUTH'])
+HEROKU = True
 
 DEBUG = True
 LOG_LEVEL = logging.DEBUG
+
+# Memcache
+CACHE_TYPE = 'spreadsaslmemcachedcache'
 
 SERVER_NAME = SERVER_HOST
 

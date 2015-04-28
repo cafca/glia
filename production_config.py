@@ -17,11 +17,15 @@ from keyczar.keys import RsaPrivateKey
 SERVER_HOST = 'www.rktik.com'
 SERVER_PORT = int(os.environ['PORT'])
 AUTH_ENABLED = bool(os.environ['SOUMA_AUTH'])
+HEROKU = True
 
 SERVER_NAME = SERVER_HOST
 
 # Define database setup
 SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+
+# Memcache
+CACHE_TYPE = 'spreadsaslmemcachedcache'
 
 # Load server cert
 SERVER_KEY = RsaPrivateKey.Read(os.environ['SERVER_PRIVATE_KEY'])
