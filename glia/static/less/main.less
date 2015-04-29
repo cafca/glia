@@ -25,6 +25,17 @@ a > .fa:hover {
     text-decoration: none;
 }
 
+
+.dl-sm {
+    dt {
+        width: 80px;
+    }
+
+    dd {
+        margin-left: 100px;
+    }
+}
+
 //
 // HEADER
 //
@@ -176,4 +187,30 @@ a > .fa:hover {
 .rk-favicon-small {
     width: 16px;
     height: 16px;
+}
+
+//
+// PERSONA PAGE
+//
+
+.rk-persona-infobox {
+    margin-bottom: 1em;
+    border-top: 3px solid blue;
+    background-color: #fafafa;
+
+    .rk-persona-picture {
+        min-height: 150px;
+        background-color: lighten(blue, 40%);
+    }
+
+    .rk-persona-meta > dl {
+        margin-top: 1.4em;
+    }
+}
+
+.rk-persona-groups {
+    margin-bottom: 1.4em;
+    .rk-persona-groups-info {
+        border-top: 2px solid lighten(grey, 20%);
+    }
 }

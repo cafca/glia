@@ -154,7 +154,13 @@ def delete_star(id=None):
 @app.route('/persona/<id>/')
 @http_auth.login_required
 def persona(id=None):
-    pass
+    persona = Persona.query.get_or_404(id)
+
+    chat = Starmap.query.join(Persona, Starmap.id==Persona.profile_id)
+
+    groups = Group.query.limit(3)
+
+    return(render_template('persona.html', chat=chat, persona=persona, groups=groups))
 
 
 @app.route('/groups/<id>', methods=["GET"])
