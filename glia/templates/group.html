@@ -14,7 +14,31 @@ window.admin_id = "{{ group.admin.id }}";
 {% block content %}
 <section class="row">
     <div class=" col-sm-4 col-sm-push-8">
-            {{ chat_macros.chat(group.profile, title=group.username) }}
+        <div class="rk-chat panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">{{ group.username }}</h3>
+            </div>
+
+            <div class="panel-body">
+                <div class="dropdown">
+                  <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                    Follow {{ group.username }}
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="groupMembershipMenu">
+                    <li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#"><i class="fa fa-fw fa-eye"></i> You are a Visitor</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">
+                        <i class="fa fa-fw fa-arrow-circle-right"></i> Become Follower</a>
+                    </li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><i class="fa fa-fw fa-users"></i> Become Member</a></li>
+                    <!-- <li role="presentation" class="divider"></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><i class="fa fa-fw fa-envelope-o"></i> Get email updates </br><i class="fa fa-fw"></i> (No signup required)</a></li> -->
+                  </ul>
+                </div>
+            </div>
+
+            {{ chat_macros.chat(group.profile) }}
+        </div> <!-- ./ panel -->
     </div> <!-- ./ chat column -->
 
     <div class="star-listing col-sm-7 col-sm-pull-3">
