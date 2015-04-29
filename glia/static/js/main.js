@@ -87,8 +87,20 @@ $(document).ready(function(){
         scroll();
     }
 
-    function scroll() {
-        $('#rk-chat-lines').get(0).scrollTop = 10000000;
+    function get_chat_height() {
+        var total_height = 0;
+        $('#rk-chat-lines > li').each(function(i) {
+            total_height += $(this).height();
+        })
+        return total_height;
+    }
+
+    function scroll(duration) {
+        duration = typeof duration !== 'undefined' ? duration : (get_chat_height() / 2);
+
+        $('#rk-chat-lines').animate({
+            scrollTop: get_chat_height() * 1.5
+        }, duration);
     }
 
     function request_upvote(star_id) {
@@ -107,7 +119,7 @@ $(document).ready(function(){
                     $('#rk-chat-more-button').attr('href', data['next_url']);
                 }
                 $(document).ready(function() {
-                    scroll();
+                    scroll(0);
                     $('#rk-chat-more-button').button('reset');
                 });
             });
