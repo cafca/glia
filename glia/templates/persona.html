@@ -55,12 +55,6 @@ window.admin_id = "{{ persona.id }}";
                         <h3>{{ gma.group.username }}</h3>
                     </a>
                     <p><em>{{ gma.group.description|default("No description", true) }}</em></p>
-                    <dl class="dl-horizontal dl-sm">
-                        <dt>Members</dt>
-                        <dd>{{ gma.group.member_count }}</dd>
-                        <dt>Founded</dt>
-                        <dd>{{ gma.group.created|localtime|naturaltime }}</dd>
-                    </dl>
                     <p>Currently a {{ gma.role }}, joined {{ gma.created|localtime|naturaltime }}.</p>
                 </div>
 

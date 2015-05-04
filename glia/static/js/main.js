@@ -28,7 +28,7 @@ $(document).ready(function(){
         var nicknames = data['nicknames'];
         var ids = data['ids'];
 
-        $('#rk-chat-nicknames').empty().append($('<span>Recently online: </span>'));
+        $('#rk-chat-nicknames').empty();
         for (var i in nicknames) {
           if (ids[i] == window.admin_id) {
             $('#rk-chat-nicknames').append($('<strong>').text(nicknames[i] + " [a]"));

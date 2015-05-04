@@ -17,7 +17,7 @@
 
     <div class="col-sm-3 col-sm-push-1">
         <h3>Info</h3>
-        <p>Original post by {{ star.author.username }} {{star.created|localtime|naturaltime}}.</p>
+        <p>Original post by <a href="{{ url_for('.persona', id=star.author.id) }}">{{ star.author.username }}</a> {{star.created|localtime|naturaltime}}.</p>
         <p>Posted to.</p>
         <ul>
         {% for map in star.starmaps %}
