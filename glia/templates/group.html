@@ -20,21 +20,26 @@ window.admin_id = "{{ group.admin.id }}";
             </div>
 
             <div class="panel-body">
-                <div class="dropdown">
-                  <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-                    Follow {{ group.username }}
-                    <span class="caret"></span>
-                  </button>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="groupMembershipMenu">
-                    <li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#"><i class="fa fa-fw fa-eye"></i> You are a Visitor</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">
-                        <i class="fa fa-fw fa-arrow-circle-right"></i> Become Follower</a>
-                    </li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><i class="fa fa-fw fa-users"></i> Become Member</a></li>
-                    <!-- <li role="presentation" class="divider"></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><i class="fa fa-fw fa-envelope-o"></i> Get email updates </br><i class="fa fa-fw"></i> (No signup required)</a></li> -->
-                  </ul>
-                </div>
+                {% if group in current_user.active_persona.groups_followed %}
+                    <button class="btn btn-default" type="submit" id="rk-group-follower" data-href="{{ url_for('.async_toggle_group_following', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-eye"></i> Unfollow
+                    </button>
+                {% else %}
+                    <button class="btn btn-primary" type="submit" id="rk-group-follower" data-href="{{ url_for('.async_toggle_group_following', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-eye"></i> Follow
+                    </button>
+                {% endif %}
+
+
+                {% if group.current_role() not in ["visitor", "anonymous"] %}
+                    <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-users"></i> Leave group
+                    </button>
+                {% else %}
+                    <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-users"></i> Become member
+                    </button>
+                {% endif %}
             </div>
 
             {{ chat_macros.chat(group.profile) }}

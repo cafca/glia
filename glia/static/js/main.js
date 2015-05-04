@@ -126,6 +126,16 @@ $(document).ready(function(){
     }
 
     $(function () {
+        //
+        // UPVOTE BUTTON
+        //
+
+        $(".oneup").click(function () {request_upvote(this.dataset.id)});
+
+        //
+        // CHAT BEHAVIOR
+        //
+
         $('#send-message').submit(function () {
             var $btn = $('.rk-chat-button').button('loading');
             socket.emit('text', {'msg': $('#message').val(), 'room_id': window.room_id}, function() {
@@ -146,6 +156,22 @@ $(document).ready(function(){
             $('#message').val('').focus();
         }
 
-        $(".oneup").click(function () {request_upvote(this.dataset.id)});
+        //
+        // GROUP META
+        //
+
+        $("#rk-group-follower").click(function() {
+            $.post($("#rk-group-follower").data("href"))
+                .done(function (data) {
+                    location.reload();
+                })
+        });
+
+        $("#rk-group-member").click(function() {
+            $.post($("#rk-group-member").data("href"))
+                .done(function (data) {
+                    location.reload();
+                })
+        });
     });
 });
