@@ -8,9 +8,9 @@
     :copyright: (c) 2015 by Vincent Ahrend.
 """
 
+import datetime
 import functools
 
-from datetime import datetime
 from flask import request, current_app
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
@@ -20,7 +20,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments
-from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Group
+from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Group, \
+    Persona
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
 # Create blinker signal namespace
@@ -48,12 +49,26 @@ def joined(message):
         if "room_id" not in message:
             message["room_id"] = "base"
 
+        current_user.active_persona.last_connected = datetime.datetime.utcnow()
+        db.session.add(current_user.active_persona)
+        db.session.commit()
+
         join_room(message["room_id"])
         app.logger.info("{} joined group chat {}".format(current_user.active_persona, message['room_id']))
         emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
 
-        data = {'nicknames': [current_user.active_persona.username, ], 'ids': [current_user.active_persona.id, ]}
-        emit('nicknames', data, room=message["room_id"])
+        rv = {"nicknames": [], "ids": []}
+        group = Group.query.filter_by(profile_id=message["room_id"]).first()
+        if group:
+            online_cutoff = datetime.datetime.utcnow() - \
+                datetime.timedelta(seconds=15 * 60)
+            for gma in group.members.join(Persona).filter(
+                    Persona.last_connected > online_cutoff).order_by(
+                    Persona.last_connected.desc()):
+                rv["nicknames"].append(gma.persona.username)
+                rv["ids"].append(gma.persona.id)
+
+        emit('nicknames', rv, room=message["room_id"])
 
 
 @socketio_authenticated_only
@@ -62,7 +77,7 @@ def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
 
-    star_created = datetime.utcnow()
+    star_created = datetime.datetime.utcnow()
     star_id = uuid4().hex
     errors = ""
     author = current_user.active_persona

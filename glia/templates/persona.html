@@ -14,7 +14,13 @@ window.admin_id = "{{ persona.id }}";
 {% block content %}
 <section class="row">
     <div class="col-sm-4 col-sm-push-8">
-            {{ chat_macros.chat(chat, title=persona.username) }}
+        <div class="rk-chat panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Chat with {{ persona.username }}</h3>
+            </div>
+
+            {{ chat_macros.chat(chat) }}
+        </div> <!-- ./ panel -->
     </div> <!-- ./ chat column -->
 
     <div class="rk-persona col-sm-8 col-sm-pull-4">
@@ -45,7 +51,9 @@ window.admin_id = "{{ persona.id }}";
             {% for group in groups %}
             <div class="rk-persona-groups-box">
                 <div class="col-sm-3 rk-persona-groups-info">
-                    <h3>{{ group.username }}</h3>
+                    <a href="{{ url_for('.group', id=group.id) }}">
+                        <h3>{{ group.username }}</h3>
+                    </a>
                     <p><em>{{ group.description|default("No description", true) }}</em></p>
                     <dl class="dl-horizontal dl-sm">
                         <dt>Members</dt>

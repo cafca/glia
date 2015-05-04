@@ -57,10 +57,14 @@ a > .fa:hover {
         &.rk-chat-connected > #rk-chat-nicknames {
             display: block !important;
         }
+    }
 
-        #rk-chat-nicknames {
-            display: none;
-        }
+    #rk-chat-nicknames > strong::after {
+        content: ", ";
+    }
+
+    #rk-chat-nicknames > strong:last-of-type::after {
+        content: none !important;
     }
 
 
