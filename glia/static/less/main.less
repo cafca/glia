@@ -25,6 +25,21 @@ a > .fa:hover {
     text-decoration: none;
 }
 
+
+.dl-sm {
+    dt {
+        width: 80px;
+    }
+
+    dd {
+        margin-left: 100px;
+    }
+}
+
+.member-only { display: none; }
+.member .member-only { display: inherit; }
+.member .non-member-only { display: none; }
+
 //
 // HEADER
 //
@@ -39,19 +54,17 @@ a > .fa:hover {
 //
 
 .rk-chat {
-    #rk-chat-meta {
-        &.rk-chat-connected > #rk-chat-connecting {
-            display: none;
-        }
-        &.rk-chat-connected > #rk-chat-nicknames {
-            display: block !important;
-        }
-
-        #rk-chat-nicknames {
-            display: none;
-        }
+    .dl-horizontal {
+        margin: 0;
     }
 
+    #rk-chat-nicknames > strong::after {
+        content: ", ";
+    }
+
+    #rk-chat-nicknames > strong:last-of-type::after {
+        content: none !important;
+    }
 
     #rk-chat-lines {
         overflow: scroll;
@@ -87,6 +100,14 @@ a > .fa:hover {
             width: 18%;
         }
     }
+}
+
+//
+// GROUPS
+//
+
+.rk-group-info {
+    btn-default { margin-bottom: 1em; }
 }
 
 //
@@ -176,4 +197,30 @@ a > .fa:hover {
 .rk-favicon-small {
     width: 16px;
     height: 16px;
+}
+
+//
+// PERSONA PAGE
+//
+
+.rk-persona-infobox {
+    margin-bottom: 1em;
+    border-top: 3px solid blue;
+    background-color: #fafafa;
+
+    .rk-persona-picture {
+        min-height: 150px;
+        background-color: lighten(blue, 40%);
+    }
+
+    .rk-persona-meta > dl {
+        margin-top: 1.4em;
+    }
+}
+
+.rk-persona-groups {
+    margin-bottom: 1.4em;
+    .rk-persona-groups-info {
+        border-top: 2px solid lighten(grey, 20%);
+    }
 }

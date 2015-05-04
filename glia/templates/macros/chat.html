@@ -20,29 +20,19 @@
 {% endmacro %}
 
 
-{% macro chat(map, title="Chat") %}
-<div class="rk-chat panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title">{{ title }}</h3>
-    </div>
+{% macro chat(map) %}
 
-    <div class="panel-body" id="rk-chat-meta">
-        <!-- <div id="rk-chat-nicknames"></div> -->
-        <p id="rk-chat-connecting">Connecting to Glia chat</p>
-    </div>
+<ul class="list-group" id="rk-chat-lines">
+    <li class="list-group-item text-center" id="rk-chat-more">
+        <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', starmap_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
+    </li>
+</ul>
 
-    <ul class="list-group" id="rk-chat-lines">
-        <li class="list-group-item text-center" id="rk-chat-more">
-            <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', starmap_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
-        </li>
-    </ul>
-
-    <div class="panel-footer">
-    <form id="send-message" class="form-inline">
-        <input id="message" autocomplete="off" class="form-control input-sm">
-        <button class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' autocomplete="off">Send</button>
-    </form>
-    </div>
-</div> <!-- ./ panel -->
+<div class="panel-footer">
+<form id="send-message" class="form-inline">
+    <input id="message" autocomplete="off" class="form-control input-sm">
+    <button class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' autocomplete="off">Send</button>
+</form>
+</div>
 
 {% endmacro%}

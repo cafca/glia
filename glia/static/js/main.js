@@ -24,19 +24,19 @@ $(document).ready(function(){
         append_timeline("System", msg['msg']);
     });
 
-    // socket.on('nicknames', function (data) {
-    //     var nicknames = data['nicknames'];
-    //     var ids = data['ids'];
+    socket.on('nicknames', function (data) {
+        var nicknames = data['nicknames'];
+        var ids = data['ids'];
 
-    //     $('#rk-chat-nicknames').empty().append($('<span>Online: </span>'));
-    //     for (var i in nicknames) {
-    //       if (ids[i] == window.admin_id) {
-    //         $('#rk-chat-nicknames').append($('<b>').text(nicknames[i] + " [a]"));
-    //       } else {
-    //         $('#rk-chat-nicknames').append($('<b>').text(nicknames[i]));
-    //       }
-    //     }
-    // });
+        $('#rk-chat-nicknames').empty();
+        for (var i in nicknames) {
+          if (ids[i] == window.admin_id) {
+            $('#rk-chat-nicknames').append($('<strong>').text(nicknames[i] + " [a]"));
+          } else {
+            $('#rk-chat-nicknames').append($('<strong>').text(nicknames[i]));
+          }
+        }
+    });
 
     socket.on('msg_to_room', append_timeline);
 
@@ -121,11 +121,22 @@ $(document).ready(function(){
                 $(document).ready(function() {
                     scroll(0);
                     $('#rk-chat-more-button').button('reset');
+                    $(".oneup").click(function () {request_upvote(this.dataset.id)});
                 });
             });
     }
 
     $(function () {
+        //
+        // UPVOTE BUTTON
+        //
+
+        $(".oneup").click(function () {request_upvote(this.dataset.id)});
+
+        //
+        // CHAT BEHAVIOR
+        //
+
         $('#send-message').submit(function () {
             var $btn = $('.rk-chat-button').button('loading');
             socket.emit('text', {'msg': $('#message').val(), 'room_id': window.room_id}, function() {
@@ -146,6 +157,22 @@ $(document).ready(function(){
             $('#message').val('').focus();
         }
 
-        $(".oneup").click(function () {request_upvote(this.dataset.id)});
+        //
+        // GROUP META
+        //
+
+        $("#rk-group-follower").click(function() {
+            $.post($("#rk-group-follower").data("href"))
+                .done(function (data) {
+                    location.reload();
+                })
+        });
+
+        $("#rk-group-member").click(function() {
+            $.post($("#rk-group-member").data("href"))
+                .done(function (data) {
+                    location.reload();
+                })
+        });
     });
 });

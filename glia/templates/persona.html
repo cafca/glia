@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/star.html" as star_macros %}
+
+{% block script %}
+window.room_id = "{{ chat.id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+window.group_id = "{{  persona.id }}";
+window.admin_id = "{{ persona.id }}";
+{% endblock %}
+
+{% block content %}
+<section class="row">
+    <div class="col-sm-4 col-sm-push-8">
+        <div class="rk-chat panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Chat with {{ persona.username }}</h3>
+            </div>
+
+            {{ chat_macros.chat(chat) }}
+        </div> <!-- ./ panel -->
+    </div> <!-- ./ chat column -->
+
+    <div class="rk-persona col-sm-8 col-sm-pull-4">
+        <div class="row rk-persona-infobox">
+            <div class="col-sm-3 rk-persona-picture">
+                <p>Profile picture</p>
+            </div>
+
+            <div class="col-sm-6 rk-persona-identity">
+                <h1>{{ persona.username }}</h1>
+                <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
+            </div>
+
+            <div class="col-sm-3 rk-persona-meta">
+                <dl class="dl-horizontal dl-sm">
+                    <dt>Connections</dt>
+                    <dd>150</dd>
+                    <dt>Shared</dt>
+                    <dd>Alex, Julia, Tim, Lea</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="row rk-persona-groups">
+            <div class="col-sm-12">
+                <h2>Member of {{ persona.group_assocs|length }} groups</h2>
+            </div>
+            {% for gma in groups %}
+            <div class="rk-persona-groups-box">
+                <div class="col-sm-3 rk-persona-groups-info">
+                    <a href="{{ url_for('.group', id=gma.group.id) }}">
+                        <h3>{{ gma.group.username }}</h3>
+                    </a>
+                    <p><em>{{ gma.group.description|default("No description", true) }}</em></p>
+                    <p>Currently a {{ gma.role }}, joined {{ gma.created|localtime|naturaltime }}.</p>
+                </div>
+
+                <div class="col-sm-9 rk-persona-groups-posts star-listing">
+                    {% for star in gma.group.profile.index.filter_by(author=persona).limit(3) %}
+                        {{ star_macros.star_line(star, controlled_personas) }}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

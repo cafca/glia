@@ -21,7 +21,8 @@ from glia.web.forms import DeleteStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, Star, Starmap, Planet
+from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, \
+    Star, Starmap, Planet, GroupMemberAssociation
 
 
 @app.before_request
@@ -154,7 +155,14 @@ def delete_star(id=None):
 @app.route('/persona/<id>/')
 @http_auth.login_required
 def persona(id=None):
-    pass
+    persona = Persona.query.get_or_404(id)
+
+    chat = Starmap.query.join(Persona, Starmap.id == Persona.profile_id)
+
+    groups = GroupMemberAssociation.query.filter_by(active=True).filter_by(
+        persona_id=persona.id)
+
+    return(render_template('persona.html', chat=chat, persona=persona, groups=groups))
 
 
 @app.route('/groups/<id>', methods=["GET"])

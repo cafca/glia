@@ -14,7 +14,49 @@ window.admin_id = "{{ group.admin.id }}";
 {% block content %}
 <section class="row">
     <div class=" col-sm-4 col-sm-push-8">
-            {{ chat_macros.chat(group.profile, title=group.username) }}
+        <div class="rk-chat panel panel-default {% if group.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
+            <div class="panel-heading">
+                <h3 class="panel-title">{{ group.username }}</h3>
+            </div>
+
+            <div class="panel-body rk-group-info">
+                {% if group in current_user.active_persona.groups_followed %}
+                    <button class="btn btn-default" type="submit" id="rk-group-follower" data-href="{{ url_for('.async_toggle_group_following', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-eye"></i> Unfollow
+                    </button>
+                {% else %}
+                    <button class="btn btn-primary" type="submit" id="rk-group-follower" data-href="{{ url_for('.async_toggle_group_following', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-eye"></i> Follow
+                    </button>
+                {% endif %}
+
+
+                {% if group.current_role() not in ["visitor", "anonymous"] %}
+                    <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-users"></i> Leave group
+                    </button>
+                {% else %}
+                    <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
+                        <i class="fa fa-fw fa-users"></i> Join group
+                    </button>
+                {% endif %}
+                    <dl class="dl-horizontal dl-sm">
+                        <dt>Members</dt>
+                        <dd>{{ group.member_count }}</dd>
+                        <dt>Founded</dt>
+                        <dd>{{ group.created|localtime|naturaltime }}</dd>
+                        <dt class="member-only">Recently seen</dt>
+                        <dd class="member-only" id="rk-chat-nicknames"></dd>
+                    </dl>
+
+                    <p class="non-member-only">Become a member of <em>{{ group.username }}</em> to start chatting and collaborating with other
+                group members on this page. </p>
+            </div>
+
+            {% if group.current_role() not in ["visitor", "anonymous"] %}
+                {{ chat_macros.chat(group.profile) }}
+            {% endif %}
+        </div> <!-- ./ panel -->
     </div> <!-- ./ chat column -->
 
     <div class="star-listing col-sm-7 col-sm-pull-3">
