@@ -27,6 +27,13 @@
       </span>
       <button type="submit" class="btn">Go to new group</button>
     </form>
+    <h3>More groups</h3>
+      <ul>
+      {% for group in more_groups %}
+      <li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a> {{ group.description|default("", True) }}</li>
+      {% endfor %}
+      </ul>
+    </p>
   </div> <!-- ./rktik-toc -->
 
   {% if top_posts|length > 0 %}

@@ -14,6 +14,7 @@ from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateGroupForm
 from uuid import uuid4
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from . import app
@@ -59,7 +60,7 @@ def index():
     groupform = CreateGroupForm()
 
     # Collect data for TOC
-    groups = Group.query.limit(5)
+    groups = current_user.active_persona.groups_followed
     group_data = []
     for g in groups:
         g_star_selection = g.profile.index.filter(Star.state >= 0)
@@ -70,6 +71,13 @@ def index():
             'top_posts': g_top_posts
         })
 
+    more_groups = Group.query \
+        .join(GroupMemberAssociation) \
+        .filter(GroupMemberAssociation.persona_id !=
+            current_user.active_persona.id) \
+        .order_by(func.count(GroupMemberAssociation.created)) \
+        .group_by(GroupMemberAssociation.created)
+
     # Collect main page content
     star_selection = Star.query.filter(Star.state >= 0)
     star_selection = sorted(star_selection, key=Star.hot, reverse=True)
@@ -79,7 +87,8 @@ def index():
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('index.html', groupform=groupform, group_data=group_data, top_posts=top_posts)
+    return render_template('index.html', groupform=groupform,
+        group_data=group_data, top_posts=top_posts, more_groups=more_groups)
 
 
 @app.route('/groups/', methods=["GET", "POST"])
