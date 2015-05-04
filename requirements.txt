@@ -1,9 +1,12 @@
+alembic==0.7.5.post2
 Flask==0.10.1
 Flask-DebugToolbar==0.10.0
 Flask-Cache==0.13.1
 Flask-HTTPAuth==2.4.0
 Flask-Login==0.2.11
+Flask-Migrate==1.4.0
 Flask-Misaka==0.3.0
+Flask-Script==2.0.5
 Flask-SQLAlchemy==1.0
 Flask-SocketIO==0.5.0
 Flask-Uploads==0.1.3
