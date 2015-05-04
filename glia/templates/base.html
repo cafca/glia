@@ -44,7 +44,7 @@
           <!-- Link groups, sorted by identity, here -->
           {% for asc in current_user.associations %}
             {% if asc.right_id == current_user.active_persona.id %}
-            <li class="active"><a href="#">{{ current_user.active_persona.username }} <span class="sr-only">(active)</span></a></li>
+            <li class="active"><a href="{{ url_for('.persona', id=current_user.active_persona.id) }}">{{ current_user.active_persona.username }} <span class="sr-only">(active)</span></a></li>
             {% else %}
             <li><a href="#">{{ current_user.active_persona.username }}</a></li>
             {% endif %}

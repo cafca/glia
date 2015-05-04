@@ -37,7 +37,7 @@ window.admin_id = "{{ group.admin.id }}";
                     </button>
                 {% else %}
                     <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
-                        <i class="fa fa-fw fa-users"></i> Become member
+                        <i class="fa fa-fw fa-users"></i> Join group
                     </button>
 
                     <p>Become a member of <em>{{ group.username }}</em> to start chatting and collaborating with other
