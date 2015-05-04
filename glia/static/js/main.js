@@ -121,6 +121,7 @@ $(document).ready(function(){
                 $(document).ready(function() {
                     scroll(0);
                     $('#rk-chat-more-button').button('reset');
+                    $(".oneup").click(function () {request_upvote(this.dataset.id)});
                 });
             });
     }
