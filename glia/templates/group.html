@@ -39,10 +39,15 @@ window.admin_id = "{{ group.admin.id }}";
                     <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
                         <i class="fa fa-fw fa-users"></i> Become member
                     </button>
+
+                    <p>Become a member of <em>{{ group.username }}</em> to start chatting and collaborating with other
+                group members on this page. </p>
                 {% endif %}
             </div>
 
-            {{ chat_macros.chat(group.profile) }}
+            {% if group.current_role() not in ["visitor", "anonymous"] %}
+                {{ chat_macros.chat(group.profile) }}
+            {% endif %}
         </div> <!-- ./ panel -->
     </div> <!-- ./ chat column -->
 
