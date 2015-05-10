@@ -1,6 +1,8 @@
 {% macro planet(planet, scale=True, icon=True, truncate=True, size="small") %}
-<!-- PLANET: {{planet.id}} -->
-{% if planet.kind == 'picture' %}
+<!-- PLANET: {{planet.kind}} {{planet.id}} -->
+{% if planet.kind == 'tag' %}
+<span class="rk-tag"><a href="{{ url_for('web.tag', name=planet.tag.name) }}">#{{ planet.title }}</a></span>
+{% elif planet.kind == 'picture' %}
 <span class="rk-imagewrap">
     <img src="{{ url_for('attachment', filename=planet.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
 </span>
@@ -37,6 +39,7 @@
 {% endif %}
 
 {% endmacro %}
+
 
 {% macro planet_icon(planet) %}
 <!-- PLANET: {{planet.id}} -->

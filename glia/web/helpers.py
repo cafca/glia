@@ -11,7 +11,8 @@ from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy import inspect
 
-from nucleus.nucleus.models import Group, LinkPlanet, LinkedPicturePlanet, TextPlanet
+from nucleus.nucleus.models import Group, LinkPlanet, LinkedPicturePlanet, \
+    TextPlanet, TagPlanet
 
 logger = logging.getLogger('web')
 
@@ -112,7 +113,6 @@ def find_links(text):
             list: List of response objects for found URLs
             str: Text with links removed if they occur at the end
     """
-    import re
     import requests
 
     # Everything that looks remotely like a URL
@@ -143,6 +143,24 @@ def find_links(text):
     return (rv, text)
 
 
+def find_tags(text):
+    """Given some text, find tags of the form "#<tag> with 1-32 chars and no
+        whitespace
+
+    Args:
+        text: input text
+
+    Returns:
+        tuple:
+            iterable: list of found tags
+            text: input text
+    """
+
+    expr = "#([\S]{1,32})"
+
+    return (re.findall(expr, text), text)
+
+
 def process_attachments(text):
     """Given some text a user entered, extract all attachments
     hinted at and return user message plus a list of Planet objects.
@@ -161,6 +179,11 @@ def process_attachments(text):
     """
     g = Goose()
     planets = list()
+
+    tags, text = find_tags(text)
+    for tag in tags:
+        tagplanet = TagPlanet(title=tag)
+        planets.append(tagplanet)
 
     links, text = find_links(text)
     for link in links:
