@@ -18,7 +18,7 @@ USE_DEBUG_SERVER = True
 LOG_LEVEL = logging.DEBUG
 
 # Define addresses
-SERVER_HOST = 'app.souma.io'
+SERVER_HOST = 'localhost'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
