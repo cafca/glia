@@ -145,7 +145,8 @@ def find_links(text):
 
 def find_tags(text):
     """Given some text, find tags of the form "#<tag> with 1-32 chars and no
-        whitespace
+        whitespace. Remove tags from text if they occur at the end and their
+        removal doesn't make text empty.
 
     Args:
         text: input text
@@ -157,8 +158,14 @@ def find_tags(text):
     """
 
     expr = "#([\S]{1,32})"
+    text_new = text
 
-    return (re.findall(expr, text), text)
+    rv = re.findall(expr, text)[::-1]
+    for tag in rv:
+        if(text_new.index(tag) + len(tag)) == len(text_new.rstrip()):
+            text_new = text_new.replace("#{}".format(tag), "")
+
+    return (rv, text_new) if len(text_new) > 0 else (rv, text)
 
 
 def process_attachments(text):
