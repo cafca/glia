@@ -11,16 +11,22 @@
     <img src="{{ planet.url }}" class="img-responsive img-rounded" alt="{{ planet.title }}"/>
 </span>
 {% elif planet.kind == 'link' %}
-<a class="rk-link" href="{{ planet.url }}">
-    {% if icon == True %}
-    <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ planet.favicon_url() }}" /> &nbsp;
-    {% endif %}
-    {% if planet.title %}
-    {{ planet.title }}
+    {% if planet.iframe_url() %}
+    <div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="{{ planet.iframe_url() }}" allowfullscreen></iframe>
+    </div>
     {% else %}
-    {{ planet.url }}
+    <a class="rk-link" href="{{ planet.url }}">
+        {% if icon == True %}
+        <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ planet.favicon_url() }}" /> &nbsp;
+        {% endif %}
+        {% if planet.title %}
+        {{ planet.title }}
+        {% else %}
+        {{ planet.url }}
+        {% endif %}
+    </a>
     {% endif %}
-</a>
 {% elif planet.kind == 'text' %}
 <span class="rk-text">
     {% if truncate %}
