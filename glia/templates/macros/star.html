@@ -21,11 +21,14 @@
       {% if planet_assoc.planet.kind == "linkedpicture" %}
       <div class="col-sm-4">
         {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+      </div>
+      {% elif planet_assoc.planet.kind == 'tag' %}
+        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
       {% else %}
       <div class="col-sm-12">
         {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
-      {% endif %}
       </div>
+      {% endif %}
     {% endfor %}
     </div>
   </div>
@@ -78,11 +81,14 @@
         {% if planet_assoc.planet.kind == "linkedpicture" %}
         <div class="col-sm-4">
           {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        </div>
+        {% elif planet_assoc.planet.kind == 'tag' %}
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
         {% else %}
         <div class="col-sm-12">
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
-        {% endif %}
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
         </div>
+        {% endif %}
       {% endfor %}
       </div>
     </div>

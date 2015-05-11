@@ -14,6 +14,7 @@ from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateGroupForm
 from uuid import uuid4
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from . import app
@@ -22,7 +23,8 @@ from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, \
-    Star, Starmap, Planet, GroupMemberAssociation
+    Star, Starmap, Planet, GroupMemberAssociation, Tag, TagPlanet, \
+    PlanetAssociation
 
 
 @app.before_request
@@ -59,7 +61,7 @@ def index():
     groupform = CreateGroupForm()
 
     # Collect data for TOC
-    groups = Group.query.limit(5)
+    groups = current_user.active_persona.groups_followed
     group_data = []
     for g in groups:
         g_star_selection = g.profile.index.filter(Star.state >= 0)
@@ -70,16 +72,24 @@ def index():
             'top_posts': g_top_posts
         })
 
+    more_groups = Group.query \
+        .join(GroupMemberAssociation) \
+        .filter(GroupMemberAssociation.persona_id !=
+            current_user.active_persona.id) \
+        .order_by(func.count(GroupMemberAssociation.created)) \
+        .group_by(GroupMemberAssociation.created)
+
     # Collect main page content
-    star_selection = Star.query.filter(Star.state >= 0)
-    star_selection = sorted(star_selection, key=Star.hot, reverse=True)
+    top_post_selection = Star.query.filter(Star.state >= 0)
+    top_post_selection = sorted(top_post_selection, key=Star.hot, reverse=True)
     top_posts = []
-    while len(top_posts) < min([9, len(star_selection)]):
-        candidate = star_selection.pop(0)
+    while len(top_posts) < min([9, len(top_post_selection)]):
+        candidate = top_post_selection.pop(0)
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('index.html', groupform=groupform, group_data=group_data, top_posts=top_posts)
+    return render_template('index.html', groupform=groupform,
+        group_data=group_data, top_posts=top_posts, more_groups=more_groups)
 
 
 @app.route('/groups/', methods=["GET", "POST"])
@@ -118,6 +128,16 @@ def star(id=None):
         return(redirect(request.referrer or url_for('.index')))
 
     return render_template("star.html", star=star)
+
+
+@app.route('/tag/<name>/')
+@http_auth.login_required
+def tag(name):
+    tag = Tag.query.filter_by(name=name).first()
+
+    stars = Star.query.join(PlanetAssociation).join(TagPlanet).filter(TagPlanet.tag_id == tag.id)
+
+    return render_template("tag.html", tag=tag, stars=stars)
 
 
 @app.route('/star/<id>/delete', methods=["GET", "POST"])

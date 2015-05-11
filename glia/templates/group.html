@@ -41,6 +41,8 @@ window.admin_id = "{{ group.admin.id }}";
                     </button>
                 {% endif %}
                     <dl class="dl-horizontal dl-sm">
+                        <dt>Mission</dt>
+                        <dd>{{ group.description|default("No mission set", True) }}</dd>
                         <dt>Members</dt>
                         <dd>{{ group.member_count }}</dd>
                         <dt>Founded</dt>
