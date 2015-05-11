@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% import "macros/star.html" as star_macros %}
+{% import "macros/identity.html" as id_macros %}
 
 {% block content %}
 <div class="row" id="rk-index">
@@ -9,7 +10,7 @@
     <div class="rk-toc-groups">
       {% for g in group_data %}
         <h3>
-          <a href="{{ url_for('.group', id=g.group.id) }}">{{ g.group.username }}</a>
+          {{ id_macros.group(g.group) }}
         </h3>
         <ul>
         {% for star in g.top_posts %}
@@ -30,7 +31,7 @@
     <h3>More Movements</h3>
       <ul>
       {% for group in more_groups %}
-      <li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a> {{ group.description|default("", True) }}</li>
+      <li>{{ id_macros.group(group) }} {{ group.description|default("", True) }}</li>
       {% endfor %}
       </ul>
     </p>

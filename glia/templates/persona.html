@@ -2,6 +2,7 @@
 
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/star.html" as star_macros %}
+{% import "macros/identity.html" as id_macros %}
 
 {% block script %}
 window.room_id = "{{ chat.id }}";
@@ -24,13 +25,13 @@ window.admin_id = "{{ persona.id }}";
     </div> <!-- ./ chat column -->
 
     <div class="rk-persona col-sm-8 col-sm-pull-4">
-        <div class="row rk-persona-infobox">
+        <div class="row rk-persona-infobox" style="border-color: #{{ persona.color }}">
             <div class="col-sm-3 rk-persona-picture">
                 <p>Profile picture</p>
             </div>
 
             <div class="col-sm-6 rk-persona-identity">
-                <h1>{{ persona.username }}</h1>
+                <h1>{{ id_macros.persona(persona) }}</h1>
                 <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
             </div>
 

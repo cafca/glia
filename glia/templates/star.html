@@ -2,6 +2,7 @@
 
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/star.html" as star_macros %}
+{% import "macros/identity.html" as id_macros %}
 
 {% block content %}
 <section class="row">
@@ -17,7 +18,7 @@
 
     <div class="col-sm-3 col-sm-push-1">
         <h3>Info</h3>
-        <p>Original post by <a href="{{ url_for('.persona', id=star.author.id) }}">{{ star.author.username }}</a> {{star.created|localtime|naturaltime}}.</p>
+        <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
         <p>Posted to.</p>
         <ul>
         {% for map in star.starmaps %}

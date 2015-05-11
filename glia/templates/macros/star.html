@@ -1,4 +1,5 @@
 {% import "macros/planet.html" as planet_macros %}
+{% import "macros/identity.html" as id_macros %}
 
 {% macro oneup(star) %}
 <button class="oneup btn btn-xs {% if star.oneupped() %}btn-inverse{% else %}btn-default{% endif %} oneup-{{star.id}}" data-id="{{star.id}}" type="button">
@@ -52,9 +53,8 @@
     <span class="inline-semantic"> by </span>
 
     <span class="attribute">
-        <i class="fa fa-circle"></i>
         <span class="caption">
-            <a href="{{ url_for('.persona', id=star.author.id) }}">{{ star.author.username}}</a>
+            {{ id_macros.persona(star.author) }}
         </span>
     </span>
   </div>
