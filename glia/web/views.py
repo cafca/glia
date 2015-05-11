@@ -92,7 +92,7 @@ def index():
         group_data=group_data, top_posts=top_posts, more_groups=more_groups)
 
 
-@app.route('/groups/', methods=["GET", "POST"])
+@app.route('/movement/', methods=["GET", "POST"])
 @login_required
 @http_auth.login_required
 def groups():
@@ -111,8 +111,8 @@ def groups():
             modified=group_created)
         db.session.add(group)
         db.session.commit()
-        flash("Your new group is ready!")
-        app.logger.debug("{} created new group {}".format(current_user.active_persona, group))
+        flash("Your new movement is ready!")
+        app.logger.debug("{} created new movement {}".format(current_user.active_persona, group))
         return redirect(url_for('.group', id=group_id))
 
     return render_template("groups.html", form=form)
@@ -185,15 +185,15 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, groups=groups))
 
 
-@app.route('/groups/<id>', methods=["GET"])
+@app.route('/movement/<id>', methods=["GET"])
 @login_required
 @http_auth.login_required
 def group(id):
     """Display a group's profile"""
     group = Group.query.get(id)
     if not group:
-        flash("Group not found")
-        app.logger.warning("Group '{}' not found. User: {}".format(id, current_user))
+        flash("Movement not found")
+        app.logger.warning("Movement '{}' not found. User: {}".format(id, current_user))
         return(redirect(url_for('.groups')))
 
     star_selection = group.profile.index.filter(Star.state >= 0)
@@ -204,7 +204,7 @@ def group(id):
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('group.html', group=group, stars=top_posts)
+    return render_template('movement.html', group=group, stars=top_posts)
 
 
 @app.route('/stars/', methods=["POST"])

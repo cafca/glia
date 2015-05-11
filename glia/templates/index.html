@@ -25,9 +25,9 @@
         <input name="name" type="text" value="" class="form-control" />
         {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
       </span>
-      <button type="submit" class="btn">Go to new group</button>
+      <button type="submit" class="btn">Start Movement</button>
     </form>
-    <h3>More groups</h3>
+    <h3>More Movements</h3>
       <ul>
       {% for group in more_groups %}
       <li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a> {{ group.description|default("", True) }}</li>
@@ -47,7 +47,7 @@
     {% endfor %}
   </div> <!-- ./ row -->
   {% else %}
-  <h1>Join some groups >>></h1>
+  <h1>Join some Movements >>></h1>
   {% endif %}
 
 </div> <!-- ./ index -->
