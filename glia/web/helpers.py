@@ -118,6 +118,7 @@ def find_links(text):
     # Everything that looks remotely like a URL
     expr = "((?:https?://)?\S+\.\w{2,3}\S*)"
     rv = list()
+    rejects = set()
 
     candidates = re.findall(expr, text)
 
@@ -128,18 +129,19 @@ def find_links(text):
             else:
                 c_schemed = c
 
-            logger.info("Testing potential link '{}' for availability".format(c_schemed))
-            try:
-                res = requests.head(c_schemed, timeout=3.0)
-            except (requests.exceptions.RequestException, ValueError):
-                # The link failed
-                pass
-            else:
-                if res and res.status_code < 400:
-                    rv.append(res)
-                    # Only remove link if it occurs at the end of text
-                    if (text.index(c) + len(c)) == len(text.rstrip()):
-                        text = text.replace(c, "")
+            if c_schemed not in rejects:
+                logger.info("Testing potential link '{}' for availability".format(c_schemed))
+                try:
+                    res = requests.head(c_schemed, timeout=3.0)
+                except (requests.exceptions.RequestException, ValueError):
+                    # The link failed
+                    rejects.add(c_schemed)
+                else:
+                    if res and res.status_code < 400:
+                        rv.append(res)
+                        # Only remove link if it occurs at the end of text
+                        if (text.index(c) + len(c)) == len(text.rstrip()):
+                            text = text.replace(c, "")
     return (rv, text)
 
 

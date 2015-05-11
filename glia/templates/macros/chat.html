@@ -9,9 +9,11 @@
         <a href="{{ url_for('web.star', id=star.id) }}"><span class="author_name">{{ star.author.username }}</span> {{star.created|localtime|naturaltime}} </a>
         {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
     </span>
+    <div>
+    {% for tagp in star.tags %}<a href="{{ url_for('web.tag', name=tagp.planet.tag.name) }}">#{{ tagp.planet.title }}</a>&nbsp;{% endfor %}
 </li>
 
-{% for planet_assoc in star.planet_assocs %}
+{% for planet_assoc in star.attachments %}
 <li class="list-group-item rk-chat-planet">
     {{ planet_macros.planet(planet_assoc.planet, scale=True, size='small') }}
 </li>
