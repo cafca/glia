@@ -1,5 +1,16 @@
 
 //
+// COLORS
+//
+
+@base: #0B3954;
+@accent: #C81D25;
+@dark: #A39BA8;
+@medium: #B8C5D6;
+@light: #F4F8FC;
+
+
+//
 //  MAIN STYLES
 //
 
@@ -49,9 +60,17 @@ a > .fa:hover {
     margin: 0 0 2em !important;
 }
 
+.navbar {
+    border-bottom: 1px solid #ddd;
+}
+
 //
 // CHAT
 //
+
+.panel .panel-heading, .panel .panel-footer {
+    background-color: @light;
+}
 
 .rk-chat {
     .dl-horizontal {
@@ -205,12 +224,12 @@ a > .fa:hover {
 
 .rk-persona-infobox {
     margin-bottom: 1em;
-    border-top: 3px solid blue;
+    border-top: 3px solid @base;
     background-color: #fafafa;
 
     .rk-persona-picture {
         min-height: 150px;
-        background-color: lighten(blue, 40%);
+        background-color: @medium;
     }
 
     .rk-persona-meta > dl {
