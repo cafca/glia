@@ -109,11 +109,17 @@ def groups():
             admin=current_user.active_persona,
             created=group_created,
             modified=group_created)
-        db.session.add(group)
-        db.session.commit()
-        flash("Your new movement is ready!")
-        app.logger.debug("{} created new movement {}".format(current_user.active_persona, group))
-        return redirect(url_for('.group', id=group_id))
+        current_user.active_persona.toggle_group_membership(group=group)
+        try:
+            db.session.add(group)
+            db.session.commit()
+        except Exception, e:
+            app.logger.exception("Error creating group: {}".format(e))
+            flash("There was a problem creating your group. Please try again.")
+        else:
+            flash("Your new movement is ready!")
+            app.logger.debug("{} created new movement {}".format(current_user.active_persona, group))
+            return redirect(url_for('.group', id=group_id))
 
     return render_template("groups.html", form=form)
 
