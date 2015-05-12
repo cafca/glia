@@ -95,9 +95,9 @@ def index():
 @app.route('/movement/', methods=["GET", "POST"])
 @login_required
 @http_auth.login_required
-def movements():
+def movements(movement_id=None):
     """Create movements"""
-    form = CreateMovementForm()
+    form = CreateMovementForm(id=movement_id)
 
     # Create a movement
     if form.validate_on_submit():
@@ -106,6 +106,7 @@ def movements():
         movement = Movement(
             id=movement_id,
             username=form.name.data,
+            description=form.mission.data,
             admin=current_user.active_persona,
             created=movement_created,
             modified=movement_created)
@@ -200,7 +201,8 @@ def movement(id):
     movement = Movement.query.get(id)
     if not movement:
         flash("Movement not found")
-        app.logger.warning("Movement '{}' not found. User: {}".format(id, current_user))
+        app.logger.warning("Movement '{}' not found. User: {}".format(
+            id, current_user))
         return(redirect(url_for('.movements')))
 
     star_selection = movement.profile.index.filter(Star.state >= 0)

@@ -20,14 +20,7 @@
       {% endfor %}
     </div> <!-- ./ movement list -->
 
-    <form action="{{ url_for('.movements') }}" method="POST" class="form-inline">
-      {{ movementform.hidden_tag() }}
-      <span class="form-group>">
-        <input name="name" type="text" value="" class="form-control" />
-        {% if movementform.name.errors %} {{movementform.name.errors}} {% endif %}
-      </span>
-      <button type="submit" class="btn">Start Movement</button>
-    </form>
+    <a role="button" class="btn btn-default" href="{{ url_for('web.movements') }}">Start a Movement Today</a>
     <h3>More Movements</h3>
       <ul>
       {% for movement in more_movements %}

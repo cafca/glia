@@ -7,10 +7,11 @@
 
     :copyright: (c) 2015 by Vincent Ahrend.
 """
-from flask import render_template, url_for, jsonify
+from flask import render_template, url_for, jsonify, request
 from flask.ext.login import login_required, current_user
 
 from . import app
+from .. import socketio
 from glia.web.dev_helpers import http_auth
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Star, Starmap, Movement
@@ -142,3 +143,47 @@ def async_toggle_movement_membership(movement_id):
         "persona_id": current_user.active_persona.id,
         "association": rv
     }, )
+
+
+@app.route("/async/movement/<movement_id>/", methods=["POST"])
+@login_required
+@http_auth.login_required
+def async_movement(movement_id):
+    """Edit a movement's description
+
+    Expects a POST request with value 'value' containing the new mission of the
+    movement
+    """
+    movement = Movement.query.get(movement_id)
+    if movement is None:
+        raise InvalidUsage(message="Movement not found", code=404)
+
+    if not current_user or not current_user.active_persona:
+        raise InvalidUsage(message="Activate a Persona to do this.")
+
+    if current_user.active_persona.id != movement.admin_id:
+        raise InvalidUsage(message="Only admin may edit group mission")
+
+    new_mission = request.form.get("value")
+    if not new_mission or len(new_mission) > 140:
+        raise InvalidUsage(
+            message="New mission can't be longer than 140 characters")
+
+    movement.description = new_mission
+    try:
+        db.session.add(movement)
+        db.session.commit()
+    except Exception:
+        app.logger.exception("Error editing mission of {} to `{}`".format(
+            movement, new_mission))
+        raise InvalidUsage(message="There was an error saving the new mission.\
+            Please try again")
+    else:
+        app.logger.info("{} changed mission of {} to '{}'".format(
+            current_user.active_persona, movement, new_mission))
+        socketio.emit('status',
+            {'msg': "{} set a new mission: {}".format(
+                current_user.active_persona.username, new_mission)},
+            room=movement.profile.id, namespace="/movements")
+
+    return jsonify({"mission": new_mission})

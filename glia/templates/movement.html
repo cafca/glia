@@ -9,6 +9,10 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.movement_id = "{{  movement.id }}";
 window.admin_id = "{{ movement.admin.id }}";
+
+$(document).ready(function() {
+    $('#rk-mission').editable();
+});
 {% endblock %}
 
 {% block content %}
@@ -20,6 +24,7 @@ window.admin_id = "{{ movement.admin.id }}";
             </div>
 
             <div class="panel-body rk-movement-info">
+                <div class="form-group">
                 {% if movement in current_user.active_persona.movements_followed %}
                     <button class="btn btn-default" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
                         <i class="fa fa-fw fa-eye"></i> Unfollow
@@ -40,18 +45,22 @@ window.admin_id = "{{ movement.admin.id }}";
                         <i class="fa fa-fw fa-users"></i> Join Movement
                     </button>
                 {% endif %}
-                    <dl class="dl-horizontal dl-sm">
-                        <dt>Mission</dt>
-                        <dd>{{ movement.description|default("No mission set", True) }}</dd>
-                        <dt>Members</dt>
-                        <dd>{{ movement.member_count }}</dd>
-                        <dt>Founded</dt>
-                        <dd>{{ movement.created|localtime|naturaltime }}</dd>
-                        <dt class="member-only">Recently seen</dt>
-                        <dd class="member-only" id="rk-chat-nicknames"></dd>
-                    </dl>
+                </div>
 
-                    <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
+                <dl class="dl-horizontal dl-sm">
+                    <dt>Mission</dt>
+                    <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
+                        {{ movement.description|default("No mission set", True) }}
+                    </a></dd>
+                    <dt>Members</dt>
+                    <dd>{{ movement.member_count }}</dd>
+                    <dt>Founded</dt>
+                    <dd>{{ movement.created|localtime|naturaltime }}</dd>
+                    <dt class="member-only">Recently seen</dt>
+                    <dd class="member-only" id="rk-chat-nicknames"></dd>
+                </dl>
+
+                <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
                 members of this movement </p>
             </div>
 
