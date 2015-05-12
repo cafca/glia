@@ -13,7 +13,7 @@ from flask.ext.login import login_required, current_user
 from . import app
 from glia.web.dev_helpers import http_auth
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Star, Starmap, Group
+from nucleus.nucleus.models import Star, Starmap, Movement
 
 
 class InvalidUsage(Exception):
@@ -86,24 +86,24 @@ def async_chat(starmap_id, index_id=None):
         }))
 
 
-@app.route("/async/group/<group_id>/toggle_following", methods=["POST", "GET"])
+@app.route("/async/movement/<movement_id>/toggle_following", methods=["POST", "GET"])
 @login_required
 @http_auth.login_required
-def async_toggle_group_following(group_id):
-    group = Group.query.get(group_id)
-    if group is None:
-        raise InvalidUsage(message="Group not found", code=404)
+def async_toggle_movement_following(movement_id):
+    movement = Movement.query.get(movement_id)
+    if movement is None:
+        raise InvalidUsage(message="Movement not found", code=404)
 
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
-    following = current_user.active_persona.toggle_following_group(group=group)
+    following = current_user.active_persona.toggle_following_movement(movement=movement)
 
     db.session.add(current_user.active_persona)
     db.session.commit()
 
     rv = {
-        "group_id": group.id,
+        "movement_id": movement.id,
         "persona_id": current_user.active_persona.id,
         "following": following
     }
@@ -111,34 +111,34 @@ def async_toggle_group_following(group_id):
     return jsonify(rv)
 
 
-@app.route("/async/group/<group_id>/toggle_membership", methods=["POST", "GET"])
+@app.route("/async/movement/<movement_id>/toggle_membership", methods=["POST", "GET"])
 @login_required
 @http_auth.login_required
-def async_toggle_group_membership(group_id):
-    group = Group.query.get(group_id)
-    if group is None:
-        raise InvalidUsage(message="Group not found", code=404)
+def async_toggle_movement_membership(movement_id):
+    movement = Movement.query.get(movement_id)
+    if movement is None:
+        raise InvalidUsage(message="Movement not found", code=404)
 
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
-    gms = current_user.active_persona.toggle_group_membership(group=group)
-    if gms:
+    mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+    if mma:
         rv = {
-            "role": gms.role,
-            "created": gms.created,
-            "description": gms.description,
-            "active": gms.active,
-            "last_seen": gms.last_seen
+            "role": mma.role,
+            "created": mma.created,
+            "description": mma.description,
+            "active": mma.active,
+            "last_seen": mma.last_seen
         }
-        db.session.add(gms)
+        db.session.add(mma)
     else:
         rv = None
 
     db.session.commit()
 
     return jsonify({
-        "group_id": group.id,
+        "movement_id": movement.id,
         "persona_id": current_user.active_persona.id,
         "association": rv
     }, )

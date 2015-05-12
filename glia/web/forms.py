@@ -81,5 +81,5 @@ class SignupForm(RedirectForm):
         return rv
 
 
-class CreateGroupForm(Form):
-    name = TextField('New group name', [validators.Required(), validators.Length(min=3, max=20)])
+class CreateMovementForm(Form):
+    name = TextField('New movement name', [validators.Required(), validators.Length(min=3, max=20)])

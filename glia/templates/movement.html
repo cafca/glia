@@ -4,59 +4,59 @@
 {% import "macros/star.html" as star_macros %}
 
 {% block script %}
-window.room_id = "{{ group.profile.id }}";
+window.room_id = "{{ movement.profile.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
-window.group_id = "{{  group.id }}";
-window.admin_id = "{{ group.admin.id }}";
+window.movement_id = "{{  movement.id }}";
+window.admin_id = "{{ movement.admin.id }}";
 {% endblock %}
 
 {% block content %}
 <section class="row">
     <div class=" col-sm-4 col-sm-push-8">
-        <div class="rk-chat panel panel-default {% if group.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
+        <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
             <div class="panel-heading">
-                <h3 class="panel-title">{{ group.username }}</h3>
+                <h3 class="panel-title">{{ movement.username }}</h3>
             </div>
 
-            <div class="panel-body rk-group-info">
-                {% if group in current_user.active_persona.groups_followed %}
-                    <button class="btn btn-default" type="submit" id="rk-group-follower" data-href="{{ url_for('.async_toggle_group_following', group_id=group.id) }}">
+            <div class="panel-body rk-movement-info">
+                {% if movement in current_user.active_persona.movements_followed %}
+                    <button class="btn btn-default" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
                         <i class="fa fa-fw fa-eye"></i> Unfollow
                     </button>
                 {% else %}
-                    <button class="btn btn-primary" type="submit" id="rk-group-follower" data-href="{{ url_for('.async_toggle_group_following', group_id=group.id) }}">
+                    <button class="btn btn-primary" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
                         <i class="fa fa-fw fa-eye"></i> Follow
                     </button>
                 {% endif %}
 
 
-                {% if group.current_role() not in ["visitor", "anonymous"] %}
-                    <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
+                {% if movement.current_role() not in ["visitor", "anonymous"] %}
+                    <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
                         <i class="fa fa-fw fa-users"></i> Leave Movement
                     </button>
                 {% else %}
-                    <button class="btn btn-default" type="submit" id="rk-group-member" data-href="{{ url_for('.async_toggle_group_membership', group_id=group.id) }}">
+                    <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
                         <i class="fa fa-fw fa-users"></i> Join Movement
                     </button>
                 {% endif %}
                     <dl class="dl-horizontal dl-sm">
                         <dt>Mission</dt>
-                        <dd>{{ group.description|default("No mission set", True) }}</dd>
+                        <dd>{{ movement.description|default("No mission set", True) }}</dd>
                         <dt>Members</dt>
-                        <dd>{{ group.member_count }}</dd>
+                        <dd>{{ movement.member_count }}</dd>
                         <dt>Founded</dt>
-                        <dd>{{ group.created|localtime|naturaltime }}</dd>
+                        <dd>{{ movement.created|localtime|naturaltime }}</dd>
                         <dt class="member-only">Recently seen</dt>
                         <dd class="member-only" id="rk-chat-nicknames"></dd>
                     </dl>
 
-                    <p class="non-member-only">Become a member of <em>{{ group.username }}</em> to start chatting and collaborating with other
+                    <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
                 members of this movement </p>
             </div>
 
-            {% if group.current_role() not in ["visitor", "anonymous"] %}
-                {{ chat_macros.chat(group.profile) }}
+            {% if movement.current_role() not in ["visitor", "anonymous"] %}
+                {{ chat_macros.chat(movement.profile) }}
             {% endif %}
         </div> <!-- ./ panel -->
     </div> <!-- ./ chat column -->

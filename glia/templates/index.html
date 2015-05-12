@@ -7,10 +7,10 @@
 <div class="row" id="rk-index">
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-8">
     <h1>RKTIK Today</h1>
-    <div class="rk-toc-groups">
-      {% for g in group_data %}
+    <div class="rk-toc-movements">
+      {% for g in movement_data %}
         <h3>
-          {{ id_macros.group(g.group) }}
+          {{ id_macros.movement(g.movement) }}
         </h3>
         <ul>
         {% for star in g.top_posts %}
@@ -18,20 +18,20 @@
         {% endfor %}
         </ul>
       {% endfor %}
-    </div> <!-- ./ group list -->
+    </div> <!-- ./ movement list -->
 
-    <form action="{{ url_for('.groups') }}" method="POST" class="form-inline">
-      {{ groupform.hidden_tag() }}
+    <form action="{{ url_for('.movements') }}" method="POST" class="form-inline">
+      {{ movementform.hidden_tag() }}
       <span class="form-group>">
         <input name="name" type="text" value="" class="form-control" />
-        {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
+        {% if movementform.name.errors %} {{movementform.name.errors}} {% endif %}
       </span>
       <button type="submit" class="btn">Start Movement</button>
     </form>
     <h3>More Movements</h3>
       <ul>
-      {% for group in more_groups %}
-      <li>{{ id_macros.group(group) }} {{ group.description|default("", True) }}</li>
+      {% for movement in more_movements %}
+      <li>{{ id_macros.movement(movement) }} {{ movement.description|default("", True) }}</li>
       {% endfor %}
       </ul>
     </p>

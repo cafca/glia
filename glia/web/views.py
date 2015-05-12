@@ -12,7 +12,7 @@ import traceback
 
 from flask import request, redirect, render_template, flash, url_for, session
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from forms import LoginForm, SignupForm, CreateGroupForm
+from forms import LoginForm, SignupForm, CreateMovementForm
 from uuid import uuid4
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -22,8 +22,8 @@ from glia.web.forms import DeleteStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Persona, User, Group, PersonaAssociation, \
-    Star, Starmap, Planet, GroupMemberAssociation, Tag, TagPlanet, \
+from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
+    Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
     PlanetAssociation
 
 
@@ -39,7 +39,7 @@ def debug():
     """ Display raw data """
     stars = Star.query.all()
     planets = Planet.query.all()
-    groups = Group.query.all()
+    movements = Movement.query.all()
     starmaps = Starmap.query.all()
     users = User.query.all()
 
@@ -48,7 +48,7 @@ def debug():
         stars=stars,
         users=users,
         planets=planets,
-        groups=groups,
+        movements=movements,
         starmaps=starmaps
     )
 
@@ -58,26 +58,26 @@ def debug():
 @http_auth.login_required
 def index():
     """Front page"""
-    groupform = CreateGroupForm()
+    movementform = CreateMovementForm()
 
     # Collect data for TOC
-    groups = current_user.active_persona.groups_followed
-    group_data = []
-    for g in groups:
+    movements = current_user.active_persona.movements_followed
+    movement_data = []
+    for g in movements:
         g_star_selection = g.profile.index.filter(Star.state >= 0)
         g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
 
-        group_data.append({
-            'group': g,
+        movement_data.append({
+            'movement': g,
             'top_posts': g_top_posts
         })
 
-    more_groups = Group.query \
-        .join(GroupMemberAssociation) \
-        .filter(GroupMemberAssociation.persona_id !=
+    more_movements = Movement.query \
+        .join(MovementMemberAssociation) \
+        .filter(MovementMemberAssociation.persona_id !=
             current_user.active_persona.id) \
-        .order_by(func.count(GroupMemberAssociation.created)) \
-        .group_by(GroupMemberAssociation.created)
+        .order_by(func.count(MovementMemberAssociation.created)) \
+        .group_by(MovementMemberAssociation.created)
 
     # Collect main page content
     top_post_selection = Star.query.filter(Star.state >= 0)
@@ -88,40 +88,40 @@ def index():
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('index.html', groupform=groupform,
-        group_data=group_data, top_posts=top_posts, more_groups=more_groups)
+    return render_template('index.html', movementform=movementform,
+        movement_data=movement_data, top_posts=top_posts, more_movements=more_movements)
 
 
 @app.route('/movement/', methods=["GET", "POST"])
 @login_required
 @http_auth.login_required
-def groups():
-    """Create groups"""
-    form = CreateGroupForm()
+def movements():
+    """Create movements"""
+    form = CreateMovementForm()
 
-    # Create a group
+    # Create a movement
     if form.validate_on_submit():
-        group_id = uuid4().hex
-        group_created = datetime.datetime.utcnow()
-        group = Group(
-            id=group_id,
+        movement_id = uuid4().hex
+        movement_created = datetime.datetime.utcnow()
+        movement = Movement(
+            id=movement_id,
             username=form.name.data,
             admin=current_user.active_persona,
-            created=group_created,
-            modified=group_created)
-        current_user.active_persona.toggle_group_membership(group=group)
+            created=movement_created,
+            modified=movement_created)
+        current_user.active_persona.toggle_movement_membership(movement=movement)
         try:
-            db.session.add(group)
+            db.session.add(movement)
             db.session.commit()
         except Exception, e:
-            app.logger.exception("Error creating group: {}".format(e))
-            flash("There was a problem creating your group. Please try again.")
+            app.logger.exception("Error creating movement: {}".format(e))
+            flash("There was a problem creating your movement. Please try again.")
         else:
             flash("Your new movement is ready!")
-            app.logger.debug("{} created new movement {}".format(current_user.active_persona, group))
-            return redirect(url_for('.group', id=group_id))
+            app.logger.debug("{} created new movement {}".format(current_user.active_persona, movement))
+            return redirect(url_for('.movement', id=movement_id))
 
-    return render_template("groups.html", form=form)
+    return render_template("movements.html", form=form)
 
 
 @app.route('/star/<id>/')
@@ -185,24 +185,25 @@ def persona(id=None):
 
     chat = Starmap.query.join(Persona, Starmap.id == Persona.profile_id)
 
-    groups = GroupMemberAssociation.query.filter_by(active=True).filter_by(
-        persona_id=persona.id)
+    movements = MovementMemberAssociation.query \
+        .filter_by(active=True) \
+        .filter_by(persona_id=persona.id)
 
-    return(render_template('persona.html', chat=chat, persona=persona, groups=groups))
+    return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
 @app.route('/movement/<id>', methods=["GET"])
 @login_required
 @http_auth.login_required
-def group(id):
-    """Display a group's profile"""
-    group = Group.query.get(id)
-    if not group:
+def movement(id):
+    """Display a movement's profile"""
+    movement = Movement.query.get(id)
+    if not movement:
         flash("Movement not found")
         app.logger.warning("Movement '{}' not found. User: {}".format(id, current_user))
-        return(redirect(url_for('.groups')))
+        return(redirect(url_for('.movements')))
 
-    star_selection = group.profile.index.filter(Star.state >= 0)
+    star_selection = movement.profile.index.filter(Star.state >= 0)
     star_selection = sorted(star_selection, key=Star.hot, reverse=True)
     top_posts = []
     while len(top_posts) < min([15, len(star_selection)]):
@@ -210,7 +211,7 @@ def group(id):
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('movement.html', group=group, stars=top_posts)
+    return render_template('movement.html', movement=movement, stars=top_posts)
 
 
 @app.route('/stars/', methods=["POST"])

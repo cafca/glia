@@ -11,8 +11,8 @@ var socket;
 
 $(document).ready(function(){
     $('#rk-chat-more-button').button('loading');
-    console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/groups')
-    socket = io.connect('http://' + document.domain + ':' + location.port + '/groups');
+    console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/movements')
+    socket = io.connect('http://' + document.domain + ':' + location.port + '/movements');
     socket.on('connect', function() {
         $('#rk-chat-meta').addClass('rk-chat-connected');
         socket.emit('joined', {'room_id': window.room_id});
@@ -161,15 +161,15 @@ $(document).ready(function(){
         // GROUP META
         //
 
-        $("#rk-group-follower").click(function() {
-            $.post($("#rk-group-follower").data("href"))
+        $("#rk-movement-follower").click(function() {
+            $.post($("#rk-movement-follower").data("href"))
                 .done(function (data) {
                     location.reload();
                 })
         });
 
-        $("#rk-group-member").click(function() {
-            $.post($("#rk-group-member").data("href"))
+        $("#rk-movement-member").click(function() {
+            $.post($("#rk-movement-member").data("href"))
                 .done(function (data) {
                     location.reload();
                 })

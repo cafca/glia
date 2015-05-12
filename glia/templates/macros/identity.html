@@ -5,9 +5,9 @@
 </a>
 {% endmacro %}
 
-{% macro group(g, flair=None) %}
-<a href="{{ url_for('web.group', id=g.id) }}">
-  <i class="fa fa-circle-o" style="color: #{{g.color|default('B8C5D6', True)}}"></i> {{ g.username }}
+{% macro movement(m, flair=None) %}
+<a href="{{ url_for('web.movement', id=m.id) }}">
+  <i class="fa fa-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> {{ m.username }}
   {% if flair %}<span class="rk-flair">{{ flair }}</span>{% endif %}
 </a>
 {% endmacro %}

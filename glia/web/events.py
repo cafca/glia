@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments
-from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Group, \
+from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
     Persona
 from nucleus.nucleus import notification_signals, PersonaNotFoundError
 
@@ -39,7 +39,7 @@ def socketio_authenticated_only(f):
 
 
 @socketio_authenticated_only
-@socketio.on('joined', namespace='/groups')
+@socketio.on('joined', namespace='/movements')
 def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
@@ -54,15 +54,15 @@ def joined(message):
         db.session.commit()
 
         join_room(message["room_id"])
-        app.logger.info("{} joined group chat {}".format(current_user.active_persona, message['room_id']))
+        app.logger.info("{} joined movement chat {}".format(current_user.active_persona, message['room_id']))
         emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
 
         rv = {"nicknames": [], "ids": []}
-        group = Group.query.filter_by(profile_id=message["room_id"]).first()
-        if group:
+        movement = Movement.query.filter_by(profile_id=message["room_id"]).first()
+        if movement:
             online_cutoff = datetime.datetime.utcnow() - \
                 datetime.timedelta(seconds=15 * 60)
-            for gma in group.members.join(Persona).filter(
+            for gma in movement.members.join(Persona).filter(
                     Persona.last_connected > online_cutoff).order_by(
                     Persona.last_connected.desc()):
                 rv["nicknames"].append(gma.persona.username)
@@ -72,7 +72,7 @@ def joined(message):
 
 
 @socketio_authenticated_only
-@socketio.on('text', namespace='/groups')
+@socketio.on('text', namespace='/movements')
 def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
@@ -137,7 +137,7 @@ def text(message):
 
 
 @socketio_authenticated_only
-@socketio.on('left', namespace='/groups')
+@socketio.on('left', namespace='/movements')
 def left(message):
     """Sent by clients when they leave a room.
     A status message is broadcast to all people in the room."""
@@ -146,7 +146,7 @@ def left(message):
 
 
 @socketio_authenticated_only
-@socketio.on('vote_request', namespace='/groups')
+@socketio.on('vote_request', namespace='/movements')
 def vote_request(message):
     """
     Issue a vote to a Star using the currently activated Persona
@@ -199,6 +199,6 @@ def vote_request(message):
         emit('vote', data, broadcast=True)
 
 
-@socketio.on_error(namespace='/groups')
+@socketio.on_error(namespace='/movements')
 def chat_error_handler(e):
     app.logger.error('An error has occurred: ' + str(e))

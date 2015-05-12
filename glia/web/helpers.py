@@ -11,7 +11,7 @@ from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy import inspect
 
-from nucleus.nucleus.models import Group, LinkPlanet, LinkedPicturePlanet, \
+from nucleus.nucleus.models import LinkPlanet, LinkedPicturePlanet, \
     TextPlanet, TagPlanet
 
 logger = logging.getLogger('web')
@@ -20,19 +20,6 @@ logger = logging.getLogger('web')
 class UnauthorizedError(Exception):
     """Current user is not authorized for this action"""
     pass
-
-
-def get_group_from_path(path):
-    """Return a group for a given URL or None
-
-    Args:
-        path (String): /group/<id> with id beign 32 bytes
-    """
-    rx = "^/groups/(.{32})"
-    rx_match = re.match(rx, path)
-    if rx_match:
-        group_id = rx_match.group(1)
-        return Group.query.get(group_id)
 
 
 def send_email(message):
