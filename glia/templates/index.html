@@ -27,7 +27,7 @@
       {% endfor %}
       </ul>
     {% endif %}
-    <a role="button" class="btn btn-default" href="{{ url_for('web.movements') }}">Start a Movement Today</a>
+    <a role="button" class="btn btn-primary" href="{{ url_for('web.movements') }}">Start Your Movement Today</a>
     </div>
 
   </div> <!-- ./rktik-toc -->
@@ -47,7 +47,7 @@
             {% if loop.first %}
               {{ star_macros.star_lead(m.top_posts[0], controlled_personas) }}
             {% else %}
-              {{ star_macros.star_line(star, controlled_personas) }}
+              {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
             {% endif %}
           {% endfor %}
         </div>
