@@ -9,7 +9,6 @@
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
@@ -25,7 +24,7 @@
     <![endif]-->
   </head>
   <body>
-    <nav class="navbar navbar-inverse navbar-static-top">
+    <nav class="navbar navbar-static-top">
       <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
@@ -71,6 +70,8 @@
         </div> <!-- /.navbar-collapse -->
       </div> <!-- ./container-fluid -->
     </nav>
+
+
 
     {% for message in get_flashed_messages() %}
         <div class='alert alert-success' role="alert"><span>{{message}}</span></div>
