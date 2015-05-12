@@ -1,13 +1,13 @@
 {% macro persona(p, flair=None) %}
 <a href="{{ url_for('web.persona', id=p.id) }}">
-  <i class="fa fa-circle" style="color: #{{p.color|default('C81D25', True)}}"></i> {{ p.username }}
+  <i class="fa fa-circle" style="color: #{{p.color|default('B8C5D6', True)}}"></i> {{ p.username }}
   {% if flair %}<span class="rk-flair">{{ flair }}</span>{% endif %}
 </a>
 {% endmacro %}
 
 {% macro group(g, flair=None) %}
 <a href="{{ url_for('web.group', id=g.id) }}">
-  <i class="fa fa-circle-o" style="color: #{{g.color|default('C81D25', True)}}"></i> {{ g.username }}
+  <i class="fa fa-circle-o" style="color: #{{g.color|default('B8C5D6', True)}}"></i> {{ g.username }}
   {% if flair %}<span class="rk-flair">{{ flair }}</span>{% endif %}
 </a>
 {% endmacro %}
