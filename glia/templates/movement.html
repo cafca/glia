@@ -11,74 +11,74 @@ window.movement_id = "{{  movement.id }}";
 window.admin_id = "{{ movement.admin.id }}";
 
 $(document).ready(function() {
-    $('#rk-mission').editable();
+  $('#rk-mission').editable();
 });
 {% endblock %}
 
 {% block content %}
 <section class="row">
-    <div class=" col-sm-4 col-sm-push-8">
-        <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
-            <div class="panel-heading">
-                <h3 class="panel-title">{{ movement.username }}</h3>
-            </div>
+  <div class=" col-sm-4 col-sm-push-8">
+    <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ movement.username }}</h3>
+      </div>
 
-            <div class="panel-body rk-movement-info">
-                <div class="form-group">
-                {% if movement in current_user.active_persona.movements_followed %}
-                    <button class="btn btn-default" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
-                        <i class="fa fa-fw fa-eye"></i> Unfollow
-                    </button>
-                {% else %}
-                    <button class="btn btn-primary" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
-                        <i class="fa fa-fw fa-eye"></i> Follow
-                    </button>
-                {% endif %}
-
-
-                {% if movement.current_role() not in ["visitor", "anonymous"] %}
-                    <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
-                        <i class="fa fa-fw fa-users"></i> Leave Movement
-                    </button>
-                {% else %}
-                    <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
-                        <i class="fa fa-fw fa-users"></i> Join Movement
-                    </button>
-                {% endif %}
-                </div>
-
-                <dl class="dl-horizontal dl-sm">
-                    <dt>Mission</dt>
-                    <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
-                        {{ movement.description|default("No mission set", True) }}
-                    </a></dd>
-                    <dt>Members</dt>
-                    <dd>{{ movement.member_count }}</dd>
-                    <dt>Founded</dt>
-                    <dd>{{ movement.created|localtime|naturaltime }}</dd>
-                    <dt class="member-only">Recently seen</dt>
-                    <dd class="member-only" id="rk-chat-nicknames"></dd>
-                </dl>
-
-                <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
-                members of this movement </p>
-            </div>
-
-            {% if movement.current_role() not in ["visitor", "anonymous"] %}
-                {{ chat_macros.chat(movement.profile) }}
-            {% endif %}
-        </div> <!-- ./ panel -->
-    </div> <!-- ./ chat column -->
-
-    <div class="star-listing col-sm-7 col-sm-pull-3">
-    {% for star in stars %}
-        {% if loop.first %}
-            {{ star_macros.star_lead(star, controlled_personas) }}
+      <div class="panel-body rk-movement-info">
+        <div class="form-group">
+        {% if movement in current_user.active_persona.movements_followed %}
+          <button class="btn btn-default" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
+            <i class="fa fa-fw fa-eye"></i> Unfollow
+          </button>
         {% else %}
-            {{ star_macros.star_line(star, controlled_personas) }}
+          <button class="btn btn-primary" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
+            <i class="fa fa-fw fa-eye"></i> Follow
+          </button>
         {% endif %}
-    {% endfor %}
-    </div> <!-- ./ star listing -->
+
+
+        {% if movement.current_role() not in ["visitor", "anonymous"] %}
+          <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
+            <i class="fa fa-fw fa-users"></i> Leave Movement
+          </button>
+        {% else %}
+          <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
+            <i class="fa fa-fw fa-users"></i> Join Movement
+          </button>
+        {% endif %}
+        </div>
+
+        <dl class="dl-horizontal dl-sm">
+          <dt>Mission</dt>
+          <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
+            {{ movement.description|default("No mission set", True) }}
+          </a></dd>
+          <dt>Members</dt>
+          <dd>{{ movement.member_count }}</dd>
+          <dt>Founded</dt>
+          <dd>{{ movement.created|localtime|naturaltime }}</dd>
+          <dt class="member-only">Recently seen</dt>
+          <dd class="member-only" id="rk-chat-nicknames"></dd>
+        </dl>
+
+        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
+        members of this movement </p>
+      </div>
+
+      {% if movement.current_role() not in ["visitor", "anonymous"] %}
+        {{ chat_macros.chat(movement.profile) }}
+      {% endif %}
+    </div> <!-- ./ panel -->
+  </div> <!-- ./ chat column -->
+
+  <div class="star-listing col-sm-7 col-sm-pull-3">
+  {% for star in stars %}
+    {% if loop.first %}
+      {{ star_macros.star_lead(star, controlled_personas) }}
+    {% else %}
+      {{ star_macros.star_line(star, controlled_personas) }}
+    {% endif %}
+  {% endfor %}
+  </div> <!-- ./ star listing -->
 </section>
 
 {% endblock %}

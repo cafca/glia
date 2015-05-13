@@ -5,19 +5,19 @@
 
 {% macro chatline(star) %}
 <li class="list-group-item">
-    {{ star_macros.oneup(star) }}
-    <span>
-        {{ id_macros.persona(star.author) }}
-        <a href="{{ url_for('web.star', id=star.id) }}">{{star.created|localtime|naturaltime}} </a>
-        {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
-    </span>
-    <div>
-    {% for tagp in star.tags %}<a href="{{ url_for('web.tag', name=tagp.planet.tag.name) }}">#{{ tagp.planet.title }}</a>&nbsp;{% endfor %}
+  {{ star_macros.oneup(star) }}
+  <span>
+    {{ id_macros.persona(star.author) }}
+    <a href="{{ url_for('web.star', id=star.id) }}">{{star.created|localtime|naturaltime}} </a>
+    {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
+  </span>
+  <div>
+  {% for tagp in star.tags %}<a href="{{ url_for('web.tag', name=tagp.planet.tag.name) }}">#{{ tagp.planet.title }}</a>&nbsp;{% endfor %}
 </li>
 
 {% for planet_assoc in star.attachments %}
 <li class="list-group-item rk-chat-planet">
-    {{ planet_macros.planet(planet_assoc.planet, scale=True, size='small') }}
+  {{ planet_macros.planet(planet_assoc.planet, scale=True, size='small') }}
 </li>
 {% endfor %}
 
@@ -27,15 +27,15 @@
 {% macro chat(map) %}
 
 <ul class="list-group" id="rk-chat-lines">
-    <li class="list-group-item text-center" id="rk-chat-more">
-        <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', starmap_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
-    </li>
+  <li class="list-group-item text-center" id="rk-chat-more">
+    <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', starmap_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
+  </li>
 </ul>
 
 <div class="panel-footer">
 <form id="send-message" class="form-inline">
-    <input id="message" autocomplete="off" class="form-control input-sm">
-    <button class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' autocomplete="off">Send</button>
+  <input id="message" autocomplete="off" class="form-control input-sm">
+  <button class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' autocomplete="off">Send</button>
 </form>
 </div>
 

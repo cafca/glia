@@ -6,50 +6,50 @@
 
 {% block content %}
 <section class="row">
-    <div class="star-listing col-sm-7 col-sm-push-1">
-        {% if star.parent %}
-        <blockquote>
-        {{ star_macros.star_line(star.parent, controlled_personas) }}
-        </blockquote>
-        {% endif %}
+  <div class="star-listing col-sm-7 col-sm-push-1">
+    {% if star.parent %}
+    <blockquote>
+    {{ star_macros.star_line(star.parent, controlled_personas) }}
+    </blockquote>
+    {% endif %}
 
-        {{ star_macros.star_lead(star, controlled_personas, truncate=False) }}
-    </div> <!-- ./ star listing -->
+    {{ star_macros.star_lead(star, controlled_personas, truncate=False) }}
+  </div> <!-- ./ star listing -->
 
-    <div class="col-sm-3 col-sm-push-1">
-        <h3>Info</h3>
-        <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
-        <p>Posted to.</p>
-        <ul>
-        {% for map in star.starmaps %}
-            {% for identity in map.contexts %}
-                {% set map_template = "web.{}".format(identity.kind) %}
-                <li><a href="{{ url_for(map_template, id=identity.id) }}">{{ identity.username }}</a></li>
-            {% endfor %}
-        {% endfor %}
-        </ul>
-        <h3>Availability</h3>
-        {% if star.author in controlled_personas %}
-            {% if star.state >= 0 %}
-            <p>
-                <a class="btn btn-default btn-sm" href="{{ url_for('.delete_star', id=star.id) }}">
-                    <i class="fa fa-eye-slash"></i> Remove
-                </a>
-            </p>
-            {% elif star.state == -2 %}
-            <p>This Star is currently hidden.</p>
-            <p>
-                <a class="btn btn-default btn-sm" href="{{ url_for('.delete_star', id=star.id) }}">
-                    <i class="fa fa-eye"></i> Publish again
-                </a>
-            </p>
-            {% endif %}
-        {% elif star.state >= 0 %}
-        <p><i class="fa fa-eye"></i> This Star is available</p>
-        {% else %}
-        <p><i class="fa fa-exclamation-circle"></i> This Star is currently unavailable.</p>
-        {% endif %}
-    </div>
+  <div class="col-sm-3 col-sm-push-1">
+    <h3>Info</h3>
+    <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
+    <p>Posted to.</p>
+    <ul>
+    {% for map in star.starmaps %}
+      {% for identity in map.contexts %}
+        {% set map_template = "web.{}".format(identity.kind) %}
+        <li><a href="{{ url_for(map_template, id=identity.id) }}">{{ identity.username }}</a></li>
+      {% endfor %}
+    {% endfor %}
+    </ul>
+    <h3>Availability</h3>
+    {% if star.author in controlled_personas %}
+      {% if star.state >= 0 %}
+      <p>
+        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_star', id=star.id) }}">
+          <i class="fa fa-eye-slash"></i> Remove
+        </a>
+      </p>
+      {% elif star.state == -2 %}
+      <p>This Star is currently hidden.</p>
+      <p>
+        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_star', id=star.id) }}">
+          <i class="fa fa-eye"></i> Publish again
+        </a>
+      </p>
+      {% endif %}
+    {% elif star.state >= 0 %}
+    <p><i class="fa fa-eye"></i> This Star is available</p>
+    {% else %}
+    <p><i class="fa fa-exclamation-circle"></i> This Star is currently unavailable.</p>
+    {% endif %}
+  </div>
 </section>
 
 {% endblock %}
