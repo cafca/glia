@@ -15,8 +15,11 @@ $(document).ready(function() {
       url: '{{ url_for('web.async_star', star_id=star.id) }}',
       title: 'How many do you want to show?',
       display: function(value, response) {
-        // clength = response["context_length"];
-        $(this).html("Displaying " + value + " previous Stars for context.");
+        if (value > 0) {
+          $(this).html("Displaying " + value + " previous Stars for context.");
+        } else {
+          $(this).html("Author has chosen not to display context for this Star.");
+        }
       },
       error: function(response, newValue) {
         if (response.status == 400) {
@@ -38,7 +41,6 @@ $(document).ready(function() {
 {% block content %}
 <section class="row">
   <div class="star-listing col-sm-7 col-sm-push-1">
-    <small class="pull-right"><a href="#" id="rk-star-context-length"></a></small>
     {% if context|length > 0 %}
     <blockquote style="padding-bottom: -20px">
     {% for s in context %}
@@ -53,6 +55,7 @@ $(document).ready(function() {
   <div class="col-sm-3 col-sm-push-1">
     <h3>Info</h3>
     <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
+    <p><a href="#" id="rk-star-context-length"></a></p>
     <p>Posted to.</p>
     <ul>
     {% for map in star.starmaps %}

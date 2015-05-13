@@ -52,10 +52,6 @@ $(document).ready(function() {
           <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
             {{ movement.description|default("No mission set", True) }}
           </a></dd>
-          <dt>Members</dt>
-          <dd>{{ movement.member_count }}</dd>
-          <dt>Founded</dt>
-          <dd>{{ movement.created|localtime|naturaltime }}</dd>
           <dt class="member-only">Recently seen</dt>
           <dd class="member-only" id="rk-chat-nicknames"></dd>
         </dl>

@@ -219,8 +219,11 @@ def async_star(star_id):
                 integer value\n{}".format(current_user.active_persona, star, e))
             raise InvalidUsage(message="Please enter a number.")
         else:
+            if context_length > 10:
+                context_length = 10
+
             star.context_length = context_length
-            app.logger.info("{} changed context length of {} to '{}'".format(
+            app.logger.info("{} changed context length of {} to {}".format(
                 current_user.active_persona, star, context_length))
 
     # Store updates

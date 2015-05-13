@@ -18,15 +18,18 @@
       </ul> <!-- ./ movement list -->
     {% endif %}
 
-    <div class="panel-body">
     {% if more_movements[:]|length() > 0 %}
-    <h3>Discover Movements</h3>
-      <ul>
+      <div class="panel-body">
+        <h3>Discover Movements</h3>
+      </div>
+      <ul class="list-group" id="rk-chat-lines">
       {% for movement in more_movements %}
-      <li>{{ id_macros.movement(movement) }} {{ movement.description|default("", True) }}</li>
+      <li class="list-group-item">{{ id_macros.movement(movement) }} {{ movement.description|default("", True) }}</li>
       {% endfor %}
       </ul>
     {% endif %}
+
+    <div class="panel-body">
     <a role="button" class="btn btn-primary" href="{{ url_for('web.movements') }}">Start Your Movement Today</a>
     </div>
 

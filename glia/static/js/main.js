@@ -22,7 +22,6 @@ $(document).ready(function(){
     });
 
     socket.on('status', function (msg) {
-        // $('#lines').append($('<p>').append($('<em>').text(msg['msg'])));
         append_timeline("System", msg['msg']);
     });
 
@@ -57,6 +56,7 @@ $(document).ready(function(){
 
     socket.on('message', function(data) {
         append_timeline(data.username, data.msg, data.star_id, data.vote_count);
+        last_id = data.star_id;
     });
 
     socket.on('vote', function(data) {
@@ -83,7 +83,7 @@ $(document).ready(function(){
         } else {
             // Star post
             $('#rk-chat-lines').append(msg);
-            $('.oneup').click(function () {request_upvote(this.dataset.id);});
+            $('#rk-chat-lines .oneup').click(function () {request_upvote(this.dataset.id); return false;});
 
         }
         scroll();
