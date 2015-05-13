@@ -43,7 +43,7 @@
 
         {% if m.top_posts|length > 0 %}
         <div class="panel-body">
-          {% for star in top_posts %}
+          {% for star in m.top_posts %}
             {% if loop.first %}
               {{ star_macros.star_lead(m.top_posts[0], controlled_personas) }}
             {% else %}
