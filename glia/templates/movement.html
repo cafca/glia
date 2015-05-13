@@ -84,22 +84,22 @@ $(document).ready(function() {
         </div> <!-- ./ navbar-header -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Mindspace <span class="sr-only">(current)</span></a></li>
-            <li><a href="#">Public Profile</a></li>
+            <li><a href="#"><i class="fa fa-file-text-o"></i> Public Profile</a></li>
+            <li class="active"><a href="#"><i class="fa fa-file-text-o"></i> Mindspace <span class="sr-only">(current)</span></a></li>
+            <li><a href="#"><i class="fa fa-file-text-o"></i> Reflection</a></li>
           </ul>
         </div><!-- /.navbar-collapse -->
       </div>
     </nav>
     <div class="alert alert-info alert-dismissible" role="alert">
       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <p>This is the movement's <strong>mindspace</strong>. On the right hand side you can chat with other members, decide on Stars to be promoted to the
-      <a href="#">public profile</a> and plan your next move.</p>
+      <p>This is the movement's <strong>mindspace</strong>. On the right hand side you can chat with other members, show them stuff and plan your next move. Below you see content from the chat with the most votes.
     </div>
     {% for star in stars %}
       {% if loop.first %}
         {{ star_macros.star_lead(star, controlled_personas) }}
       {% else %}
-        {{ star_macros.star_line(star, controlled_personas) }}
+        {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
       {% endif %}
     {% endfor %}
   </div> <!-- ./ star listing -->

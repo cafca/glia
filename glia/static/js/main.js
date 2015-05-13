@@ -8,6 +8,7 @@
 */
 
 var socket;
+var last_id = undefined;
 
 $(document).ready(function(){
     $('#rk-chat-more-button').button('loading');
@@ -16,7 +17,8 @@ $(document).ready(function(){
     socket.on('connect', function() {
         $('#rk-chat-meta').addClass('rk-chat-connected');
         socket.emit('joined', {'room_id': window.room_id});
-        load_more_chatlines();
+        load_more_chatlines(update_last=true);
+        $('#rk-chat-submit').prop('disabled', false);
     });
 
     socket.on('status', function (msg) {
@@ -108,11 +110,16 @@ $(document).ready(function(){
         socket.emit('vote_request', {'star_id': star_id});
     }
 
-    function load_more_chatlines() {
+    function load_more_chatlines(update_last) {
         $('#rk-chat-more-button').button('loading');
         $.ajax($('#rk-chat-more-button').attr('href'))
             .done(function(data) {
                 $('#rk-chat-more').after(data['html']);
+
+                if (update_last == true) {
+                    last_id = data["last_id"];
+                }
+
                 if (data['end_reached'] == true) {
                     $('#rk-chat-more-button').remove();
                 } else {
@@ -139,7 +146,11 @@ $(document).ready(function(){
 
         $('#send-message').submit(function () {
             var $btn = $('.rk-chat-button').button('loading');
-            socket.emit('text', {'msg': $('#message').val(), 'room_id': window.room_id}, function() {
+            socket.emit('text', {
+                    'msg': $('#message').val(),
+                    'room_id': window.room_id,
+                    'last_id': last_id
+                }, function() {
                 $btn.button('reset');
             });
             clear();

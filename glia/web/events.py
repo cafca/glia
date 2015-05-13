@@ -89,11 +89,23 @@ def text(message):
     if map is None:
         errors += "The Starmap you're trying to post into could not be found. "
 
+    if map and (message['last_id'] is None):
+        # check whether there really is no post yet in the map
+        map_content = map.index.first()
+        if map_content is not None:
+            errors += "Please try submitting your message again: '{}' ".format(
+                message["msg"])
+    else:
+        parent_star = Star.query.get(message["last_id"])
+        if parent_star is None:
+            errors += "Could not find the message before yours. "
+
     if errors == "":
         star = Star(
             id=star_id,
             text=message['msg'],
             author=author,
+            parent=parent_star,
             created=star_created,
             modified=star_created)
         db.session.add(star)

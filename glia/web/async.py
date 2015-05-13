@@ -67,8 +67,10 @@ def async_chat(starmap_id, index_id=None):
 
         stars = stars.limit(51)[::-1]
 
+        last_id = None
         for star in stars[:50]:
             html = "\n".join([html, render_template('chatline.html', star=star)])
+            last_id = star.id
 
         end_reached = True if len(stars) < 51 else False
 
@@ -83,6 +85,7 @@ def async_chat(starmap_id, index_id=None):
         return(jsonify({
             'end_reached': end_reached,
             'html': html,
+            'last_id': last_id,
             'next_url': next_url,
         }))
 
@@ -187,3 +190,46 @@ def async_movement(movement_id):
             room=movement.profile.id, namespace="/movements")
 
     return jsonify({"mission": new_mission})
+
+
+@app.route("/async/star/<star_id>/", methods=["POST"])
+@login_required
+@http_auth.login_required
+def async_star(star_id):
+    """Edit a Star
+
+    Expects a POST request with fields 'key' and 'value'
+    """
+    star = Star.query.get(star_id)
+    if star is None:
+        raise InvalidUsage(message="Star not found", code=404)
+
+    if not current_user or not current_user.active_persona:
+        raise InvalidUsage(message="Activate a Persona to do this.")
+
+    if current_user.active_persona.id != star.author_id:
+        raise InvalidUsage(message="Only author may edit Stars")
+
+    # Validata input
+    if request.form.get("name") == "context_length":
+        try:
+            context_length = int(request.form.get("value"))
+        except ValueError, e:
+            app.logger.warning("{} tried to set context length of {} to a non-\
+                integer value\n{}".format(current_user.active_persona, star, e))
+            raise InvalidUsage(message="Please enter a number.")
+        else:
+            star.context_length = context_length
+            app.logger.info("{} changed context length of {} to '{}'".format(
+                current_user.active_persona, star, context_length))
+
+    # Store updates
+    try:
+        db.session.add(star)
+        db.session.commit()
+    except Exception:
+        app.logger.exception("Error storing updates for {}".format(star))
+        raise InvalidUsage(message="There was an error saving the Star.\
+            Please try again")
+
+    return jsonify({"context_length": context_length})

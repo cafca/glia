@@ -77,7 +77,7 @@
       {% endif %}
     </div>
 
-    {% if no_planets == False %}
+    {% if no_planets == False and star.planet_assocs.count() > 0 %}
     <!-- Attachments -->
     <div class="rk-planet">
       <div class="row">

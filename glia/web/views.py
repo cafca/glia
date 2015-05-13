@@ -130,11 +130,19 @@ def movements(movement_id=None):
 def star(id=None):
     star = Star.query.get_or_404(id)
 
+    # Load conversation context
+    context = []
+    while(len(context) < star.context_length) and star.parent is not None:
+        context.append(star.parent if len(context) == 0 else context[-1].parent)
+        if context[-1].parent is None:
+            break
+    context = context[::-1]  # reverse list
+
     if star.state < 0 and not star.author.controlled():
         flash("This Star is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
-    return render_template("star.html", star=star)
+    return render_template("star.html", star=star, context=context)
 
 
 @app.route('/tag/<name>/')

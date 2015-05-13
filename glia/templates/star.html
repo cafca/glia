@@ -4,12 +4,46 @@
 {% import "macros/star.html" as star_macros %}
 {% import "macros/identity.html" as id_macros %}
 
+{% block script %}
+{{ super() }}
+$(document).ready(function() {
+    $('#rk-star-context-length').editable({
+      autotext: 'always',
+      type: 'text',
+      name: 'context_length',
+      pk: '{{ star.id }}',
+      url: '{{ url_for('web.async_star', star_id=star.id) }}',
+      title: 'How many do you want to show?',
+      display: function(value, response) {
+        // clength = response["context_length"];
+        $(this).html("Displaying " + value + " previous Stars for context.");
+      },
+      error: function(response, newValue) {
+        if (response.status == 400) {
+          return response.message;
+        } else {
+          return "There was an error processing your input.";
+        }
+      },
+      success: function(response, newValue) {
+        location.reload();
+      },
+      value: {{ star.context_length }},
+      placement: 'bottom',
+      disabled: {% if star.author == active_persona %}false{% else %}true{% endif %}
+  });
+});
+{% endblock %}
+
 {% block content %}
 <section class="row">
   <div class="star-listing col-sm-7 col-sm-push-1">
-    {% if star.parent %}
-    <blockquote>
-    {{ star_macros.star_line(star.parent, controlled_personas) }}
+    <small class="pull-right"><a href="#" id="rk-star-context-length"></a></small>
+    {% if context|length > 0 %}
+    <blockquote style="padding-bottom: -20px">
+    {% for s in context %}
+    {{ star_macros.star_line(s, controlled_personas) }}
+    {% endfor %}
     </blockquote>
     {% endif %}
 
