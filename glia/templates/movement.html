@@ -20,7 +20,7 @@ $(document).ready(function() {
   <div class=" col-sm-4 col-sm-push-8">
     <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
       <div class="panel-heading">
-        <h3 class="panel-title">{{ movement.username }}</h3>
+        <h3 class="panel-title">{{ movement.username }} Chat</h3>
       </div>
 
       <div class="panel-body rk-movement-info">
@@ -70,14 +70,38 @@ $(document).ready(function() {
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->
 
-  <div class="star-listing col-sm-7 col-sm-pull-3">
-  {% for star in stars %}
-    {% if loop.first %}
-      {{ star_macros.star_lead(star, controlled_personas) }}
-    {% else %}
-      {{ star_macros.star_line(star, controlled_personas) }}
-    {% endif %}
-  {% endfor %}
+  <div class="star-listing col-sm-8 col-sm-pull-4">
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">{{ movement.username }}</a>
+        </div> <!-- ./ navbar-header -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Mindspace <span class="sr-only">(current)</span></a></li>
+            <li><a href="#">Public Profile</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div>
+    </nav>
+    <div class="alert alert-info alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <p>This is the movement's <strong>mindspace</strong>. On the right hand side you can chat with other members, decide on Stars to be promoted to the
+      <a href="#">public profile</a> and plan your next move.</p>
+    </div>
+    {% for star in stars %}
+      {% if loop.first %}
+        {{ star_macros.star_lead(star, controlled_personas) }}
+      {% else %}
+        {{ star_macros.star_line(star, controlled_personas) }}
+      {% endif %}
+    {% endfor %}
   </div> <!-- ./ star listing -->
 </section>
 
