@@ -45,12 +45,14 @@ window.admin_id = "{{ persona.id }}";
             </div>
         </div>
 
-        <div class="row rk-persona-movements">
-            <div class="col-sm-12">
-                <h2>Member of {{ persona.movement_assocs|length }} movement</h2>
+        <div class="rk-persona-movements">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h2>Member of {{ persona.movement_assocs|length }} movement</h2>
+                </div>
             </div>
             {% for mma in movements %}
-            <div class="rk-persona-movements-box">
+            <div class="rk-persona-movements-box row">
                 <div class="col-sm-3 rk-persona-movements-info">
                     <a href="{{ url_for('.movement', id=mma.movement.id) }}">
                         <h3>{{ mma.movement.username }}</h3>
