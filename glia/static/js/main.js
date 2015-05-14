@@ -132,9 +132,10 @@ $(document).ready(function(){
                 } else {
                     $('#rk-chat-more-button').attr('href', data['next_url']);
                 }
-                $(document).ready(function() {
+                $('#rk-chat-more').ready(function() {
                     scroll(0);
                     $('#rk-chat-more-button').button('reset');
+                    $(".oneup").unbind("click");
                     $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
                 });
             });
@@ -145,7 +146,7 @@ $(document).ready(function(){
         // UPVOTE BUTTON
         //
 
-        $(".oneup").click(function () {request_upvote(this.dataset.id)});
+        $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
 
         //
         // CHAT BEHAVIOR
