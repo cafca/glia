@@ -196,7 +196,12 @@
   {% set new_deep=(deep-1) %}
   <div class="rk-replies">
     {% for c in star.comments %}
+      {% if c.context_length > 0 %}
       {{ comment_tree(c, controlled_personas, deep=new_deep) }}
+      {% else %}
+      <small>[<a href="{{ url_for('web.star', id=c.id) }}">This reply
+      was hidden from this context by the author</a>]</small>
+      {% endif %}
     {% endfor %}
   </div>
 {% endif %}
