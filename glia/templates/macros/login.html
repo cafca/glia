@@ -2,10 +2,10 @@
 
 {% block content %}
 <form method="POST" action="{{ url_for('.login') }}">
-    {{ form.hidden_tag() }}
-    {{ form.email.label }} {{ form.email(size=20) }}
-    {{ form.password.label }} {{ form.password(size=20) }}
-    <input type="submit" value="Go">
+  {{ form.hidden_tag() }}
+  {{ form.email.label }} {{ form.email(size=20) }}
+  {{ form.password.label }} {{ form.password(size=20) }}
+  <input type="submit" value="Go">
 </form>
 {% endblock %}
 

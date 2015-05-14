@@ -4,43 +4,43 @@
 <span class="rk-tag"><a href="{{ url_for('web.tag', name=planet.tag.name) }}">#{{ planet.title }}</a></span>
 {% elif planet.kind == 'picture' %}
 <span class="rk-imagewrap">
-    <img src="{{ url_for('attachment', filename=planet.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
+  <img src="{{ url_for('attachment', filename=planet.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
 </span>
 {% elif planet.kind == 'linkedpicture' %}
 <span class="rk-image">
-    <img src="{{ planet.url }}" class="img-responsive img-rounded" alt="{{ planet.title }}"/>
+  <img src="{{ planet.url }}" class="img-responsive img-rounded" alt="{{ planet.title }}"/>
 </span>
 {% elif planet.kind == 'link' %}
-    {% if planet.iframe_url() %}
-    <div class="embed-responsive embed-responsive-16by9">
-        <iframe class="embed-responsive-item" src="{{ planet.iframe_url() }}" allowfullscreen></iframe>
-    </div>
-    {% else %}
-    <a class="rk-link" href="{{ planet.url }}">
-        {% if icon == True %}
-        <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ planet.favicon_url() }}" /> &nbsp;
-        {% endif %}
-        {% if planet.title %}
-        {{ planet.title }}
-        {% else %}
-        {{ planet.url }}
-        {% endif %}
-    </a>
+  {% if planet.iframe_url() %}
+  <div class="embed-responsive embed-responsive-16by9">
+    <iframe class="embed-responsive-item" src="{{ planet.iframe_url() }}" allowfullscreen></iframe>
+  </div>
+  {% else %}
+  <a class="rk-link" href="{{ planet.url }}">
+    {% if icon == True %}
+    <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ planet.favicon_url() }}" /> &nbsp;
     {% endif %}
+    {% if planet.title %}
+    {{ planet.title }}
+    {% else %}
+    {{ planet.url }}
+    {% endif %}
+  </a>
+  {% endif %}
 {% elif planet.kind == 'text' %}
 <span class="rk-text">
-    {% if truncate %}
-    <p>
-        <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
-    </p>
-    {{ planet.text|truncate()|markdown}}
-    {% else %}
-    <p>
-        <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
-        <i class="fa fa-link"></i>  Source {{ planet.source|urlize }}
-    </p>
-    {{ planet.text|markdown}}
-    {% endif %}
+  {% if truncate %}
+  <p>
+    <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
+  </p>
+  {{ planet.text|truncate()|markdown}}
+  {% else %}
+  <p>
+    <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
+    <i class="fa fa-link"></i>  Source {{ planet.source|urlize }}
+  </p>
+  {{ planet.text|markdown}}
+  {% endif %}
 </span>
 {% endif %}
 
@@ -53,17 +53,17 @@
 {% if planet.kind == 'picture' %}
 <button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
 {% elif planet.kind == 'tag' %}
-<button disbaled="disabled" class="btn btn-xs">#{{ planet.title }}</button>
+<button disabled="disabled" class="btn btn-xs">#{{ planet.title }}</button>
 {% elif planet.kind == 'linkedpicture' %}
 <button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
 {% elif planet.kind == 'link' %}
 <button disabled="disabled" class="btn btn-xs">
-    <i class="fa fa-link"></i>
-    <img class="rk-favicon-small" src="{{ planet.favicon_url() }}" />
+  <i class="fa fa-link"></i>
+  <img class="rk-favicon-small" src="{{ planet.favicon_url() }}" />
 </button>
 {% elif planet.kind == 'text' %}
 <button disabled="disabled" href="#" class="btn btn-xs">
-    <i class="fa fa-file-text-o"></i> read {{ planet.reading_time()|naturaldelta }}
+  <i class="fa fa-file-text-o"></i> read {{ planet.reading_time()|naturaldelta }}
 </button>
 {% endif %}
 

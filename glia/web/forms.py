@@ -1,9 +1,10 @@
 from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
+from flask.ext.login import current_user
 from flask_wtf import Form
 from wtforms import TextField, HiddenField, PasswordField, validators
 
-from nucleus.nucleus.models import User
+from nucleus.nucleus.models import User, Movement
 
 
 def is_safe_url(target):
@@ -81,5 +82,7 @@ class SignupForm(RedirectForm):
         return rv
 
 
-class CreateGroupForm(Form):
-    name = TextField('New group name', [validators.Required(), validators.Length(min=3, max=20)])
+class CreateMovementForm(Form):
+    id = HiddenField()
+    name = TextField('Choose a name for your Movement *', [validators.Required(), validators.Length(min=3, max=20)])
+    mission = TextField('Describe your mission', [validators.Length(max=140)])

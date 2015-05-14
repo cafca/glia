@@ -4,28 +4,28 @@
 
 {% block content %}
 <section class="row">
-    <div class="col-sm-7 center-block" style="float: none;">
-        <div class="panel panel-danger">
-            <div class="panel-heading">
-                {% if star.state >= 0 %}
-                <h1>Remove Star</h1>
-                <p>Removing a post will hide its content from other users.</p>
-                {% else %}
-                <h1>Publish Star</h1>
-                {% endif %}
-            </div>
-            <div class="panel-body">
-                {{ star_macros.star_line(star, controlled_personas) }}
-            </div> <!-- ./ star listing -->
-            <div class="panel-footer">
-                <form method="POST"action="{{ url_for('.delete_star', id=star.id) }}">
-                    {{ form.hidden_tag() }}
-                    <a class="btn btn-sm" href="{{ url_for('.star', id=star.id) }}">Cancel</a>
-                    <input type="submit" class="btn btn-sm" value="{% if star.state >= 0 %}Remove now{% else %}Publish now{% endif %}">
-                </form>
-            </div>
-        </div>
+  <div class="col-sm-7 center-block" style="float: none;">
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        {% if star.state >= 0 %}
+        <h1>Remove Star</h1>
+        <p>Removing a post will hide its content from other users.</p>
+        {% else %}
+        <h1>Publish Star</h1>
+        {% endif %}
+      </div>
+      <div class="panel-body">
+        {{ star_macros.star_line(star, controlled_personas) }}
+      </div> <!-- ./ star listing -->
+      <div class="panel-footer">
+        <form method="POST"action="{{ url_for('.delete_star', id=star.id) }}">
+          {{ form.hidden_tag() }}
+          <a class="btn btn-sm" href="{{ url_for('.star', id=star.id) }}">Cancel</a>
+          <input type="submit" class="btn btn-sm" value="{% if star.state >= 0 %}Remove now{% else %}Publish now{% endif %}">
+        </form>
+      </div>
     </div>
+  </div>
 </section>
 
 {% endblock %}

@@ -63,7 +63,7 @@
 
 
 
-{% macro star_line(star, controlled_personas) %}
+{% macro star_line(star, controlled_personas, truncate=True, no_planets=False) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-line">
@@ -72,8 +72,12 @@
   <div class="rk-line-container">
     <div class="rk-star-title">
       <a href="{{ url_for('.star', id=star.id) }}">{{ star.text }}</a>
+      {% if no_planets %}
+      {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
+      {% endif %}
     </div>
 
+    {% if no_planets == False and star.planet_assocs.count() > 0 %}
     <!-- Attachments -->
     <div class="rk-planet">
       <div class="row">
@@ -92,6 +96,7 @@
       {% endfor %}
       </div>
     </div>
+    {% endif %}
   </div>
 </div>
 {% endmacro %}
