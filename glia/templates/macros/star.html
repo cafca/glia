@@ -144,7 +144,7 @@
     </div>
 
     <div class="rk-star-title">
-      <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text }}</a>
+      <p>{{ star.text }}</p>
       {% if no_planets %}
       {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
       {% endif %}

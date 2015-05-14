@@ -34,7 +34,7 @@ $(document).ready(function() {
       success: function(response, newValue) {
         location.reload();
       },
-      value: {{ star.context_length }},
+      value: {{ star.context_length|default("0", True) }},
       placement: 'bottom',
       disabled: {% if star.author == active_persona %}false{% else %}true{% endif %}
   });
@@ -81,6 +81,8 @@ $(document).ready(function() {
     <h3>Info</h3>
     <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-star-context-length"></a></p>
+
+    {% if star.starmaps|length > 0 %}
     <p>Posted to.</p>
     <ul>
     {% for map in star.starmaps %}
@@ -90,6 +92,10 @@ $(document).ready(function() {
       {% endfor %}
     {% endfor %}
     </ul>
+    {% else %}
+    <p>Not posted to any Starmaps.</p>
+    {% endif %}
+
     <h3>Availability</h3>
     {% if star.author in controlled_personas %}
       {% if star.state >= 0 %}
