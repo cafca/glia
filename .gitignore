@@ -3,7 +3,7 @@ server.db
 server_private.key
 .env
 *.pyc
-*.css
+main.css
 
 secret_key
 sendgrid.auth
