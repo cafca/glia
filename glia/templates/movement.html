@@ -5,6 +5,7 @@
 
 {% block script %}
 window.room_id = "{{ movement.profile.id }}";
+window.map_id = "{{ movement.profile.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.movement_id = "{{  movement.id }}";

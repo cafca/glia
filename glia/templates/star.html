@@ -5,7 +5,10 @@
 {% import "macros/identity.html" as id_macros %}
 
 {% block script %}
-{{ super() }}
+window.room_id = "{{ star.id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+
 $(document).ready(function() {
     $('#rk-star-context-length').editable({
       autotext: 'always',
@@ -31,7 +34,7 @@ $(document).ready(function() {
       success: function(response, newValue) {
         location.reload();
       },
-      value: {{ star.context_length }},
+      value: {{ star.context_length|default("0", True) }},
       placement: 'bottom',
       disabled: {% if star.author == active_persona %}false{% else %}true{% endif %}
   });
@@ -40,22 +43,46 @@ $(document).ready(function() {
 
 {% block content %}
 <section class="row">
-  <div class="star-listing col-sm-7 col-sm-push-1">
-    {% if context|length > 0 %}
-    <blockquote style="padding-bottom: -20px">
-    {% for s in context %}
-    {{ star_macros.star_line(s, controlled_personas) }}
-    {% endfor %}
-    </blockquote>
-    {% endif %}
+  <div class="col-sm-7 col-sm-push-1 rk-star-{{ star.id }}">
+    <div class="rk-star-listing row">
+      <div class="col-sm-12">
+        {% if context|length > 0 %}
+        <blockquote style="padding-bottom: -20px">
+        {% for s in context %}
+        {{ star_macros.star_line(s, controlled_personas, no_planets=True) }}
+        {% endfor %}
+        </blockquote>
+        {% endif %}
 
-    {{ star_macros.star_lead(star, controlled_personas, truncate=False) }}
-  </div> <!-- ./ star listing -->
+        {{ star_macros.star_lead(star, controlled_personas, truncate=False) }}
+      </div>
+    </div> <!-- ./ star listing -->
+
+    <div class="rk-star-reply row">
+      <div class="col-sm-6">
+        <form class="rk-create">
+          <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
+          <div class="form-group">
+            <textarea class="form-control rk-create-text" name="text"></textarea>
+          </div>
+          <button type="submit" class="rk-create-submit btn btn-primary btn-sm"data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+        </form>
+      </div>
+    </div> <!-- ./ top-level reply form -->
+
+    <div class="rk-star-listing rk-comments rk-replies">
+    {% for s in star.comments %}
+      {{ star_macros.comment_tree(s, controlled_personas) }}
+    {% endfor %}
+    </div> <!-- ./ comments -->
+  </div> <!-- ./ content area -->
 
   <div class="col-sm-3 col-sm-push-1">
     <h3>Info</h3>
     <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-star-context-length"></a></p>
+
+    {% if star.starmaps|length > 0 %}
     <p>Posted to.</p>
     <ul>
     {% for map in star.starmaps %}
@@ -65,6 +92,10 @@ $(document).ready(function() {
       {% endfor %}
     {% endfor %}
     </ul>
+    {% else %}
+    <p>Not posted to any Starmaps.</p>
+    {% endif %}
+
     <h3>Availability</h3>
     {% if star.author in controlled_personas %}
       {% if star.state >= 0 %}

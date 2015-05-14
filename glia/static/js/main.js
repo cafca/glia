@@ -8,7 +8,6 @@
 */
 
 var socket;
-var last_id = undefined;
 
 $(document).ready(function(){
     $('#rk-chat-more-button').button('loading');
@@ -56,7 +55,11 @@ $(document).ready(function(){
 
     socket.on('message', function(data) {
         append_timeline(data.username, data.msg, data.star_id, data.vote_count);
-        last_id = data.star_id;
+        $("#rk-chat-parent").val(data.star_id);
+    });
+
+    socket.on('comment', function(data) {
+        insert_reply(data.parent_id, data.msg);
     });
 
     socket.on('vote', function(data) {
@@ -89,6 +92,10 @@ $(document).ready(function(){
         scroll();
     }
 
+    function insert_reply(parent_id, rendered_content) {
+        $(".rk-star-"+parent_id+" > .rk-replies").prepend(rendered_content);
+    }
+
     function get_chat_height() {
         var total_height = 0;
         $('#rk-chat-lines > li').each(function(i) {
@@ -117,7 +124,7 @@ $(document).ready(function(){
                 $('#rk-chat-more').after(data['html']);
 
                 if (update_last == true) {
-                    last_id = data["last_id"];
+                    $("#rk-chat-parent").val(data["last_id"]);
                 }
 
                 if (data['end_reached'] == true) {
@@ -125,9 +132,10 @@ $(document).ready(function(){
                 } else {
                     $('#rk-chat-more-button').attr('href', data['next_url']);
                 }
-                $(document).ready(function() {
+                $('#rk-chat-more').ready(function() {
                     scroll(0);
                     $('#rk-chat-more-button').button('reset');
+                    $(".oneup").unbind("click");
                     $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
                 });
             });
@@ -138,22 +146,34 @@ $(document).ready(function(){
         // UPVOTE BUTTON
         //
 
-        $(".oneup").click(function () {request_upvote(this.dataset.id)});
+        $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
 
         //
         // CHAT BEHAVIOR
         //
 
-        $('#send-message').submit(function () {
-            var $btn = $('.rk-chat-button').button('loading');
+        $('.rk-create').submit(function () {
+            var $btn = $(this).find('.rk-create-submit');
+            var $text = $(this).find('.rk-create-text').val();
+            var $parent = $(this).find('.rk-create-parent').val();
+
+            $btn.button('loading');
             socket.emit('text', {
-                    'msg': $('#message').val(),
+                    'msg': $text,
                     'room_id': window.room_id,
-                    'last_id': last_id
-                }, function() {
-                $btn.button('reset');
+                    'map_id': window.map_id,
+                    'parent_id': $parent
+                }, function(data) {
+                    $btn.button('reset');
             });
             clear();
+            return false;
+        });
+
+        $(".rk-create-display-toggle").click(function() {
+            var $form = $(".rk-star-"+$(this).data("id")+" .rk-create");
+            $form.css("display", "block");
+            $form.find("textarea").focus();
             return false;
         });
 
@@ -165,7 +185,7 @@ $(document).ready(function(){
         })
 
         function clear () {
-            $('#message').val('').focus();
+            $('.rk-create-text').val('').focus();
         }
 
         //

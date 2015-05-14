@@ -107,11 +107,11 @@ a > .fa:hover {
         }
     }
 
-    #send-message {
+    .rk-create {
         margin: .5em 0 .5em;
         width: 100%;
 
-        #message {
+        .rk-create-text {
             width: 80%;
         }
 
@@ -160,11 +160,19 @@ a > .fa:hover {
 
     .oneup {
         float: left;
-        margin-right: .5em;
     }
 
     .rk-line-container {
-        // margin-left: 36px;
+        margin-left: 2.5em;
+        padding: 5px 0 0 5px;
+    }
+
+    .rk-star-meta {
+        color: lighten(gray, 10%);
+    }
+
+    .rk-create {
+        margin-top: 1em;
     }
 }
 
@@ -188,6 +196,26 @@ a > .fa:hover {
     .rk-star-box-planets {
         line-height: 1.8em;
     }
+}
+
+.rk-comments {
+    margin: 2em 0;
+
+    .rk-star-line {
+        max-width: 30em;
+    }
+}
+
+.rk-replies {
+    margin-left: 2.5em;
+    padding-left: 5px;
+    border-left: 1px dashed @medium;
+}
+
+.rk-replies&.rk-comments {
+    margin-left: 0;
+    padding-left: 0;
+    border: none;
 }
 
 //

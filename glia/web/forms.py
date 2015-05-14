@@ -1,10 +1,13 @@
+import logging
+
 from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
-from flask.ext.login import current_user
 from flask_wtf import Form
-from wtforms import TextField, HiddenField, PasswordField, validators
+from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
 
-from nucleus.nucleus.models import User, Movement
+from nucleus.nucleus.models import User, Star
+
+logger = logging.getLogger('web')
 
 
 def is_safe_url(target):
@@ -86,3 +89,20 @@ class CreateMovementForm(Form):
     id = HiddenField()
     name = TextField('Choose a name for your Movement *', [validators.Required(), validators.Length(min=3, max=20)])
     mission = TextField('Describe your mission', [validators.Length(max=140)])
+
+
+class CreateStarForm(Form):
+    parent = HiddenField()
+    text = TextAreaField('Enter your reply', [validators.Required()])
+
+    def validate(self):
+        rv = Form.validate(self)
+        if rv:
+            parent = Star.query.get(self.parent.data)
+            if parent is None:
+                rv = False
+                logger.warning("Reply form failed because parent '{}' could not \
+                    be found.".format(self.parent.data))
+                self.parent.errors.append("Can't find the post you are \
+                    replying to. Please try reloading the page.")
+        return rv

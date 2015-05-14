@@ -18,7 +18,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from . import app
-from glia.web.forms import DeleteStarForm
+from glia.web.forms import DeleteStarForm, CreateStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email
 from nucleus.nucleus.database import db
@@ -142,7 +142,10 @@ def star(id=None):
         flash("This Star is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
-    return render_template("star.html", star=star, context=context)
+    reply_form = CreateStarForm(parent=star.id)
+
+    return render_template("star.html", star=star, context=context,
+        reply_form=reply_form)
 
 
 @app.route('/tag/<name>/')
