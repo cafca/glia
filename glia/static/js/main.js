@@ -8,7 +8,6 @@
 */
 
 var socket;
-var last_id = undefined;
 
 $(document).ready(function(){
     $('#rk-chat-more-button').button('loading');
@@ -56,7 +55,7 @@ $(document).ready(function(){
 
     socket.on('message', function(data) {
         append_timeline(data.username, data.msg, data.star_id, data.vote_count);
-        last_id = data.star_id;
+        $("#rk-chat-parent").val(data.star_id);
     });
 
     socket.on('vote', function(data) {
@@ -117,7 +116,7 @@ $(document).ready(function(){
                 $('#rk-chat-more').after(data['html']);
 
                 if (update_last == true) {
-                    last_id = data["last_id"];
+                    $("#rk-chat-parent").val(data["last_id"]);
                 }
 
                 if (data['end_reached'] == true) {
@@ -144,12 +143,16 @@ $(document).ready(function(){
         // CHAT BEHAVIOR
         //
 
-        $('#send-message').submit(function () {
-            var $btn = $('.rk-chat-button').button('loading');
+        $('.rk-create').submit(function () {
+            var $btn = $(this).find('.rk-create-submit');
+            var $text = $(this).find('.rk-create-text').val();
+            var $parent = $(this).find('.rk-create-parent').val();
+
+            $btn.button('loading');
             socket.emit('text', {
-                    'msg': $('#message').val(),
+                    'msg': $text,
                     'room_id': window.room_id,
-                    'last_id': last_id
+                    'parent_id': $parent
                 }, function() {
                 $btn.button('reset');
             });
@@ -165,7 +168,7 @@ $(document).ready(function(){
         })
 
         function clear () {
-            $('#message').val('').focus();
+            $('.rk-create-text').val('').focus();
         }
 
         //

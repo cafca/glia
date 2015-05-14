@@ -86,17 +86,18 @@ def text(message):
         errors += "You were about to say something?"
 
     map = Starmap.query.get(message["room_id"])
-    if map is None:
-        errors += "The Starmap you're trying to post into could not be found. "
 
-    if map and (message['last_id'] is None):
-        # check whether there really is no post yet in the map
-        map_content = map.index.first()
-        if map_content is not None:
-            errors += "Please try submitting your message again: '{}' ".format(
-                message["msg"])
+    if message["parent_id"] is None:
+        if map:
+            # check whether there really is no post yet in the map
+            map_content = map.index.first()
+            if map_content is not None:
+                errors += "Please try submitting your message again: '{}' ".format(
+                    message["msg"])
+        else:
+            errors += "No parent specified"
     else:
-        parent_star = Star.query.get(message["last_id"])
+        parent_star = Star.query.get(message["parent_id"])
         if parent_star is None:
             errors += "Could not find the message before yours. "
 
@@ -110,8 +111,9 @@ def text(message):
             modified=star_created)
         db.session.add(star)
 
-        map.index.append(star)
-        db.session.add(map)
+        if map:
+            map.index.append(star)
+            db.session.add(map)
 
         text, planets = process_attachments(star.text)
         star.text = text
@@ -124,7 +126,6 @@ def text(message):
             app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
 
-    if errors == "":
         try:
             db.session.commit()
         except SQLAlchemyError, e:
@@ -144,7 +145,7 @@ def text(message):
             }
             emit('message', data, room=message["room_id"])
 
-    if errors:
+    if errors != "":
         emit('error', errors)
 
 

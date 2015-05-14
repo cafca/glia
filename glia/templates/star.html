@@ -57,14 +57,14 @@ $(document).ready(function() {
 
     <div class="rk-star-reply row">
       <div class="col-sm-6">
-        <form class="rk-reply" method="POST" action="{{ url_for('web.create_star') }}" data-parent-id="{{ star.id }}">
+        <form class="rk-create">
           {{ reply_form.csrf_token }}
-          {{ reply_form.parent(value=star.id) }}
+          {{ reply_form.parent(value=star.id, class_="rk-create-parent") }}
           <div class="form-group">
             {{ reply_form.text.label }}
-            {{ reply_form.text(class_="form-control") }}
+            {{ reply_form.text(class_="form-control rk-create-text") }}
           </div>
-          <button type="submit" id="rk-reply-submit" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Submit</button>
+          <button type="submit" class="rk-create-submit" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Submit</button>
         </form>
       </div>
     </div>
