@@ -129,15 +129,74 @@
 {% endmacro %}
 
 
-{% macro reply_line(star, controlled_personas, deep=3) %}
 
-{{ star_line(star, controlled_personas) }}
+{% macro comment(star, controlled_personas, no_planets=False) %}
+<!-- STAR {{star.id}} -->
+<div class="rk-star rk-star-line rk-star-{{ star.id }}">
+  {{ oneup(star) }}
+
+  <div class="rk-line-container">
+    <div class="rk-star-meta">
+      <span class="small">
+        by {{ id_macros.persona(star.author) }} {{ star.created|localtime|naturaltime }}
+        <a href="{{ url_for('web.star', id=star.id) }}">link</a>
+      </span>
+    </div>
+
+    <div class="rk-star-title">
+      <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text }}</a>
+      {% if no_planets %}
+      {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
+      {% endif %}
+    </div>
+
+    {% if no_planets == False and star.planet_assocs.count() > 0 %}
+    <!-- Attachments -->
+    <div class="rk-planet">
+      <div class="row">
+      {% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
+        {% if planet_assoc.planet.kind == "linkedpicture" %}
+        <div class="col-sm-4">
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        </div>
+        {% elif planet_assoc.planet.kind == 'tag' %}
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {% else %}
+        <div class="col-sm-12">
+          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
+        </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="rk-star-meta">
+      <small><a href="#" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
+      <form class="rk-create" style="display: none">
+        <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
+        <div class="form-group">
+          <textarea class="form-control rk-create-text" name="text"></textarea>
+        </div>
+        <button type="submit" class="rk-create-submit btn btn-sm btn-default" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endmacro %}
+
+
+
+{% macro comment_tree(star, controlled_personas, deep=3) %}
+
+{{ comment(star, controlled_personas) }}
 
 {% if deep > 0 %}
   {% set new_deep=(deep-1) %}
   <div class="rk-replies">
     {% for c in star.comments %}
-      {{ reply_line(c, controlled_personas, deep=new_deep) }}
+      {{ comment_tree(c, controlled_personas, deep=new_deep) }}
     {% endfor %}
   </div>
 {% endif %}

@@ -61,19 +61,18 @@ $(document).ready(function() {
     <div class="rk-star-reply row">
       <div class="col-sm-6">
         <form class="rk-create">
-          {{ reply_form.csrf_token }}
-          {{ reply_form.parent(value=star.id, class_="rk-create-parent") }}
+          <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
           <div class="form-group">
-            {{ reply_form.text(class_="form-control rk-create-text") }}
+            <textarea class="form-control rk-create-text" name="text"></textarea>
           </div>
-          <button type="submit" class="rk-create-submit" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+          <button type="submit" class="rk-create-submit btn btn-primary btn-sm"data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
         </form>
       </div>
     </div> <!-- ./ top-level reply form -->
 
     <div class="rk-star-listing rk-comments rk-replies">
     {% for s in star.comments %}
-      {{ star_macros.reply_line(s, controlled_personas) }}
+      {{ star_macros.comment_tree(s, controlled_personas) }}
     {% endfor %}
     </div> <!-- ./ comments -->
   </div> <!-- ./ content area -->

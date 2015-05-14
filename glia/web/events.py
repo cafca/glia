@@ -148,7 +148,7 @@ def text(message):
             template = current_app.jinja_env.get_template('macros/star.html')
             template_module = template.make_module({'request': request})
             reply_data = {
-                'msg': template_module.star_line(star),
+                'msg': template_module.comment(star),
                 'parent_id': star.parent.id
             }
             emit('comment', reply_data, room=message["room_id"])

@@ -169,6 +169,13 @@ $(document).ready(function(){
             return false;
         });
 
+        $(".rk-create-display-toggle").click(function() {
+            var $form = $(".rk-star-"+$(this).data("id")+" .rk-create");
+            $form.css("display", "block");
+            $form.find("textarea").focus();
+            return false;
+        });
+
         $('#rk-chat-more-button').click(function() {
             var $top_line = $('#rk-chat-lines li:nth-child(2)');
             data = load_more_chatlines();
