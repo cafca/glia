@@ -5,7 +5,10 @@
 {% import "macros/identity.html" as id_macros %}
 
 {% block script %}
-{{ super() }}
+window.room_id = "{{ star.id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+
 $(document).ready(function() {
     $('#rk-star-context-length').editable({
       autotext: 'always',
@@ -40,7 +43,7 @@ $(document).ready(function() {
 
 {% block content %}
 <section class="row">
-  <div class="col-sm-7 col-sm-push-1">
+  <div class="col-sm-7 col-sm-push-1 rk-star-{{ star.id }}">
     <div class="rk-star-listing row">
       <div class="col-sm-12">
         {% if context|length > 0 %}
@@ -61,14 +64,19 @@ $(document).ready(function() {
           {{ reply_form.csrf_token }}
           {{ reply_form.parent(value=star.id, class_="rk-create-parent") }}
           <div class="form-group">
-            {{ reply_form.text.label }}
             {{ reply_form.text(class_="form-control rk-create-text") }}
           </div>
-          <button type="submit" class="rk-create-submit" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Submit</button>
+          <button type="submit" class="rk-create-submit" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
         </form>
       </div>
-    </div>
-  </div>
+    </div> <!-- ./ top-level reply form -->
+
+    <div class="rk-star-listing rk-comments rk-replies">
+    {% for s in star.comments %}
+      {{ star_macros.reply_line(s, controlled_personas) }}
+    {% endfor %}
+    </div> <!-- ./ comments -->
+  </div> <!-- ./ content area -->
 
   <div class="col-sm-3 col-sm-push-1">
     <h3>Info</h3>

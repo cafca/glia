@@ -85,7 +85,7 @@ def text(message):
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
 
-    map = Starmap.query.get(message["room_id"])
+    map = Starmap.query.get(message["map_id"]) if "map_id" in message else None
 
     if message["parent_id"] is None:
         if map:
@@ -144,6 +144,14 @@ def text(message):
                 'vote_count': star.oneup_count()
             }
             emit('message', data, room=message["room_id"])
+
+            template = current_app.jinja_env.get_template('macros/star.html')
+            template_module = template.make_module({'request': request})
+            reply_data = {
+                'msg': template_module.star_line(star),
+                'parent_id': star.parent.id
+            }
+            emit('comment', reply_data, room=message["room_id"])
 
     if errors != "":
         emit('error', errors)

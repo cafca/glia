@@ -10,9 +10,9 @@
 {% macro star_lead(star, controlled_personas, truncate=True) %}
 
 <!-- STAR {{star.id}} -->
-<div class="rk-star rk-star-lead">
+<div class="rk-star rk-star-lead rk-star-{{ star.id }}">
   <span class="rk-star-title">
-    <a href="{{ url_for('.star', id=star.id) }}"><h2>{{ star.text }}</h2></a>
+    <a href="{{ url_for('web.star', id=star.id) }}"><h2>{{ star.text }}</h2></a>
   </span>
 
   <!-- Attachments -->
@@ -45,7 +45,7 @@
 
     <span>
         <span class="caption">
-            <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">
+            <a href="{{ url_for('web.star', id=star.id) }}" title="{{star.created}}">
             <i class="fa fa-star"></i> {{star.created|localtime|naturaltime}}</a>
         </span>
     </span>
@@ -66,12 +66,12 @@
 {% macro star_line(star, controlled_personas, truncate=True, no_planets=False) %}
 
 <!-- STAR {{star.id}} -->
-<div class="rk-star rk-star-line">
+<div class="rk-star rk-star-line rk-star-{{ star.id }}">
   {{ oneup(star) }}
 
   <div class="rk-line-container">
     <div class="rk-star-title">
-      <a href="{{ url_for('.star', id=star.id) }}">{{ star.text }}</a>
+      <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text }}</a>
       {% if no_planets %}
       {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
       {% endif %}
@@ -106,9 +106,9 @@
 {% macro star_box(star, controlled_personas) %}
 
 <!-- STAR {{star.id}} -->
-<div class="rk-star rk-star-box col-md-3">
+<div class="rk-star rk-star-box col-md-3 rk-star-{{ star.id }}">
   <div class="panel">
-    <a href="{{ url_for('.star', id=star.id) }}">
+    <a href="{{ url_for('web.star', id=star.id) }}">
       <div class="rk-star-box-content">
         <p>{{ star.text}}</p>
         <div class="rk-star-box-planets">{% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
@@ -121,9 +121,25 @@
     {{ oneup(star) }}
 
     <span class="caption">
-        <a href="{{ url_for('.star', id=star.id) }}" title="{{star.created}}">
+        <a href="{{ url_for('web.star', id=star.id) }}" title="{{star.created}}">
         <i class="fa fa-star"></i> {{star.created|localtime|naturaltime}}</a>
     </span>
   </p>
 </div>
+{% endmacro %}
+
+
+{% macro reply_line(star, controlled_personas, deep=3) %}
+
+{{ star_line(star, controlled_personas) }}
+
+{% if deep > 0 %}
+  {% set new_deep=(deep-1) %}
+  <div class="rk-replies">
+    {% for c in star.comments %}
+      {{ reply_line(c, controlled_personas, deep=new_deep) }}
+    {% endfor %}
+  </div>
+{% endif %}
+
 {% endmacro %}

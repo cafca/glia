@@ -58,6 +58,10 @@ $(document).ready(function(){
         $("#rk-chat-parent").val(data.star_id);
     });
 
+    socket.on('comment', function(data) {
+        insert_reply(data.parent_id, data.msg);
+    });
+
     socket.on('vote', function(data) {
         window.votedata = data;
 
@@ -86,6 +90,10 @@ $(document).ready(function(){
 
         }
         scroll();
+    }
+
+    function insert_reply(parent_id, rendered_content) {
+        $(".rk-star-"+parent_id+" > .rk-replies").prepend(rendered_content);
     }
 
     function get_chat_height() {
@@ -152,9 +160,10 @@ $(document).ready(function(){
             socket.emit('text', {
                     'msg': $text,
                     'room_id': window.room_id,
+                    'map_id': window.map_id,
                     'parent_id': $parent
-                }, function() {
-                $btn.button('reset');
+                }, function(data) {
+                    $btn.button('reset');
             });
             clear();
             return false;
