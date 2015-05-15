@@ -25,8 +25,16 @@ SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 AUTH_ENABLED = False
 
 # Define database setup
-DATABASE_FILE = '../server.db'
-SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
+
+# SQLITE SETUP
+# DATABASE_FILE = '../server.db'
+# SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
+
+# POSTGRESQL SETUP
+# Create database with psql:
+# >> CREATE DATABASE glia_dev ENCODING 'utf8';
+SQLALCHEMY_DATABASE_URI = "postgresql://localhost/glia_dev"
+
 SQLALCHEMY_RECORD_QUERIES = False
 
 # Memcache config
