@@ -76,8 +76,9 @@ def index():
         .join(MovementMemberAssociation) \
         .filter(MovementMemberAssociation.persona_id !=
             current_user.active_persona.id) \
-        .order_by(func.count(MovementMemberAssociation.created)) \
-        .group_by(MovementMemberAssociation.created)
+        .order_by(func.count(MovementMemberAssociation.persona_id)) \
+        .group_by(MovementMemberAssociation.persona_id) \
+        .group_by(Movement)
 
     # Collect main page content
     top_post_selection = Star.query.filter(Star.state >= 0)
