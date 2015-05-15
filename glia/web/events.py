@@ -87,15 +87,17 @@ def text(message):
 
     map = Starmap.query.get(message["map_id"]) if "map_id" in message else None
 
-    if message["parent_id"] is None:
-        if map:
+    if not message["parent_id"]:
+        if isinstance(map, Starmap):
             # check whether there really is no post yet in the map
             map_content = map.index.first()
-            if map_content is not None:
+            if map_content is None:
+                parent_star = None
+            else:
                 errors += "Please try submitting your message again: '{}' ".format(
                     message["msg"])
         else:
-            errors += "No parent specified"
+            errors += "Neither map nor parent specified"
     else:
         parent_star = Star.query.get(message["parent_id"])
         if parent_star is None:
@@ -111,7 +113,7 @@ def text(message):
             modified=star_created)
         db.session.add(star)
 
-        if map:
+        if isinstance(map, Starmap):
             map.index.append(star)
             db.session.add(map)
 
@@ -149,11 +151,12 @@ def text(message):
             template_module = template.make_module({'request': request})
             reply_data = {
                 'msg': template_module.comment(star),
-                'parent_id': star.parent.id
+                'parent_id': star.parent.id if star.parent else None
             }
             emit('comment', reply_data, room=message["room_id"])
 
     if errors != "":
+        app.logger.warning("Errors creating Star: {}".format(errors))
         emit('error', errors)
 
 
