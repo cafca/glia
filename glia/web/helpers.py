@@ -70,8 +70,8 @@ def send_validation_email(user, db):
     message.set_from('RKTIK Email Confirmation')
 
     # Override activation step if email can't be sent in dev environment
-    def activate_user():
-        logger.warning("User is being auto-activated in dev environment")
+    def activate_user(reason):
+        logger.warning("User is being auto-activated, because: {}".format(reason))
         login_user(user, remember=False)
         user.active = True
         db.session.add(user)
@@ -82,7 +82,9 @@ def send_validation_email(user, db):
     except SendGridClientError, e:
         logger.error("Client error sending confirmation email: {}".format(e))
         if current_app.config.get('DEBUG') is True:
-            activate_user()
+            activate_user("In dev environment")
+        else:
+            activate_user("Sending email does not work right")
     except SendGridServerError, e:
         logger.error("Server error sending confirmation email: {}".format(e))
         if current_app.config.get('DEBUG') is True:
