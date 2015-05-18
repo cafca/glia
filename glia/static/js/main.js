@@ -10,6 +10,7 @@
 var socket;
 
 $(document).ready(function(){
+    PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/movements')
     socket = io.connect('http://' + document.domain + ':' + location.port + '/movements');
@@ -51,6 +52,13 @@ $(document).ready(function(){
 
     socket.on('error', function (e) {
         append_timeline('System', e ? e : 'A unknown error occurred');
+        new PNotify({
+            title: 'RKTIK Error',
+            text: e ? e : 'A unknown error occurred',
+            desktop: {
+                desktop: true
+            }
+        });
     });
 
     socket.on('message', function(data) {
@@ -115,6 +123,16 @@ $(document).ready(function(){
     function request_upvote(star_id) {
         console.log("Voting Star "+star_id);
         socket.emit('vote_request', {'star_id': star_id});
+    }
+
+    function notification(title, message) {
+        new PNotify({
+            title: 'RKTIK ' + title,
+            text: message,
+            desktop: {
+                desktop: true
+            }
+        });
     }
 
     function load_more_chatlines(update_last) {
@@ -218,6 +236,28 @@ $(document).ready(function(){
             var modal = $(this)
             modal.find('#rk-repost-username').text(window.user_name);
             modal.find('#rk-repost-text').text(text);
+        });
+
+        $('.rk-repost-form').submit(function (event) {
+            event.preventDefault();
+            var $btn = $(this).find(":button");
+            var $map = $btn.data("starmap-id");
+            var $text = $('#rk-repost').find('.rk-create-text').val();
+            var $parent = $('#rk-repost').find('.rk-create-parent').val();
+
+            $btn.button('loading');
+            socket.emit('repost', {
+                'parent_id': $parent,
+                'text': $text,
+                'room_id': window.room_id,
+                'map_id': $map,
+            }, function(data) {
+                if (data.status == "success") {
+                    notification("Repost", data.message);
+                }
+            });
+            $btn.button('success');
+            $btn.prop('disabled', true);
         });
     });
 });

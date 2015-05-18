@@ -11,7 +11,7 @@
 import datetime
 import functools
 
-from flask import request, current_app
+from flask import request, current_app, url_for
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
 from uuid import uuid4
@@ -158,6 +158,82 @@ def text(message):
     if errors != "":
         app.logger.warning("Errors creating Star: {}".format(errors))
         emit('error', errors)
+
+
+@socketio_authenticated_only
+@socketio.on('repost', namespace='/movements')
+def repost(message):
+    """Sent by client when the user reposts a Star."""
+    star_created = datetime.datetime.utcnow()
+    star_id = uuid4().hex
+    errors = ""
+    author = current_user.active_persona
+
+    if len(message['text']) == 0:
+        errors += "You were about to say something?"
+
+    map = Starmap.query.get(message["map_id"])
+
+    if not message["parent_id"]:
+        errors += "No repost source specified"
+    else:
+        parent_star = Star.query.get(message["parent_id"])
+        if parent_star is None:
+            errors += "Could not find the original post. "
+
+    if errors == "":
+        star = Star(
+            id=star_id,
+            text=message['text'],
+            author=author,
+            parent=parent_star,
+            created=star_created,
+            modified=star_created)
+        db.session.add(star)
+
+        map.index.append(star)
+        db.session.add(map)
+
+        text, planets = process_attachments(star.text)
+        star.text = text
+
+        for planet_asc in parent_star.planet_assocs:
+            assoc = PlanetAssociation(star=star, planet=planet_asc.planet, author=author)
+            star.planet_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(planet_asc.planet, star))
+            db.session.add(assoc)
+
+        try:
+            db.session.commit()
+        except SQLAlchemyError, e:
+            db.session.rollback()
+            app.logger.error("Error completing Star repost: {}".format(e))
+            errors += "An error occured saving your message. Please try again. "
+        else:
+            app.logger.info(u"Repost {} {}: {}".format(map, author.username, star.text))
+
+            # Render using template
+            template = current_app.jinja_env.get_template('chatline.html')
+            data = {
+                'username': author.username,
+                'msg': template.render(star=star),
+                'star_id': star.id,
+                'vote_count': star.oneup_count()
+            }
+            emit('message', data, room=map.id)
+
+    if errors != "":
+        app.logger.warning("Errors creating Star: {}".format(errors))
+        emit('error', errors)
+
+    return {
+        "status": "success" if len(errors) == 0 else "error",
+        "errors": errors,
+        "message": "Star was reposted to {}".format(map.name),
+        "map_id": map.id if map else None,
+        "star_id": star.id if star else None,
+        "url": url_for('web.star', id=star.id)
+    }
 
 
 @socketio_authenticated_only
