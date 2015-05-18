@@ -236,6 +236,7 @@ $(document).ready(function(){
             var modal = $(this)
             modal.find('#rk-repost-username').text(window.user_name);
             modal.find('#rk-repost-text').text(text);
+            modal.find('.rk-create-parent').val(id);
         });
 
         $('.rk-repost-form').submit(function (event) {

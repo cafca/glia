@@ -8,44 +8,6 @@
 {% endmacro %}
 
 
-{% macro repost_modal(star) %}
-<div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title"><i class="fa fa-retweet"></i> Repost as <span id="rk-repost-username"></span></h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col-sm-6">
-              <div class="form-group">
-                <label for="rk-repost-text"><h4>Text</h4></label>
-                <textarea id="rk-repost-text" class="form-control rk-create-text" name="text"></textarea>
-                <input type="hidden" class="rk-create-parent" value="{{ star.id }}" />
-              </div>
-            </div>
-            <div class="col-sm-6 rk-repost-starmaps">
-              <h4>Pick a Place</h4>
-                <ul class="list-unstyled">
-              {% for map in repost_starmaps %}
-                  <form class="rk-repost-form">
-                    <li>
-                      <button type="submit" class="btn btn-default btn-block rk-repost-button" data-starmap-id="{{ map.id }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Creating Star' data-success-text='<i class="fa fa-check"></i> {{ map.name }}'>{{ map.name }}</button>
-                    </li>
-                  </form>
-              {% endfor %}
-                </ul>
-          </div>
-        </div>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-{% endmacro %}
-
-
 {% macro repost_button(star, btn="btn-primary") %}
   <span data-toggle="modal" data-star-text="Repost: {{star.text}}" data-star-id="{{star.id}}" data-target="#rk-repost">
     <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom" title="Share this Star with People, Movements or anywhere else!">
