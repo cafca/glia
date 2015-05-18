@@ -7,6 +7,61 @@
 </button>
 {% endmacro %}
 
+
+{% macro repost_modal(star) %}
+<div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title"><i class="fa fa-retweet"></i> Repost as <span id="rk-repost-username"></span></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label for="rk-repost-text"><h4>Text</h4></label>
+                <textarea id="rk-repost-text" class="form-control rk-create-text" name="text"></textarea>
+              </div>
+            </div>
+            <div class="col-sm-6 rk-repost-starmaps">
+              <h4>Pick a Map</h4>
+              <ul class="list-unstyled">
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement A</a></li>
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement B</a></li>
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement C</a></li>
+              </ul>
+
+              <ul class="list-unstyled">
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona A</a></li>
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona B</a></li>
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona C</a></li>
+              </ul>
+
+              <ul class="list-unstyled">
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Your Profile</a></li>
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement B</a></li>
+                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement C</a></li>
+              </ul>
+          </div>
+        </div>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+{% endmacro %}
+
+
+{% macro repost_button(star, btn="btn-primary") %}
+  <span data-toggle="modal" data-star-text="{{star.text}}" data-star-id="{{star.id}}" data-target="#rk-repost">
+    <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom"title="Share this Star with People, Movements or anywhere else!">
+      <i class="fa fa-retweet"></i> Repost
+    </button>
+  </span>
+{% endmacro %}
+
+
 {% macro star_lead(star, controlled_personas, truncate=True) %}
 
 <!-- STAR {{star.id}} -->

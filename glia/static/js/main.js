@@ -205,5 +205,19 @@ $(document).ready(function(){
                     location.reload();
                 })
         });
+
+        //
+        // REPOST
+        //
+
+        $('#rk-repost').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var id = button.data('star-id');
+            var text = button.data('star-text');
+
+            var modal = $(this)
+            modal.find('#rk-repost-username').text(window.user_name);
+            modal.find('#rk-repost-text').text(text);
+        });
     });
 });

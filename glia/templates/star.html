@@ -11,40 +11,41 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 
 $(document).ready(function() {
-    $('[data-toggle="tooltip"]').tooltip();
+  $('[data-toggle="tooltip"]').tooltip();
 
-    $('#rk-star-context-length').editable({
-      autotext: 'always',
-      type: 'text',
-      name: 'context_length',
-      pk: '{{ star.id }}',
-      url: '{{ url_for('web.async_star', star_id=star.id) }}',
-      title: 'How many do you want to show?',
-      display: function(value, response) {
-        if (value > 0) {
-          $(this).html("Displaying " + value + " previous Stars for context.");
-        } else {
-          $(this).html("Author has chosen not to display context for this Star.");
-        }
-      },
-      error: function(response, newValue) {
-        if (response.status == 400) {
-          return response.message;
-        } else {
-          return "There was an error processing your input.";
-        }
-      },
-      success: function(response, newValue) {
-        location.reload();
-      },
-      value: {{ star.context_length|default("0", True) }},
-      placement: 'bottom',
-      disabled: {% if star.author == active_persona %}false{% else %}true{% endif %}
+  $('#rk-star-context-length').editable({
+    autotext: 'always',
+    type: 'text',
+    name: 'context_length',
+    pk: '{{ star.id }}',
+    url: '{{ url_for('web.async_star', star_id=star.id) }}',
+    title: 'How many do you want to show?',
+    display: function(value, response) {
+      if (value > 0) {
+        $(this).html("Displaying " + value + " previous Stars for context.");
+      } else {
+        $(this).html("Author has chosen not to display context for this Star.");
+      }
+    },
+    error: function(response, newValue) {
+      if (response.status == 400) {
+        return response.message;
+      } else {
+        return "There was an error processing your input.";
+      }
+    },
+    success: function(response, newValue) {
+      location.reload();
+    },
+    value: {{ star.context_length|default("0", True) }},
+    placement: 'bottom',
+    disabled: {% if star.author == active_persona %}false{% else %}true{% endif %}
   });
 });
 {% endblock %}
 
 {% block content %}
+
 <section class="row">
   <div class="col-sm-7 col-sm-push-1 rk-star-{{ star.id }}">
     <div class="rk-star-listing row">
@@ -99,11 +100,7 @@ $(document).ready(function() {
     <p>Not posted to any Starmaps.</p>
     {% endif %}
 
-    <span data-toggle="modal" data-target="#rk-repost">
-      <button class="btn btn-primary" data-toggle="tooltip" data-placement="bottom" title="Share this Star with People, Movements or anywhere else!">
-        <i class="fa fa-retweet"></i> Repost
-      </button>
-    </span>
+    {{ star_macros.repost_button(star) }}
 
     <h3>Availability</h3>
     {% if star.author in controlled_personas %}
@@ -129,46 +126,6 @@ $(document).ready(function() {
   </div>
 </section>
 
-<div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title"><i class="fa fa-retweet"></i> Repost as {{ active_persona.username }}</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col-sm-6">
-              <div class="form-group">
-                <label for="rk-repost-text"><h4>Text</h4></label>
-                <textarea id="rk-repost-text" class="form-control rk-create-text" name="text">{{ star.text }}</textarea>
-              </div>
-            </div>
-            <div class="col-sm-6 rk-repost-starmaps">
-              <h4>Pick a Map</h4>
-              <ul class="list-unstyled">
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement A</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement B</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement C</a></li>
-              </ul>
-
-              <ul class="list-unstyled">
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona A</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona B</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona C</a></li>
-              </ul>
-
-              <ul class="list-unstyled">
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Your Profile</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement B</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement C</a></li>
-              </ul>
-          </div>
-        </div>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+{{ star_macros.repost_modal(star) }}
 
 {% endblock %}
