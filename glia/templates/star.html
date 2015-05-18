@@ -90,10 +90,9 @@ $(document).ready(function() {
     <p>Posted to.</p>
     <ul>
     {% for map in star.starmaps %}
-      {% for identity in map.contexts %}
-        {% set map_template = "web.{}".format(identity.kind) %}
-        <li><a href="{{ url_for(map_template, id=identity.id) }}">{{ identity.username }}</a></li>
-      {% endfor %}
+      {% if map.absolute_url() %}
+      <li><a href="{{ map.absolute_url() }}">{{ map.name }}</a></li>
+      {% endif %}
     {% endfor %}
     </ul>
     {% else %}

@@ -4,8 +4,8 @@
 {% import "macros/star.html" as star_macros %}
 
 {% block script %}
-window.room_id = "{{ movement.profile.id }}";
-window.map_id = "{{ movement.profile.id }}";
+window.room_id = "{{ movement.mindspace.id }}";
+window.map_id = "{{ movement.mindspace.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.movement_id = "{{  movement.id }}";
@@ -62,7 +62,7 @@ $(document).ready(function() {
       </div>
 
       {% if movement.current_role() not in ["visitor", "anonymous"] %}
-        {{ chat_macros.chat(movement.profile) }}
+        {{ chat_macros.chat(movement.mindspace) }}
       {% endif %}
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->

@@ -64,7 +64,7 @@ def index():
     movements = current_user.active_persona.movements_followed
     movement_data = []
     for g in movements:
-        g_star_selection = g.profile.index.filter(Star.state >= 0)
+        g_star_selection = g.mindspace.index.filter(Star.state >= 0)
         g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
 
         movement_data.append({
@@ -196,7 +196,10 @@ def delete_star(id=None):
 def persona(id=None):
     persona = Persona.query.get_or_404(id)
 
-    chat = Starmap.query.join(Persona, Starmap.id == Persona.profile_id)
+    if persona == current_user.active_persona:
+        chat = current_user.active_persona.mindspace
+    else:
+        chat = Starmap.query.join(Persona, Starmap.id == Persona.profile_id)
 
     movements = MovementMemberAssociation.query \
         .filter_by(active=True) \
@@ -217,7 +220,7 @@ def movement(id):
             id, current_user))
         return(redirect(url_for('.movements')))
 
-    star_selection = movement.profile.index.filter(Star.state >= 0)
+    star_selection = movement.mindspace.index.filter(Star.state >= 0)
     star_selection = sorted(star_selection, key=Star.hot, reverse=True)
     top_posts = []
     while len(top_posts) < min([15, len(star_selection)]):

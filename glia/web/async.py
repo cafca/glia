@@ -187,7 +187,7 @@ def async_movement(movement_id):
         socketio.emit('status',
             {'msg': "{} set a new mission: {}".format(
                 current_user.active_persona.username, new_mission)},
-            room=movement.profile.id, namespace="/movements")
+            room=movement.mindspace.id, namespace="/movements")
 
     return jsonify({"mission": new_mission})
 
