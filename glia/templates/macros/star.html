@@ -26,24 +26,12 @@
               </div>
             </div>
             <div class="col-sm-6 rk-repost-starmaps">
-              <h4>Pick a Map</h4>
-              <ul class="list-unstyled">
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement A</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement B</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement C</a></li>
-              </ul>
-
-              <ul class="list-unstyled">
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona A</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona B</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Persona C</a></li>
-              </ul>
-
-              <ul class="list-unstyled">
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Your Profile</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement B</a></li>
-                <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="" href="#" role="button">Movement C</a></li>
-              </ul>
+              <h4>Pick a Place</h4>
+                <ul class="list-unstyled">
+              {% for map in repost_starmaps %}
+                  <li><a class="btn btn-default btn-block rk-repost-button" data-starmap-id="{{ map.id }}" href="#" role="button">{{ map.name }}</a></li>
+              {% endfor %}
+                </ul>
           </div>
         </div>
       </div>
