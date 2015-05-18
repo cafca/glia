@@ -222,6 +222,14 @@ def repost(message):
             }
             emit('message', data, room=map.id)
 
+            template = current_app.jinja_env.get_template('macros/star.html')
+            template_module = template.make_module({'request': request})
+            reply_data = {
+                'msg': template_module.comment(star),
+                'parent_id': star.parent.id if star.parent else None
+            }
+            emit('comment', reply_data, room=message["room_id"])
+
     if errors != "":
         app.logger.warning("Errors creating Star: {}".format(errors))
         emit('error', errors)
