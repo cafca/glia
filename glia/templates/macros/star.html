@@ -7,6 +7,16 @@
 </button>
 {% endmacro %}
 
+
+{% macro repost_button(star, btn="btn-primary") %}
+  <span data-toggle="modal" data-star-text="Repost: {{star.text}}" data-star-id="{{star.id}}" data-target="#rk-repost">
+    <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom" title="Share this Star with People, Movements or anywhere else!">
+      <i class="fa fa-retweet"></i> Repost
+    </button>
+  </span>
+{% endmacro %}
+
+
 {% macro star_lead(star, controlled_personas, truncate=True) %}
 
 <!-- STAR {{star.id}} -->

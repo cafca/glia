@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
     <!-- X-Editable -->
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+    <!-- PNotify -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pnotify.custom.min.css') }}">
 
     <!-- Glia Styles -->
     <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
@@ -78,11 +80,47 @@
         <div class='alert alert-success' role="alert"><span>{{message}}</span></div>
     {% endfor %}
 
+
     <div class="container-fluid main-container">
 
       {% block content %}{% endblock %}
 
     </div>
+
+    <div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><i class="fa fa-retweet"></i> Repost as <span id="rk-repost-username"></span></h4>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="rk-repost-text"><h4>Text</h4></label>
+                    <textarea id="rk-repost-text" class="form-control rk-create-text" name="text"></textarea>
+                    <input type="hidden" class="rk-create-parent" value="" />
+                  </div>
+                </div>
+                <div class="col-sm-6 rk-repost-starmaps">
+                  <h4>Pick a Place</h4>
+                    <ul class="list-unstyled">
+                  {% for map in repost_starmaps %}
+                      <form class="rk-repost-form">
+                        <li>
+                          <button type="submit" class="btn btn-default btn-block rk-repost-button" data-starmap-id="{{ map.id }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Creating Star' data-success-text='<i class="fa fa-check"></i> {{ map.name }}'>{{ map.name }}</button>
+                        </li>
+                      </form>
+                  {% endfor %}
+                    </ul>
+              </div>
+            </div>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
 
     <!-- jQuery -->
@@ -95,6 +133,8 @@
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
     <!-- X-Editable -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <!-- PNotify -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/pnotify.custom.min.js') }}"></script>
     <!-- Glia JS -->
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script type="text/javascript" charset="utf-8">{% block script %}

@@ -152,13 +152,13 @@
         </tr>
     </thead>
     <tbody>
-      {% for group in groups %}
+      {% for movement in movements %}
       <tr>
-        <td>{{ group.id }}</td>
-        <td>{{ group.username }}</td>
-        <td>{{ group.description }}</td>
-        <td>{{ group.profile }}</td>
-        <td>{{ group.vesicles | length }}</td>
+        <td>{{ movement.id }}</td>
+        <td>{{ movement.username }}</td>
+        <td>{{ movement.description }}</td>
+        <td>{{ movement.profile }}</td>
+        <td>{{ movement.vesicles | length }}</td>
       </tr>
       {% endfor %}
     </tbody>
