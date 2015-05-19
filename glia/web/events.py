@@ -22,7 +22,8 @@ from .. import socketio, db
 from glia.web.helpers import process_attachments
 from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
     Persona
-from nucleus.nucleus import notification_signals, PersonaNotFoundError
+from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
+    UnauthorizedError
 
 # Create blinker signal namespace
 local_model_changed = notification_signals.signal('local-model-changed')
@@ -275,6 +276,9 @@ def vote_request(message):
             upvote = star.toggle_oneup()
         except PersonaNotFoundError:
             error_message += "Please activate a Persona for voting. "
+            upvote = None
+        except UnauthorizedError:
+            error_message += "You are not authorized to do this. Please login again."
             upvote = None
 
     data = dict()
