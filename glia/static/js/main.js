@@ -211,6 +211,7 @@ $(document).ready(function(){
         //
 
         $("#rk-movement-follower").click(function() {
+            $(this).button('loading');
             $.post($("#rk-movement-follower").data("href"))
                 .done(function (data) {
                     location.reload();
@@ -218,6 +219,7 @@ $(document).ready(function(){
         });
 
         $("#rk-movement-member").click(function() {
+            $(this).button('loading');
             $.post($("#rk-movement-member").data("href"))
                 .done(function (data) {
                     location.reload();

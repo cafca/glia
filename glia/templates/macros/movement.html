@@ -1,0 +1,37 @@
+{% import "macros/planet.html" as planet_macros %}
+{% import "macros/star.html" as star_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+
+{% macro nav(movement, current) %}
+{% set nav_items = {
+  "Blog": url_for("web.movement_blog", id=movement.id),
+  "Mindspace": url_for("web.movement", id=movement.id),
+  "Reflection": "#"
+} %}
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{{ url_for('web.movement', id=movement.id) }}">{{ movement.username }}</a>
+    </div> <!-- ./ navbar-header -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        {% for name, url in nav_items.iteritems() %}
+          {% if name == current %}
+          <li class="active"><a href="{{ url }}"><i class="fa fa-file-text-o"></i> {{ name }}<span class="sr-only">(current)</span></a></li>
+          {% else %}
+          <li><a href="{{ url }}"><i class="fa fa-file-text-o"></i> {{ name }} </a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div>
+</nav>
+{% endmacro %}

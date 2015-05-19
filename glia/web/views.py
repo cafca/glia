@@ -96,9 +96,9 @@ def index():
 @app.route('/movement/', methods=["GET", "POST"])
 @login_required
 @http_auth.login_required
-def movements(movement_id=None):
+def movements(id=None):
     """Create movements"""
-    form = CreateMovementForm(id=movement_id)
+    form = CreateMovementForm(id=id)
 
     # Create a movement
     if form.validate_on_submit():
@@ -208,7 +208,7 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
-@app.route('/movement/<id>', methods=["GET"])
+@app.route('/movement/<id>/mindspace', methods=["GET"])
 @login_required
 @http_auth.login_required
 def movement(id):
@@ -228,7 +228,19 @@ def movement(id):
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('movement.html', movement=movement, stars=top_posts)
+    return render_template('movement_mindspace.html', movement=movement, stars=top_posts)
+
+
+@app.route('/movement/<id>', methods=["GET"])
+@login_required
+@http_auth.login_required
+def movement_blog(id):
+    """Display a movement's profile"""
+    movement = Movement.query.get_or_404(id)
+
+    star_selection = movement.profile.index.filter(Star.state >= 0).order_by(Star.created.desc())
+
+    return render_template('movement_blog.html', movement=movement, stars=star_selection)
 
 
 @app.route('/stars/', methods=["POST"])

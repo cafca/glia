@@ -2,6 +2,7 @@
 
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/star.html" as star_macros %}
+{% import "macros/movement.html" as movement_macros %}
 
 {% block script %}
 window.room_id = "{{ movement.mindspace.id }}";
@@ -68,26 +69,7 @@ $(document).ready(function() {
   </div> <!-- ./ chat column -->
 
   <div class="star-listing col-sm-8 col-sm-pull-4">
-    <nav class="navbar navbar-inverse">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">{{ movement.username }}</a>
-        </div> <!-- ./ navbar-header -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            <li><a href="#"><i class="fa fa-file-text-o"></i> Public Profile</a></li>
-            <li class="active"><a href="#"><i class="fa fa-file-text-o"></i> Mindspace <span class="sr-only">(current)</span></a></li>
-            <li><a href="#"><i class="fa fa-file-text-o"></i> Reflection</a></li>
-          </ul>
-        </div><!-- /.navbar-collapse -->
-      </div>
-    </nav>
+    {{ movement_macros.nav(movement, "Mindspace") }}
     <div class="alert alert-info alert-dismissible" role="alert">
       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       <p>This is the movement's <strong>mindspace</strong>. On the right hand side you can chat with other members, show them stuff and plan your next move. Below you see content from the chat with the most votes.
