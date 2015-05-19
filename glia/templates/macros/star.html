@@ -24,6 +24,12 @@
 </span>
 {% endmacro %}
 
+{% macro promote_button(star) %}
+<span>
+    <button class="btn btn-xs btn-default rk-promote" href="#" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote'>Promote</button>
+</span>
+{% endmacro %}
+
 
 {% macro star_lead(star, controlled_personas, truncate=True) %}
 
@@ -58,6 +64,10 @@
 
     {{ comments_button(star) }}
 
+    {% if star.oneup_count() > 0 %}
+      {{ promote_button(star) }}
+    {% endif %}
+
     <span>
         <span class="caption">
             {{star.created|localtime|naturaltime}}
@@ -85,6 +95,10 @@
   <span class="rk-star-meta">
     {{ oneup(star) }}
     {{ comments_button(star) }}
+
+    {% if star.oneup_count() > 0 %}
+      {{ promote_button(star) }}
+    {% endif %}
   </span>
 
   <div class="rk-line-container">
