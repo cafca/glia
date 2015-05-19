@@ -2,8 +2,6 @@
 Alembic supplementary upgrade using ORM
 
 """
-import logging
-
 from uuid import uuid4
 
 from glia import create_app
@@ -16,15 +14,22 @@ def upgrade(logger):
     identities = Identity.query.all()
     logger.info("Creating Mindspaces")
     for identity in identities:
-        if identity.mindspace is None:
-            logger.info("Creating mindspace for {}".format(identity))
-            mindspace = Starmap(
+        if identity.mindspace is not None:
+            if identity.mindspace.kind.endswith("_profile"):
+                new_kind = "{}_mspace".format(identity.kind)
+                app.logger.info("Updating {} mindspace kind to `{}`".format(
+                    identity, new_kind))
+                identity.mindspace.kind = new_kind
+
+        if identity.profile is None:
+            logger.info("Creating profile for {}".format(identity))
+            profile = Starmap(
                 id=uuid4().hex,
                 author=identity,
-                kind="{}_mspace".format(identity.kind),
+                kind="{}_profile".format(identity.kind),
                 modified=identity.created)
-            identity.mindspace = mindspace
-            db.session.add(identity)
+            identity.profile = profile
+        db.session.add(identity)
 
     db.session.commit()
 
