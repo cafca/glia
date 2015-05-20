@@ -22,7 +22,8 @@ from .. import socketio, db
 from glia.web.helpers import process_attachments
 from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
     Persona
-from nucleus.nucleus import notification_signals, PersonaNotFoundError
+from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
+    UnauthorizedError
 
 # Create blinker signal namespace
 local_model_changed = notification_signals.signal('local-model-changed')
@@ -58,8 +59,10 @@ def joined(message):
         emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
 
         rv = {"nicknames": [], "ids": []}
-        movement = Movement.query.filter_by(profile_id=message["room_id"]).first()
-        if movement:
+        movement = Movement.query.filter_by(blog_id=message["room_id"]).first()
+        room = Starmap.query.get(message["room_id"])
+        if room and isinstance(room.author, Movement):
+            movement = room.author
             online_cutoff = datetime.datetime.utcnow() - \
                 datetime.timedelta(seconds=15 * 60)
             for gma in movement.members.join(Persona).filter(
@@ -275,6 +278,9 @@ def vote_request(message):
             upvote = star.toggle_oneup()
         except PersonaNotFoundError:
             error_message += "Please activate a Persona for voting. "
+            upvote = None
+        except UnauthorizedError:
+            error_message += "You are not authorized to do this. Please login again."
             upvote = None
 
     data = dict()

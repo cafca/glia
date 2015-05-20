@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/star.html" as star_macros %}
+{% import "macros/movement.html" as movement_macros %}
+
+{% block script %}
+window.room_id = "{{ movement.blog_id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+window.movement_id = "{{  movement.id }}";
+window.admin_id = "{{ movement.admin_id }}";
+{% endblock %}
+
+{% block content %}
+<section class="row">
+  <div class="star-listing col-sm-8 col-sm-push-2">
+    <div class="jumbotron">
+      <h1>{{ movement.username }}</h1>
+      <p>{{ movement.description }}</p>
+      {% if movement not in current_user.active_persona.movements_followed %}
+      <button class="btn btn-primary btn-lg" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+        <i class="fa fa-fw fa-eye"></i> Follow <em>{{ movement.username }}</em> now
+      </button>
+      {% endif %}
+    </div>
+
+    {{ movement_macros.nav(movement, "Blog") }}
+
+    <div class="alert alert-info alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <p>This is the movement's <strong>blog</strong>. Members of the movement collect content and decide collectively what they want to post here.
+    </div>
+
+
+
+    {% for star in stars %}
+      {% if loop.first %}
+        {{ star_macros.star_lead(star, controlled_personas) }}
+      {% else %}
+        {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
+      {% endif %}
+    {% else %}
+      <div class="rk-star rk-star-lead">
+        <h1>No blog posts found</h1>
+        <p class="lead">This movement is just getting started. You can become a member now to help them out or follow this movement, then wait and see.</p>
+      </div>
+    {% endfor %}
+  </div> <!-- ./ star listing -->
+
+  <div class="col-sm-8 col-sm-push-2">
+    <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
+
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+            {% if movement in current_user.active_persona.movements_followed %}
+              <button class="btn btn-default" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+                <i class="fa fa-fw fa-eye"></i> Unfollow
+              </button>
+            {% else %}
+              <button class="btn btn-primary btn-lg" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+                <i class="fa fa-fw fa-eye"></i> Follow <em>{{ movement.username }}</em> now
+              </button>
+
+            {% endif %}
+            </div>
+          </div>
+
+          <div class="col-sm-8">
+            <h4>Followers receive updates from this movement on their frontpage.</h4>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+
+            {% if movement.current_role() not in ["visitor", "anonymous"] %}
+              <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+                <i class="fa fa-fw fa-users"></i> Leave Movement
+              </button>
+            {% else %}
+              <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+                <i class="fa fa-fw fa-users"></i> Join Movement
+              </button>
+            {% endif %}
+            </div>
+          </div>
+
+          <div class="col-sm-8">
+            <p>Only members get full access to the group mind. Come join us!</p>
+          </div>
+        </div>
+
+
+
+
+
+
+
+<!--         <dl class="dl-horizontal dl-sm">
+          <dt>Mission</dt>
+          <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
+            {{ movement.description|default("No mission set", True) }}
+          </a></dd>
+        </dl>
+
+        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
+        members of this movement </p> -->
+    </div> <!-- ./ panel -->
+  </div> <!-- ./ chat column -->
+</section>
+
+{% endblock %}

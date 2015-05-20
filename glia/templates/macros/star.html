@@ -16,8 +16,24 @@
   </span>
 {% endmacro %}
 
+{% macro comments_button(star) %}
+<span>
+    <a class="btn btn-xs btn-default" href="{{ url_for('web.star', id=star.id, _anchor='comments') }}">
+        <span class="oneup-count" id="comment-count-{{star.id}}">{{star.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
+    </a>
+</span>
+{% endmacro %}
 
-{% macro star_lead(star, controlled_personas, truncate=True) %}
+{% macro promote_button(star, movement) %}
+{% if movement.current_role() == "admin" %}
+<span>
+    <button class="btn btn-xs btn-default rk-promote" href="#" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote' data-star-id="{{ star.id }}" data-promote-url="{{ url_for('web.async_promote', movement_id=movement.id) }}">Promote</button>
+</span>
+{% endif %}
+{% endmacro %}
+
+
+{% macro star_lead(star, controlled_personas, truncate=True, promote_to=None) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-lead rk-star-{{ star.id }}">
@@ -47,16 +63,16 @@
   <!-- Meta -->
   <div class="rk-star-meta">
     {{ oneup(star) }}
-    <!-- <span>
-        <button data-target="#comment-modal-{{star.id}}" role="button" class="btn btn-xs" id="comments-{{star.id}}" type="button" data-toggle="modal">
-            <span class="oneup-count" id="comment-count-{{star.id}}">{{star.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
-        </button>
-    </span> -->
+
+    {{ comments_button(star) }}
+
+    {% if promote_to != None %}
+      {{ promote_button(star, movement=promote_to) }}
+    {% endif %}
 
     <span>
         <span class="caption">
-            <a href="{{ url_for('web.star', id=star.id) }}" title="{{star.created}}">
-            <i class="fa fa-star"></i> {{star.created|localtime|naturaltime}}</a>
+            {{star.created|localtime|naturaltime}}
         </span>
     </span>
 
@@ -73,11 +89,19 @@
 
 
 
-{% macro star_line(star, controlled_personas, truncate=True, no_planets=False) %}
+{% macro star_line(star, controlled_personas, truncate=True, no_planets=False, promote_to=None) %}
 
 <!-- STAR {{star.id}} -->
-<div class="rk-star rk-star-line rk-star-{{ star.id }}">
-  {{ oneup(star) }}
+<div class="rk-star rk-star-line rk-star-{{ star.id }} clearfix">
+  <!-- Meta -->
+  <span class="rk-star-meta">
+    {{ oneup(star) }}
+    {{ comments_button(star) }}
+
+    {% if promote_to != None %}
+      {{ promote_button(star, movement=promote_to) }}
+    {% endif %}
+  </span>
 
   <div class="rk-line-container">
     <div class="rk-star-title">
@@ -142,8 +166,11 @@
 
 {% macro comment(star, controlled_personas, no_planets=False) %}
 <!-- STAR {{star.id}} -->
-<div class="rk-star rk-star-line rk-star-{{ star.id }}">
-  {{ oneup(star) }}
+<div class="rk-star rk-star-line rk-star-{{ star.id }} clearfix">
+  <!-- Meta -->
+  <span class="rk-star-meta">
+    {{ oneup(star) }}
+  </span>
 
   <div class="rk-line-container">
     <div class="rk-star-meta">
@@ -204,12 +231,12 @@
 
 {% if deep > 0 %}
   {% set new_deep=(deep-1) %}
-  <div class="rk-replies">
+  <div class="rk-replies clearfix">
     {% for c in star.comments %}
       {% if c.context_length > 0 %}
       {{ comment_tree(c, controlled_personas, deep=new_deep) }}
       {% else %}
-      <small>[<a href="{{ url_for('web.star', id=c.id) }}">This reply
+      <small>[<a href="{{ url_for('web.star', id=c.id) }}">Reply
       was hidden from this context by the author</a>]</small>
       {% endif %}
     {% endfor %}

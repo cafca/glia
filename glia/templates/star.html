@@ -62,6 +62,7 @@ $(document).ready(function() {
       </div>
     </div> <!-- ./ star listing -->
 
+    <a id="comments" />
     <div class="rk-star-reply row">
       <div class="col-sm-6">
         <form class="rk-create">
@@ -87,13 +88,12 @@ $(document).ready(function() {
     <p><a href="#" id="rk-star-context-length"></a></p>
 
     {% if star.starmaps|length > 0 %}
-    <p>Posted to.</p>
+    <p>Posted on:</p>
     <ul>
     {% for map in star.starmaps %}
-      {% for identity in map.contexts %}
-        {% set map_template = "web.{}".format(identity.kind) %}
-        <li><a href="{{ url_for(map_template, id=identity.id) }}">{{ identity.username }}</a></li>
-      {% endfor %}
+      {% if map.get_absolute_url() %}
+      <li><a href="{{ map.get_absolute_url() }}">{{ map.name }}</a></li>
+      {% endif %}
     {% endfor %}
     </ul>
     {% else %}

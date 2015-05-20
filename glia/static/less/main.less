@@ -51,6 +51,10 @@ a > .fa:hover {
 .member .member-only { display: inherit; }
 .member .non-member-only { display: none; }
 
+.rk-promote {
+    border-color: #fb4e0b;
+}
+
 //
 // HEADER
 //
@@ -181,16 +185,17 @@ a > .fa:hover {
 .rk-star-line {
     margin-bottom: 1em;
 
-    .oneup {
-        float: left;
-    }
-
     .rk-line-container {
-        margin-left: 2.5em;
+        float: left
     }
 
     .rk-star-meta {
         color: lighten(gray, 10%);
+
+        .btn {
+            float: left;
+            margin-right: 3px;
+        }
     }
 
     .rk-create {

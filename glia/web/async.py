@@ -10,6 +10,8 @@
 from flask import render_template, url_for, jsonify, request
 from flask.ext.login import login_required, current_user
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
@@ -126,7 +128,11 @@ def async_toggle_movement_membership(movement_id):
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
-    mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+    try:
+        mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+    except NotImplementedError, e:
+        raise InvalidUsage(str(e))
+
     if mma:
         rv = {
             "role": mma.role,
@@ -187,9 +193,42 @@ def async_movement(movement_id):
         socketio.emit('status',
             {'msg': "{} set a new mission: {}".format(
                 current_user.active_persona.username, new_mission)},
-            room=movement.profile.id, namespace="/movements")
+            room=movement.mindspace.id, namespace="/movements")
 
     return jsonify({"mission": new_mission})
+
+
+@app.route("/async/movement/<movement_id>/promote", methods=["POST"])
+@login_required
+@http_auth.login_required
+def async_promote(movement_id):
+    """Promote a Star to a Movement's blog
+
+    Expects a POST request with fields 'star_id' """
+    star_id = request.form.get('star_id')
+    if not star_id:
+        raise InvalidUsage("Missing request parameter 'star_id'")
+
+    star = Star.query.get_or_404(star_id)
+    movement = Movement.query.get_or_404(movement_id)
+
+    if movement.current_role() != "admin":
+        raise InvalidUsage("Only the admin may promote a Star")
+
+    movement.blog.index.append(star)
+    db.session.add(movement)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError, e:
+        db.session.rollback()
+        app.logger.error("Error promoting {} to {}\n{}".format(
+            star, movement.blog, e))
+        raise InvalidUsage("Error saving to DB", code=500)
+    else:
+        app.logger.info("{} promoted {} to {}".format(
+            current_user.active_persona, star, movement.blog))
+        return jsonify({"message": "The post can now be seen on the movement's blog.", "url": "#"})
 
 
 @app.route("/async/star/<star_id>/", methods=["POST"])
