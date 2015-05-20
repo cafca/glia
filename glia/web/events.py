@@ -59,8 +59,10 @@ def joined(message):
         emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
 
         rv = {"nicknames": [], "ids": []}
-        movement = Movement.query.filter_by(profile_id=message["room_id"]).first()
-        if movement:
+        movement = Movement.query.filter_by(blog_id=message["room_id"]).first()
+        room = Starmap.query.get(message["room_id"])
+        if room and isinstance(room.author, Movement):
+            movement = room.author
             online_cutoff = datetime.datetime.utcnow() - \
                 datetime.timedelta(seconds=15 * 60)
             for gma in movement.members.join(Persona).filter(

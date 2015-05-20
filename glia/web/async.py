@@ -128,7 +128,11 @@ def async_toggle_movement_membership(movement_id):
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
-    mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+    try:
+        mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+    except NotImplementedError, e:
+        raise InvalidUsage(str(e))
+
     if mma:
         rv = {
             "role": mma.role,
@@ -207,6 +211,9 @@ def async_promote(movement_id):
 
     star = Star.query.get_or_404(star_id)
     movement = Movement.query.get_or_404(movement_id)
+
+    if movement.current_role() != "admin":
+        raise InvalidUsage("Only the admin may promote a Star")
 
     movement.blog.index.append(star)
     db.session.add(movement)

@@ -24,14 +24,16 @@
 </span>
 {% endmacro %}
 
-{% macro promote_button(star, movement_id) %}
+{% macro promote_button(star, movement) %}
+{% if movement.current_role() == "admin" %}
 <span>
-    <button class="btn btn-xs btn-default rk-promote" href="#" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote' data-star-id="{{ star.id }}" data-promote-url="{{ url_for('web.async_promote', movement_id=movement_id) }}">Promote</button>
+    <button class="btn btn-xs btn-default rk-promote" href="#" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote' data-star-id="{{ star.id }}" data-promote-url="{{ url_for('web.async_promote', movement_id=movement.id) }}">Promote</button>
 </span>
+{% endif %}
 {% endmacro %}
 
 
-{% macro star_lead(star, controlled_personas, truncate=True, promote_id=None) %}
+{% macro star_lead(star, controlled_personas, truncate=True, promote_to=None) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-lead rk-star-{{ star.id }}">
@@ -64,8 +66,8 @@
 
     {{ comments_button(star) }}
 
-    {% if promote_id != None %}
-      {{ promote_button(star, movement_id=promote_id) }}
+    {% if promote_to != None %}
+      {{ promote_button(star, movement=promote_to) }}
     {% endif %}
 
     <span>
@@ -87,7 +89,7 @@
 
 
 
-{% macro star_line(star, controlled_personas, truncate=True, no_planets=False, promote_id=None) %}
+{% macro star_line(star, controlled_personas, truncate=True, no_planets=False, promote_to=None) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-line rk-star-{{ star.id }} clearfix">
@@ -96,8 +98,8 @@
     {{ oneup(star) }}
     {{ comments_button(star) }}
 
-    {% if promote_id != None %}
-      {{ promote_button(star, movement_id=promote_id) }}
+    {% if promote_to != None %}
+      {{ promote_button(star, movement=promote_to) }}
     {% endif %}
   </span>
 

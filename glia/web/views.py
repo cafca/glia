@@ -111,7 +111,7 @@ def movements(id=None):
             admin=current_user.active_persona,
             created=movement_created,
             modified=movement_created)
-        current_user.active_persona.toggle_movement_membership(movement=movement)
+        current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
         try:
             db.session.add(movement)
             db.session.commit()
@@ -238,10 +238,14 @@ def movement_mindspace(id):
     top_posts = []
     while len(top_posts) < min([15, len(star_selection)]):
         candidate = star_selection.pop(0)
+        candidate.promote_target = None if candidate in movement.blog \
+            else movement
+        app.logger.info("{} '{}'".format(candidate, candidate.promote_target))
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    return render_template('movement_mindspace.html', movement=movement, stars=top_posts)
+    return render_template('movement_mindspace.html',
+        movement=movement, stars=top_posts)
 
 
 @app.route('/movement/<id>/blog', methods=["GET"])
