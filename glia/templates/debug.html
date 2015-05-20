@@ -145,8 +145,8 @@
     <thead>
         <tr>
             <th>ID</id>
-            <th>Name</th>
-            <th>Description</th>
+            <th>Name/Description</th>
+            <th>Members</th>
             <th>Blog</th>
             <th>Mindspace</th>
             <th>Vesicles</th>
@@ -156,8 +156,10 @@
       {% for movement in movements %}
       <tr>
         <td>{{ movement.id }}</td>
-        <td>{{ movement.username }}</td>
-        <td>{{ movement.description }}</td>
+        <td><strong>{{ movement.username }}</strong> <br /> {{ movement.description }}</td>
+        <td>{% for mma in movement.members %}
+        <p>{{ loop.index }}: {{ mma.persona.username }} ({{ mma.role }})</p>
+        {% endfor %}</td>
         <td>{{ movement.blog }}</td>
         <td>{{ movement.mindspace }}</td>
         <td>{{ movement.vesicles | length }}</td>
