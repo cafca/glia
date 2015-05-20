@@ -10,6 +10,8 @@
 from flask import render_template, url_for, jsonify, request
 from flask.ext.login import login_required, current_user
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
@@ -190,6 +192,36 @@ def async_movement(movement_id):
             room=movement.mindspace.id, namespace="/movements")
 
     return jsonify({"mission": new_mission})
+
+
+@app.route("/async/movement/<movement_id>/promote", methods=["POST"])
+@login_required
+@http_auth.login_required
+def async_promote(movement_id):
+    """Promote a Star to a Movement's blog
+
+    Expects a POST request with fields 'star_id' """
+    star_id = request.form.get('star_id')
+    if not star_id:
+        raise InvalidUsage("Missing request parameter 'star_id'")
+
+    star = Star.query.get_or_404(star_id)
+    movement = Movement.query.get_or_404(movement_id)
+
+    movement.profile.index.append(star)
+    db.session.add(movement)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError, e:
+        db.session.rollback()
+        app.logger.error("Error promoting {} to {}\n{}".format(
+            star, movement.profile, e))
+        raise InvalidUsage("Error saving to DB", code=500)
+    else:
+        app.logger.info("{} promoted {} to {}".format(
+            current_user.active_persona, star, movement.profile))
+        return jsonify({"message": "The post can now be seen on the movement's blog.", "url": "#"})
 
 
 @app.route("/async/star/<star_id>/", methods=["POST"])

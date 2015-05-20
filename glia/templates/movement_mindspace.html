@@ -76,9 +76,9 @@ $(document).ready(function() {
     </div>
     {% for star in stars %}
       {% if loop.first %}
-        {{ star_macros.star_lead(star, controlled_personas) }}
+        {{ star_macros.star_lead(star, controlled_personas, promote_id=movement.id) }}
       {% else %}
-        {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
+        {{ star_macros.star_line(star, controlled_personas, no_planets=True, promote_id=movement.id) }}
       {% endif %}
     {% endfor %}
   </div> <!-- ./ star listing -->

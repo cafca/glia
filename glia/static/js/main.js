@@ -167,6 +167,23 @@ $(document).ready(function(){
         $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
 
         //
+        // PROMOTE BUTTON
+        //
+
+        $('.rk-promote').click(function() {
+            $(this).prop("disabled", "true");
+            $(this).button("loading");
+            var data = {
+                "star_id": $(this).data("star-id"),
+            }
+            $.post($(this).data("promote-url"), data)
+              .done(function(data) {
+                notification("Star Promotion", data["message"]);
+                $(".rk-promote").button("reset");
+              });
+          });
+
+        //
         // CHAT BEHAVIOR
         //
 
