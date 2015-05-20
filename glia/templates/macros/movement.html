@@ -6,7 +6,7 @@
 {% macro nav(movement, current) %}
 {% set nav_items = {
   "Blog": url_for("web.movement_blog", id=movement.id),
-  "Mindspace": url_for("web.movement", id=movement.id),
+  "Mindspace": url_for("web.movement_mindspace", id=movement.id),
   "Reflection": "#"
 } %}
 
@@ -19,7 +19,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="{{ url_for('web.movement', id=movement.id) }}">{{ movement.username }}</a>
+      <a class="navbar-brand" href="{{ url_for('web.movement_mindspace', id=movement.id) }}">{{ movement.username }}</a>
     </div> <!-- ./ navbar-header -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">

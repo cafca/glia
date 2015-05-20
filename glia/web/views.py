@@ -211,7 +211,7 @@ def persona(id=None):
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 @login_required
 @http_auth.login_required
-def movement(id):
+def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
     if not movement:

@@ -88,11 +88,11 @@ $(document).ready(function() {
     <p><a href="#" id="rk-star-context-length"></a></p>
 
     {% if star.starmaps|length > 0 %}
-    <p>Posted to.</p>
+    <p>Posted on:</p>
     <ul>
     {% for map in star.starmaps %}
-      {% if map.absolute_url() %}
-      <li><a href="{{ map.absolute_url() }}">{{ map.name }}</a></li>
+      {% if map.get_absolute_url() %}
+      <li><a href="{{ map.get_absolute_url() }}">{{ map.name }}</a></li>
       {% endif %}
     {% endfor %}
     </ul>
