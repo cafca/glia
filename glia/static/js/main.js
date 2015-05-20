@@ -32,7 +32,7 @@ $(document).ready(function(){
         $('#rk-chat-nicknames').empty();
         for (var i in nicknames) {
           if (ids[i] == window.admin_id) {
-            $('#rk-chat-nicknames').append($('<strong>').text(nicknames[i] + " [a]"));
+            $('#rk-chat-nicknames').append($('<strong>').text(nicknames[i] + " (Administrator)"));
           } else {
             $('#rk-chat-nicknames').append($('<strong>').text(nicknames[i]));
           }
@@ -180,6 +180,10 @@ $(document).ready(function(){
               .done(function(data) {
                 notification("Star Promotion", data["message"]);
                 $(".rk-promote").button("reset");
+              })
+              .error(function(data) {
+                notification("Error promoting Star", data["message"]);
+                $(".rk-promote").button("reset");
               });
           });
 
@@ -233,6 +237,10 @@ $(document).ready(function(){
                 .done(function (data) {
                     location.reload();
                 })
+                .error(function(data) {
+                    notification("Error", data.responseJSON["message"]);
+                    $("#rk-movement-follower").button('reset');
+                })
         });
 
         $("#rk-movement-member").click(function() {
@@ -240,6 +248,11 @@ $(document).ready(function(){
             $.post($("#rk-movement-member").data("href"))
                 .done(function (data) {
                     location.reload();
+                })
+                .error(function(data) {
+                    console.log(data);
+                    notification("Error", data.responseJSON["message"]);
+                    $("#rk-movement-member").button('reset');
                 })
         });
 
@@ -273,7 +286,7 @@ $(document).ready(function(){
                 'map_id': $map,
             }, function(data) {
                 if (data.status == "success") {
-                    notification("Repost", data.message);
+                    notification("Repost", data.responseJSON["message"]);
                 }
             });
             $btn.button('success');
