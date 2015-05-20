@@ -208,7 +208,7 @@ def async_promote(movement_id):
     star = Star.query.get_or_404(star_id)
     movement = Movement.query.get_or_404(movement_id)
 
-    movement.profile.index.append(star)
+    movement.blog.index.append(star)
     db.session.add(movement)
 
     try:
@@ -216,11 +216,11 @@ def async_promote(movement_id):
     except SQLAlchemyError, e:
         db.session.rollback()
         app.logger.error("Error promoting {} to {}\n{}".format(
-            star, movement.profile, e))
+            star, movement.blog, e))
         raise InvalidUsage("Error saving to DB", code=500)
     else:
         app.logger.info("{} promoted {} to {}".format(
-            current_user.active_persona, star, movement.profile))
+            current_user.active_persona, star, movement.blog))
         return jsonify({"message": "The post can now be seen on the movement's blog.", "url": "#"})
 
 

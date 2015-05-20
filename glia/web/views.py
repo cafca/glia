@@ -208,6 +208,19 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
+@app.route('/movement/<id>/')
+@login_required
+@http_auth.login_required
+def movement(id):
+    """Redirect user depending on whether he is a member or not"""
+    movement = Movement.query.get_or_404(id)
+    if movement.current_role() in ["member", "admin"]:
+        rv = redirect(url_for("web.movement_mindspace", id=id))
+    else:
+        rv = redirect(url_for("web.movement_blog", id=id))
+    return rv
+
+
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 @login_required
 @http_auth.login_required
@@ -231,14 +244,14 @@ def movement_mindspace(id):
     return render_template('movement_mindspace.html', movement=movement, stars=top_posts)
 
 
-@app.route('/movement/<id>', methods=["GET"])
+@app.route('/movement/<id>/blog', methods=["GET"])
 @login_required
 @http_auth.login_required
 def movement_blog(id):
     """Display a movement's profile"""
     movement = Movement.query.get_or_404(id)
 
-    star_selection = movement.profile.index.filter(Star.state >= 0).order_by(Star.created.desc())
+    star_selection = movement.blog.index.filter(Star.state >= 0).order_by(Star.created.desc())
 
     return render_template('movement_blog.html', movement=movement, stars=star_selection)
 

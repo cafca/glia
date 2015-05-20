@@ -62,7 +62,7 @@ window.admin_id = "{{ persona.id }}";
         </div>
 
         <div class="col-sm-9 rk-persona-movements-posts star-listing">
-          {% for star in mma.movement.profile.index.filter_by(author=persona).limit(3) %}
+          {% for star in mma.movement.blog.limit(3) %}
             {{ star_macros.star_line(star, controlled_personas) }}
           {% endfor %}
         </div>
