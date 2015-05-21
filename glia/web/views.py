@@ -240,7 +240,6 @@ def movement_mindspace(id):
         candidate = star_selection.pop(0)
         candidate.promote_target = None if candidate in movement.blog \
             else movement
-        app.logger.info("{} '{}'".format(candidate, candidate.promote_target))
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
