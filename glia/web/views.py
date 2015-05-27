@@ -247,14 +247,18 @@ def movement_mindspace(id):
         movement=movement, stars=top_posts)
 
 
-@app.route('/movement/<id>/blog', methods=["GET"])
+@app.route('/movement/<id>/blog/', methods=["GET"])
+@app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
 @login_required
 @http_auth.login_required
-def movement_blog(id):
+def movement_blog(id, page=1):
     """Display a movement's profile"""
     movement = Movement.query.get_or_404(id)
 
-    star_selection = movement.blog.index.filter(Star.state >= 0).order_by(Star.created.desc())
+    star_selection = movement.blog.index \
+        .filter(Star.state >= 0) \
+        .order_by(Star.created.desc()) \
+        .paginate(page, 5)
 
     return render_template('movement_blog.html', movement=movement, stars=star_selection)
 
