@@ -22,6 +22,7 @@ from humanize.time import naturaldelta
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona, get_active_persona
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona
+from glia.helpers import inject_mentions
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -91,6 +92,9 @@ def create_app(log_info=True):
     app.jinja_env.filters['naturaltime'] = naturaltime
     app.jinja_env.filters['naturaldelta'] = naturaldelta
     app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
+
+    # Additional template filters
+    app.jinja_env.filters['mentions'] = inject_mentions
 
     # Setup debug toolbar
     toolbar = DebugToolbarExtension()

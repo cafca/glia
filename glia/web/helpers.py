@@ -12,7 +12,7 @@ from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy import inspect
 
 from nucleus.nucleus.models import LinkPlanet, LinkedPicturePlanet, \
-    TextPlanet, TagPlanet
+    TextPlanet, TagPlanet, Identity, Mention
 
 logger = logging.getLogger('web')
 
@@ -159,6 +159,31 @@ def find_tags(text):
     return (rv, text_new) if len(text_new) > 0 else (rv, text)
 
 
+def find_mentions(text):
+    """Given some text, find mentioned Identities formatted as "@<username>
+
+    Args:
+        text: input text
+
+    Returns:
+        iterable: pairs of (mention_text, Identity_object)
+    """
+
+    expr = "@([\S]{3,80})"
+    rv = []
+
+    res = re.findall(expr, text)
+    for mention_text in res:
+        ident = Identity.query.filter_by(username=mention_text).first()
+        if ident is not None:
+            rv.append((mention_text, ident))
+        else:
+            logger.warning("No ident found corresponding to mention \
+                {}".format(mention_text))
+
+    return rv
+
+
 def process_attachments(text):
     """Given some text a user entered, extract all attachments
     hinted at and return user message plus a list of Planet objects.
@@ -182,6 +207,11 @@ def process_attachments(text):
     for tag in tags:
         tagplanet = TagPlanet(title=tag)
         planets.append(tagplanet)
+
+    mentions = find_mentions(text)
+    for mention_text, ident in mentions:
+        mention = Mention(identity=ident, text=mention_text)
+        planets.append(mention)
 
     links, text = find_links(text)
     for link in links:

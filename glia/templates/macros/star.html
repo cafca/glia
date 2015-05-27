@@ -38,7 +38,7 @@
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-lead rk-star-{{ star.id }}">
   <span class="rk-star-title">
-    <a href="{{ url_for('web.star', id=star.id) }}"><h2>{{ star.text }}</h2></a>
+    <a href="{{ url_for('web.star', id=star.id) }}"><h2>{{ star.text|mentions(star, nolink=True) }}</h2></a>
   </span>
 
   <!-- Attachments -->
@@ -105,7 +105,7 @@
 
   <div class="rk-line-container">
     <div class="rk-star-title">
-      <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text }}</a>
+      <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text|mentions(star, nolink=True) }}</a>
       {% if no_planets %}
       {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
       {% endif %}
@@ -144,7 +144,7 @@
   <div class="panel">
     <a href="{{ url_for('web.star', id=star.id) }}">
       <div class="rk-star-box-content">
-        <p>{{ star.text}}</p>
+        <p>{{ star.text|mentions(star, nolink=True) }}</p>
         <div class="rk-star-box-planets">{% for planet_assoc in star.planet_assocs|sort(attribute='sort_rank') %}
         {{ planet_macros.planet_icon(planet_assoc.planet)}}
         {% endfor %}</div>
@@ -181,7 +181,7 @@
     </div>
 
     <div class="rk-star-title">
-      <p>{{ star.text }}</p>
+      <p>{{ star.text|mentions(star) }}</p>
       {% if no_planets %}
       {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
       {% endif %}
