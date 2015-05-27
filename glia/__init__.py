@@ -93,8 +93,9 @@ def create_app(log_info=True):
     app.jinja_env.filters['naturaldelta'] = naturaldelta
     app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
 
-    # Additional template filters
+    # Additional template filters and extensions
     app.jinja_env.filters['mentions'] = inject_mentions
+    app.jinja_env.add_extension('jinja2.ext.do')
 
     # Setup debug toolbar
     toolbar = DebugToolbarExtension()
