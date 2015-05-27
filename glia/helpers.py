@@ -3,6 +3,7 @@ import sys
 
 from colorlog import ColoredFormatter
 from flask import Request, session
+from jinja2 import Environment, PackageLoader, Markup, evalcontextfilter
 
 formatter = ColoredFormatter(
     "%(log_color)s%(name)s :: %(module)s [%(filename)s:%(lineno)d]%(reset)s %(message)s",
@@ -97,3 +98,30 @@ def get_active_persona():
         return Persona.query.get(session['active_persona'])
     else:
         return None
+
+
+@evalcontextfilter
+def inject_mentions(eval_ctx, text, star, nolink=False):
+    """Replace portions of Star text with a link to the mentioned Identity for
+    every mention registered on the Star"""
+
+    from flask import url_for
+    env = Environment(loader=PackageLoader('glia', 'templates'))
+    env.globals['url_for'] = url_for
+    template = env.get_template('macros/identity.html')
+    mentions = [pa.planet for pa in star.planet_assocs.all() if pa.planet.kind == "mention"]
+
+    for mention in mentions:
+        if mention.identity.kind == "persona":
+            rendered_link = template.module.persona(mention.identity, nolink=nolink)
+        else:
+            rendered_link = template.module.movement(mention.identity, nolink=nolink)
+
+        if eval_ctx.autoescape:
+            rendered_link = Markup(rendered_link)
+        text = text.replace("".join(["@", mention.text]), rendered_link)
+
+    if eval_ctx.autoescape:
+        text = Markup(text)
+
+    return text

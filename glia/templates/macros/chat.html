@@ -9,7 +9,7 @@
   <span>
     {{ id_macros.persona(star.author) }}
     <a href="{{ url_for('web.star', id=star.id) }}">{{star.created|localtime|naturaltime}} </a>
-    {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True) }}
+    {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(star) }}
   </span>
   <div>
   {% for tagp in star.tags %}<a href="{{ url_for('web.tag', name=tagp.planet.tag.name) }}">#{{ tagp.planet.title }}</a>&nbsp;{% endfor %}
