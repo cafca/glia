@@ -3,6 +3,7 @@
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/star.html" as star_macros %}
 {% import "macros/movement.html" as movement_macros %}
+{% import "macros/helpers.html" as helper_macros %}
 
 {% block script %}
 window.room_id = "{{ movement.blog_id }}";
@@ -34,7 +35,7 @@ window.admin_id = "{{ movement.admin_id }}";
 
 
 
-    {% for star in stars %}
+    {% for star in stars.items %}
       {% if loop.first %}
         {{ star_macros.star_lead(star, controlled_personas) }}
       {% else %}
@@ -46,6 +47,9 @@ window.admin_id = "{{ movement.admin_id }}";
         <p class="lead">This movement is just getting started. You can become a member now to help them out or follow this movement, then wait and see.</p>
       </div>
     {% endfor %}
+
+    {{ helper_macros.paginate(stars) }}
+
   </div> <!-- ./ star listing -->
 
   <div class="col-sm-8 col-sm-push-2">

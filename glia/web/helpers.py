@@ -122,8 +122,8 @@ def find_links(text):
                 logger.info("Testing potential link '{}' for availability".format(c_schemed))
                 try:
                     res = requests.head(c_schemed, timeout=3.0)
-                except (requests.exceptions.RequestException, ValueError):
-                    # The link failed
+                except (requests.exceptions.RequestException, ValueError), e:
+                    logger.info("Not a suitable link ({})".format(e))
                     rejects.add(c_schemed)
                 else:
                     if res and res.status_code < 400:
@@ -131,6 +131,9 @@ def find_links(text):
                         # Only remove link if it occurs at the end of text
                         if (text.index(c) + len(c)) == len(text.rstrip()):
                             text = text.replace(c, "")
+                    else:
+                        res = "No response object" if res is None else res
+                        logger.info("Not a suitable link ({})\n{}".format(res, c_schemed))
     return (rv, text)
 
 
