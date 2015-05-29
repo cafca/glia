@@ -195,10 +195,8 @@ $(document).ready(function(){
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
             var $parent = $(this).find('.rk-create-parent').val();
-            console.log($(this).find("#rk-create-counter")[0].hasClass("safe"));
-            event.preventDefault();
 
-            if ($(this).find("#rk-create-counter").hasClass("safe")) {
+            if ($(this).find($("#rk-create-counter")).hasClass("safe")) {
                 $btn.button('loading');
                 socket.emit('text', {
                         'msg': $text,
