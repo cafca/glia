@@ -3,37 +3,25 @@
 {% import "macros/star.html" as star_macros %}
 
 {% block script %}
-$('#text').simplyCountable({
-    counter:            '#rk-create-counter',
-    countType:          'characters',
-    maxCount:           140,
-    strictMax:          false,
-    countDirection:     'down',
-    safeClass:          'safe',
-    overClass:          'over',
-    thousandSeparator:  ',',
-    onOverCount:        function(count, countable, counter){
-        $(".rk-create-submit").prop("disabled", true);
-    },
-    onSafeCount:        function(count, countable, counter){
-        $(".rk-create-submit").prop("disabled", false);
-    },
-    onMaxCount:         function(count, countable, counter){}
+$(document).ready(function() {
+  $('#text').simplyCountable({
+      counter:            '#rk-create-counter',
+      countType:          'characters',
+      maxCount:           140,
+      strictMax:          false,
+      countDirection:     'down',
+      safeClass:          'safe',
+      overClass:          'over',
+      thousandSeparator:  ',',
+      onOverCount:        function(count, countable, counter){
+          $(".rk-create-submit").prop("disabled", true);
+      },
+      onSafeCount:        function(count, countable, counter){
+          $(".rk-create-submit").prop("disabled", false);
+      },
+      onMaxCount:         function(count, countable, counter){}
+  });
 });
-
-$("rk-longform").submit(function(event) {
-  if ($("#rk-create-counter").hasClass("over")) {
-    alert("The title is too long");
-    event.preventDefault();
-  }
-});
-
-{% if starmap %}
-$(".rk-create-cancel").click(function(event) {
-  event.preventDefault();
-  window.location.href = "{{ starmap.get_absolute_url() }}";
-})
-{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -64,10 +52,10 @@ $(".rk-create-cancel").click(function(event) {
 
   <div class="pull-right">
   {% if starmap %}
-  <button class="btn btn-default rk-create-cancel">Cancel</button>
-  <button type="submit" class="btn btn-primary rk-create-submit">Send to {{ starmap.name }}</button>
+  <a class="btn btn-default rk-create-cancel" href="{{ starmap.get_absolute_url() }}">Cancel</a>
+  <input type="submit" class="btn btn-primary rk-create-submit" value="Send to {{ starmap.name }}" \>
   {% else %}
-  <button type="submit" class="btn btn-primary rk-create-submit">Create</button>
+  <input type="submit" class="btn btn-primary rk-create-submit" value="Create" \>
   {% endif %}
   </div>
 </form>
