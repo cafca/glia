@@ -93,7 +93,10 @@ class CreateMovementForm(Form):
 
 class CreateStarForm(Form):
     parent = HiddenField()
-    text = TextAreaField('Enter your reply', [validators.Required()])
+    starmap = HiddenField()
+    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
+    longform = TextAreaField('Add more detail')
+    lfsource = TextField('Source of longform (eg. website URL)', [validators.Length(max=128)])
 
     def validate(self):
         rv = Form.validate(self)
