@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% import "macros/star.html" as star_macros %}
+
+{% block script %}
+$('#text').simplyCountable({
+    counter:            '#rk-create-counter',
+    countType:          'characters',
+    maxCount:           140,
+    strictMax:          false,
+    countDirection:     'down',
+    safeClass:          'safe',
+    overClass:          'over',
+    thousandSeparator:  ',',
+    onOverCount:        function(count, countable, counter){
+        $(".rk-create-submit").prop("disabled", true);
+    },
+    onSafeCount:        function(count, countable, counter){
+        $(".rk-create-submit").prop("disabled", false);
+    },
+    onMaxCount:         function(count, countable, counter){}
+});
+
+$("rk-longform").submit(function(event) {
+  if ($("#rk-create-counter").hasClass("over")) {
+    alert("The title is too long");
+    event.preventDefault();
+  }
+});
+
+{% if starmap %}
+$(".rk-create-cancel").click(function(event) {
+  event.preventDefault();
+  window.location.href = "{{ starmap.get_absolute_url() }}";
+})
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-sm-6 col-sm-push-3">
+<h1>Create Star</h1>
+
+<form method="POST" action="{{ url_for('web.create_star') }}" class="rk-longform">
+  {% if parent %}
+  <p class="lead">In response to:</p>
+  <blockquote style="font-size: 14px;">
+    <div class="panel panel-default">
+      <div class="panel-body">{{ star_macros.star_line(parent) }}</div>
+    </div>
+  </blockquote>
+  {% endif %}
+
+  <div class="form-group">
+    <label for="text">Title</label>
+    <span id="rk-create-counter" class="pull-right"></span>
+    <input type="text" class="form-control rk-longform-title" id="text" name="text" placeholder="Enter text">
+  </div>
+
+  <div class="form-group">
+    <label for="longtext">Text</label>
+    <textarea id="rk-longform-text" class="form-control" id="longtext">{{ text }}</textarea>
+  </div>
+
+  <div class="pull-right">
+  {% if starmap %}
+  <button class="btn btn-default rk-create-cancel">Cancel</button>
+  <button type="submit" class="btn btn-primary rk-create-submit">Send to {{ starmap.name }}</button>
+  {% else %}
+  <button type="submit" class="btn btn-primary rk-create-submit">Create</button>
+  {% endif %}
+  </div>
+</form>
+</div>
+</div>
+{% endblock %}

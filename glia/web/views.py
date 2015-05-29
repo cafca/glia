@@ -263,11 +263,25 @@ def movement_blog(id, page=1):
     return render_template('movement_blog.html', movement=movement, stars=star_selection)
 
 
-@app.route('/stars/', methods=["POST"])
+@app.route('/create', methods=["GET", "POST"])
 @http_auth.login_required
 def create_star():
     """Post a new Star"""
-    pass
+
+    text = request.form.get("text", None)
+
+    if "starmap" in request.form:
+        sm = Starmap.query.get_or_404(request.form['starmap'])
+    else:
+        sm = None
+
+    if "parent" in request.form:
+        parent = Star.query.get_or_404(request.form['parent'])
+    else:
+        parent = None
+
+    return render_template("create_star.html",
+        text=text, starmap=sm, parent=parent)
 
 
 @app.route('/login', methods=["GET", "POST"])

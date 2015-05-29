@@ -191,22 +191,46 @@ $(document).ready(function(){
         // CHAT BEHAVIOR
         //
 
-        $('.rk-create').submit(function () {
+        $('.rk-create').submit(function(event) {
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
             var $parent = $(this).find('.rk-create-parent').val();
+            console.log($(this).find("#rk-create-counter")[0].hasClass("safe"));
+            event.preventDefault();
 
-            $btn.button('loading');
-            socket.emit('text', {
-                    'msg': $text,
-                    'room_id': window.room_id,
-                    'map_id': window.map_id,
-                    'parent_id': $parent
-                }, function(data) {
-                    $btn.button('reset');
-            });
-            clear();
-            return false;
+            if ($(this).find("#rk-create-counter").hasClass("safe")) {
+                $btn.button('loading');
+                socket.emit('text', {
+                        'msg': $text,
+                        'room_id': window.room_id,
+                        'map_id': window.map_id,
+                        'parent_id': $parent
+                    }, function(data) {
+                        $btn.button('reset');
+                });
+                clear();
+                event.preventDefault();
+            }
+        });
+
+        $('.rk-create-text').simplyCountable({
+            counter:            '#rk-create-counter',
+            countType:          'characters',
+            maxCount:           140,
+            strictMax:          false,
+            countDirection:     'down',
+            safeClass:          'safe',
+            overClass:          'over',
+            thousandSeparator:  ',',
+            onOverCount:        function(count, countable, counter){
+                countable.parent().find(".rk-create-submit").prop("disabled", true);
+                countable.parent().find(".rk-create-extend").toggle("highlight");
+            },
+            onSafeCount:        function(count, countable, counter){
+                countable.parent().find(".rk-create-submit").prop("disabled", false);
+                countable.parent().find(".rk-create-extend").toggle("highlight");
+            },
+            onMaxCount:         function(count, countable, counter){}
         });
 
         $(".rk-create-display-toggle").click(function() {
