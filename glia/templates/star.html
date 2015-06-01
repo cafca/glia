@@ -67,7 +67,7 @@ $(document).ready(function() {
     <div class="rk-star-reply row">
       <div class="col-sm-6">
         <form class="rk-create">
-        <div class="pull-right" id="rk-create-counter"></div>
+        <div class="pull-right rk-create-counter"></div>
         <div class="rk-create-extend">
           <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
         </div>
@@ -92,7 +92,7 @@ $(document).ready(function() {
     <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-star-context-length"></a></p>
 
-    <p>{{ star.starmap.name }}</p>
+    <p>Posted on <a href="{{ star.starmap.get_absolute_url() }}">{{ star.starmap.name }}</a></p>
 
     {{ star_macros.repost_button(star) }}
 

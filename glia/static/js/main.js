@@ -211,25 +211,28 @@ $(document).ready(function(){
             }
         });
 
-        $('.rk-create-text').simplyCountable({
-            counter:            '#rk-create-counter',
-            countType:          'characters',
-            maxCount:           140,
-            strictMax:          false,
-            countDirection:     'down',
-            safeClass:          'safe',
-            overClass:          'over',
-            thousandSeparator:  ',',
-            onOverCount:        function(count, countable, counter){
-                countable.parent().find(".rk-create-submit").prop("disabled", true);
-                countable.parent().find(".rk-create-extend").toggle("highlight");
-            },
-            onSafeCount:        function(count, countable, counter){
-                countable.parent().find(".rk-create-submit").prop("disabled", false);
-                countable.parent().find(".rk-create-extend").toggle("highlight");
-            },
-            onMaxCount:         function(count, countable, counter){}
-        });
+        $('.rk-create-text').each(function(index, obj) {
+            $(obj).simplyCountable({
+                counter:            ":parent:parent .rk-create-counter",
+                countType:          'characters',
+                maxCount:           140,
+                strictMax:          false,
+                countDirection:     'down',
+                safeClass:          'safe',
+                overClass:          'over',
+                thousandSeparator:  ',',
+                onOverCount:        function(count, countable, counter){
+                    console.log(counter);
+                    countable.parent().find(".rk-create-submit").prop("disabled", true);
+                    countable.parent().find(".rk-create-extend").toggle("highlight");
+                },
+                onSafeCount:        function(count, countable, counter){
+                    countable.parent().find(".rk-create-submit").prop("disabled", false);
+                    countable.parent().find(".rk-create-extend").toggle("highlight");
+                },
+                onMaxCount:         function(count, countable, counter){}
+            });
+        })
 
         //
         // CHAT BEHAVIOR
