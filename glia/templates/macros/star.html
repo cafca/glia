@@ -211,6 +211,10 @@
     <div class="rk-star-meta">
       <small><a href="#" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
       <form class="rk-create" style="display: none">
+        <div class="pull-right" id="rk-create-counter"></div>
+        <div class="rk-create-extend">
+          <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
+        </div>
         <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
         <div class="form-group">
           <textarea class="form-control rk-create-text" name="text"></textarea>

@@ -13,14 +13,14 @@ import traceback
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from forms import LoginForm, SignupForm, CreateMovementForm
+from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
+    DeleteStarForm, CreateStarForm
 from uuid import uuid4
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import app
 from .. import socketio
-from glia.web.forms import DeleteStarForm, CreateStarForm
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, process_attachments
 from nucleus.nucleus.database import db
@@ -145,7 +145,7 @@ def star(id=None):
         flash("This Star is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
-    reply_form = CreateStarForm(parent=star.id)
+    reply_form = CreateReplyForm(parent=star.id)
 
     return render_template("star.html", star=star, context=context,
         reply_form=reply_form)

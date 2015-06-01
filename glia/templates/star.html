@@ -66,6 +66,10 @@ $(document).ready(function() {
     <div class="rk-star-reply row">
       <div class="col-sm-6">
         <form class="rk-create">
+        <div class="pull-right" id="rk-create-counter"></div>
+        <div class="rk-create-extend">
+          <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
+        </div>
           <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
           <div class="form-group">
             <textarea class="form-control rk-create-text" name="text"></textarea>

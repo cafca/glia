@@ -188,7 +188,7 @@ $(document).ready(function(){
           });
 
         //
-        // CHAT BEHAVIOR
+        // CREATE STAR
         //
 
         $('.rk-create').submit(function(event) {
@@ -230,6 +230,10 @@ $(document).ready(function(){
             },
             onMaxCount:         function(count, countable, counter){}
         });
+
+        //
+        // CHAT BEHAVIOR
+        //
 
         $(".rk-create-display-toggle").click(function() {
             var $form = $(".rk-star-"+$(this).data("id")+" .rk-create");

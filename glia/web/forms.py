@@ -100,12 +100,22 @@ class CreateStarForm(Form):
 
     def validate(self):
         rv = Form.validate(self)
-        if rv:
+        if rv and self.parent.data:
             parent = Star.query.get(self.parent.data)
             if parent is None:
                 rv = False
-                logger.warning("Reply form failed because parent '{}' could not \
+                logger.warning("Create Star form failed because parent '{}' could not \
                     be found.".format(self.parent.data))
                 self.parent.errors.append("Can't find the post you are \
                     replying to. Please try reloading the page.")
+        return rv
+
+
+class CreateReplyForm(CreateStarForm):
+    def validate(self):
+        rv = CreateStarForm.validate(self)
+        if rv and self.parent.data is None:
+            logger.warning("Reply form failed because no parent id was given")
+            self.parent.errors.append("Can't find the post you are \
+                replying to. Please try reloading the page.")
         return rv
