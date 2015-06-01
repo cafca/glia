@@ -84,24 +84,17 @@ def text(message):
     star_id = uuid4().hex
     errors = ""
     author = current_user.active_persona
+    parent_star = None
 
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
 
-    map = Starmap.query.get(message["map_id"]) if "map_id" in message else None
-
-    if not message["parent_id"]:
-        if isinstance(map, Starmap):
-            # check whether there really is no post yet in the map
-            map_content = map.index.first()
-            if map_content is None:
-                parent_star = None
-            else:
-                errors += "Please try submitting your message again: '{}' ".format(
-                    message["msg"])
-        else:
-            errors += "Neither map nor parent specified"
+    if "map_id" not in message:
+        errors += "No Starmap context given."
     else:
+        map = Starmap.query.get(message["map_id"])
+
+    if message["parent_id"]:
         parent_star = Star.query.get(message["parent_id"])
         if parent_star is None:
             errors += "Could not find the message before yours. "
@@ -113,12 +106,9 @@ def text(message):
             author=author,
             parent=parent_star,
             created=star_created,
-            modified=star_created)
+            modified=star_created,
+            starmap_id=map.id)
         db.session.add(star)
-
-        if isinstance(map, Starmap):
-            map.index.append(star)
-            db.session.add(map)
 
         text, planets = process_attachments(star.text)
         star.text = text

@@ -287,7 +287,7 @@ def create_star():
     if "parent" in request.args:
         form.parent.data = request.args['parent']
 
-    sm = Starmap.query.get_or_404(form.starmap.data) if form.starmap.data else None
+    sm = Starmap.query.get_or_404(form.starmap.data)
     parent = Star.query.get_or_404(form.parent.data) if form.parent.data else None
 
     if form.validate_on_submit():
@@ -297,12 +297,9 @@ def create_star():
             author=author,
             parent=parent,
             created=star_created,
-            modified=star_created)
+            modified=star_created,
+            starmap_id=sm.id)
         db.session.add(star)
-
-        if isinstance(sm, Starmap):
-            sm.index.append(star)
-            db.session.add(sm)
 
         text, planets = process_attachments(star.text)
         star.text = text

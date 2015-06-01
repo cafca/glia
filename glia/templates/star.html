@@ -7,6 +7,7 @@
 
 {% block script %}
 window.room_id = "{{ star.id }}";
+window.map_id = "{{ star.starmap_id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 
@@ -91,18 +92,7 @@ $(document).ready(function() {
     <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-star-context-length"></a></p>
 
-    {% if star.starmaps|length > 0 %}
-    <p>Posted on:</p>
-    <ul>
-    {% for map in star.starmaps %}
-      {% if map.get_absolute_url() %}
-      <li><a href="{{ map.get_absolute_url() }}">{{ map.name }}</a></li>
-      {% endif %}
-    {% endfor %}
-    </ul>
-    {% else %}
-    <p>Not posted to any Starmaps.</p>
-    {% endif %}
+    <p>{{ star.starmap.name }}</p>
 
     {{ star_macros.repost_button(star) }}
 
