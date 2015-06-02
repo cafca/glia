@@ -101,7 +101,7 @@ $(document).ready(function(){
     }
 
     function insert_reply(parent_id, rendered_content) {
-        $(".rk-star-"+parent_id+" > .rk-replies").prepend(rendered_content);
+        $(".rk-star-"+parent_id).parent().children(".rk-replies").prepend(rendered_content);
     }
 
     function get_chat_height() {
@@ -196,7 +196,7 @@ $(document).ready(function(){
             var $text = $(this).find('.rk-create-text').val();
             var $parent = $(this).find('.rk-create-parent').val();
 
-            if ($(this).find($("#rk-create-counter")).hasClass("safe")) {
+            if ($(this).find($(".rk-create-counter")).hasClass("safe")) {
                 $btn.button('loading');
                 socket.emit('text', {
                         'msg': $text,
