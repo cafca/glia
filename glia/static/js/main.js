@@ -115,11 +115,11 @@ $(document).ready(function(){
     }
 
     function insert_reply(parent_id, rendered_content) {
-        reply_box = $(".rk-star-"+parent_id).next(".rk-replies");
+        reply_box = $(".rk-star-"+parent_id).siblings(".rk-replies").first();
         if (reply_box.length == 0) {
             $(".rk-star-"+parent_id).after("<div><p>Additional replies hidden.</p></div>");
         } else {
-            $(".rk-star-"+parent_id).next(".rk-replies")
+            reply_box
                 .prepend(rendered_content)
                 .find(".oneup").click(function () {
                     request_upvote(this.dataset.id);
@@ -254,13 +254,14 @@ $(document).ready(function(){
                 overClass:          'over',
                 thousandSeparator:  ',',
                 onOverCount:        function(count, countable, counter){
-                    console.log(counter);
-                    countable.parent().find(".rk-create-submit").prop("disabled", true);
-                    countable.parent().find(".rk-create-extend").toggle("highlight");
+                    form = countable.closest(".rk-create");
+                    form.find(".rk-create-submit").prop("disabled", true);
+                    form.find(".rk-create-extend").toggle("highlight");
                 },
                 onSafeCount:        function(count, countable, counter){
-                    countable.parent().find(".rk-create-submit").prop("disabled", false);
-                    countable.parent().find(".rk-create-extend").toggle("highlight");
+                    form = countable.closest(".rk-create");
+                    form.find(".rk-create-submit").prop("disabled", false);
+                    form.find(".rk-create-extend").toggle("highlight");
                 },
                 onMaxCount:         function(count, countable, counter){}
             });
