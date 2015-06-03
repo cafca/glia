@@ -326,19 +326,24 @@ def create_star():
         else:
             app.logger.info(u"{} {}: {}".format(sm, author.username, star.text))
 
-            # Render using template
+            # Render using templates
+            star_macros_template = current_app.jinja_env.get_template(
+                'macros/star.html')
+            star_macros = star_macros_template.make_module(
+                {'request': request})
+
             data = {
                 'username': author.username,
                 'msg': render_template("chatline.html", star=star),
                 'star_id': star_id,
+                'parent_id': star.parent_id,
+                'parent_short': star_macros.short(star.parent),
                 'vote_count': star.oneup_count()
             }
             socketio.emit('message', data, room=form.starmap.data)
 
-            template = current_app.jinja_env.get_template('macros/star.html')
-            template_module = template.make_module({'request': request})
             reply_data = {
-                'msg': template_module.comment(star),
+                'msg': star_macros.comment(star),
                 'parent_id': form.parent.data
             }
             socketio.emit('comment', reply_data, room=form.parent.data)

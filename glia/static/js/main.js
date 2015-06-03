@@ -62,7 +62,7 @@ $(document).ready(function(){
     });
 
     socket.on('message', function(data) {
-        append_timeline(data.username, data.msg, data.star_id, data.vote_count);
+        append_timeline(data.username, data.msg, data);
         $("#rk-chat-parent").val(data.star_id);
     });
 
@@ -87,12 +87,26 @@ $(document).ready(function(){
     });
 
     // DOM manipulation
-    function append_timeline (from, msg, star_id, vote_count) {
+    function append_timeline (from, msg, data) {
+        if (typeof data == 'undefined') {
+            data = {};
+        }
+        var star_id = data.star_id;
+        var parent_id = data.parent_id;
+        var parent_short = data.parent_short;
+        var vote_count = data.vote_count;
+
         if (star_id === undefined) {
             // Server message
-            $('#rk-chat-lines').append($('<li class="list-group-item">').append($('<em>').text(msg)));
+            $('#rk-chat-lines').append($('<li class="list-group-item rk-system">').append($('<em>').text(msg)));
         } else {
             // Star post
+            if (parent_id != $("#rk-chat-parent").val()) {
+                $('#rk-chat-lines')
+                    .append($('<li class="list-group-item rk-system">')
+                        .append("Comment on "+parent_short)
+                    );
+            }
             $('#rk-chat-lines').append(msg);
             $('#rk-chat-lines .oneup').click(function () {request_upvote(this.dataset.id); return false;});
 

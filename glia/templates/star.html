@@ -6,7 +6,7 @@
 {% import "macros/identity.html" as id_macros %}
 
 {% block script %}
-window.room_id = "{{ star.id }}";
+window.room_id = "{{ star.starmap_id }}";
 window.map_id = "{{ star.starmap_id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";

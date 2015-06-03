@@ -163,6 +163,11 @@
 {% endmacro %}
 
 
+{% macro short(star) %}
+  <a href="{{ url_for('web.star', id=star.id) }}">{{star.author.username}}: {{star.text|mentions(star, nolink=True)}}</a>
+{% endmacro %}
+
+
 
 {% macro comment(star, controlled_personas, no_planets=False) %}
 <!-- STAR {{star.id}} -->
