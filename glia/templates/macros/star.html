@@ -209,7 +209,7 @@
     {% endif %}
 
     <div class="rk-star-meta">
-      <small><a href="#" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
+      <small><a href="{{ url_for('web.create_star', parent=star.id, starmap=star.starmap.id) }}" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
       <form class="rk-create">
         <div class="pull-right rk-create-counter"></div>
         <div class="rk-create-extend">

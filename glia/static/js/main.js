@@ -101,7 +101,23 @@ $(document).ready(function(){
     }
 
     function insert_reply(parent_id, rendered_content) {
-        $(".rk-star-"+parent_id).parent().children(".rk-replies").prepend(rendered_content);
+        reply_box = $(".rk-star-"+parent_id).next(".rk-replies");
+        if (reply_box.length == 0) {
+            $(".rk-star-"+parent_id).after("<div><p>Additional replies hidden.</p></div>");
+        } else {
+            $(".rk-star-"+parent_id).next(".rk-replies")
+                .prepend(rendered_content)
+                .find(".oneup").click(function () {
+                    request_upvote(this.dataset.id);
+                    return false;
+                });
+        }
+    }
+
+    function show_reply_box(star_id) {
+        var $form = $(".rk-star-"+star_id+" .rk-create");
+        $form.css("display", "block");
+        $form.find("textarea").focus();
     }
 
     function get_chat_height() {
@@ -158,6 +174,8 @@ $(document).ready(function(){
                 });
             });
     }
+
+
 
     $(function () {
         //
@@ -239,9 +257,7 @@ $(document).ready(function(){
         //
 
         $(".rk-create-display-toggle").click(function() {
-            var $form = $(".rk-star-"+$(this).data("id")+" .rk-create");
-            $form.css("display", "block");
-            $form.find("textarea").focus();
+            show_reply_box($(this).data("id"));
             return false;
         });
 
