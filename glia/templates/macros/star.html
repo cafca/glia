@@ -169,7 +169,7 @@
 
 
 
-{% macro comment(star, controlled_personas, no_planets=False) %}
+{% macro comment(star, controlled_personas, no_planets=False, truncate=True) %}
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-line rk-star-{{ star.id }} clearfix">
   <!-- Meta -->
@@ -215,12 +215,16 @@
 
     <div class="rk-star-meta">
       <small><a href="{{ url_for('web.create_star', parent=star.id, starmap=star.starmap.id) }}" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
-      <form class="rk-create">
-        <div class="pull-right rk-create-counter"></div>
-        <div class="rk-create-extend">
-          <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
-        </div>
+      <form class="rk-create" action="{{ url_for('web.create_star') }}" method="GET">
         <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
+        <input type="hidden" name="starmap" value="{{ star.starmap_id }}" />
+        <div>
+          <span>&nbsp;</span>
+          <div class="pull-right rk-create-counter"></div>
+          <div class="rk-create-extend">
+            <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
+          </div>
+        </div>
         <div class="form-group">
           <textarea class="form-control rk-create-text" name="text"></textarea>
         </div>
@@ -234,9 +238,9 @@
 
 
 
-{% macro comment_tree(star, controlled_personas, deep=3) %}
+{% macro comment_tree(star, controlled_personas, deep=3, truncate=True) %}
 
-{{ comment(star, controlled_personas) }}
+{{ comment(star, controlled_personas, truncate=truncate) }}
 
 {% if deep > 0 %}
   {% set new_deep=(deep-1) %}

@@ -82,7 +82,7 @@ $(document).ready(function() {
 
     <div class="rk-star-listing rk-comments rk-replies">
     {% for s in star.comments %}
-      {{ star_macros.comment_tree(s, controlled_personas) }}
+      {{ star_macros.comment_tree(s, controlled_personas, truncate=True) }}
     {% endfor %}
     </div> <!-- ./ comments -->
   </div> <!-- ./ content area -->
