@@ -305,9 +305,12 @@ def create_star():
         star.text = text
 
         if len(form.longform.data) > 0:
-            lfplanet = TextPlanet.get_or_create(form.longform.data,
+            lftext, lfplanets = process_attachments(form.longform.data)
+            planets = planets + lfplanets
+
+            lftext_planet = TextPlanet.get_or_create(lftext,
                 source=form.lfsource.data)
-            planets.append(lfplanet)
+            planets.append(lftext_planet)
 
         for planet in planets:
             db.session.add(planet)
