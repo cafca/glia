@@ -337,7 +337,7 @@ def create_star():
                 'msg': render_template("chatline.html", star=star),
                 'star_id': star_id,
                 'parent_id': star.parent_id,
-                'parent_short': star_macros.short(star.parent),
+                'parent_short': star_macros.short(star.parent) if star.parent else None,
                 'vote_count': star.oneup_count()
             }
             socketio.emit('message', data, room=form.starmap.data)
