@@ -430,7 +430,8 @@ def signup():
         if ap:
             ap.association[0].active = False
 
-        association = PersonaAssociation(user=user, persona=persona, active=True)
+        association = PersonaAssociation(
+            user=user, persona=persona, active=True)
         db.session.add(association)
         try:
             db.session.commit()
@@ -473,6 +474,6 @@ def signup_validation(id, signup_code):
         user.active = True
         db.session.add(user)
         db.session.commit()
-        app.logger.info("{} activated their account.".format(user))
-        flash("Yay! Welcome to RKTIK.")
+        app.logger.info("{} validated their email address.".format(user))
+        flash("Your email address is now verified.")
     return redirect(url_for('.index'))
