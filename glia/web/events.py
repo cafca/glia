@@ -144,7 +144,7 @@ def text(message):
                 'msg': chatline_template.render(star=star),
                 'star_id': star.id,
                 'parent_id': star.parent_id,
-                'parent_short': star_macros.short(star.parent),
+                'parent_short': star_macros.short(star.parent) if star.parent else None,
                 'vote_count': star.oneup_count()
             }
             emit('message', data, room=message["room_id"])
