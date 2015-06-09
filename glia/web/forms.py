@@ -79,7 +79,7 @@ class SignupForm(RedirectForm):
 
         user = User.query.filter_by(email=self.email.data).first()
         if user:
-            self.email.errors.append("A user with this email address already exists.")
+            self.email.errors.append("A user with this email already exists. Please send an email to admin@rktik.com if someone else signed up with your address.")
             rv = False
 
         return rv
