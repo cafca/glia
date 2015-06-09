@@ -408,8 +408,7 @@ def signup():
             id=uuid4().hex,
             email=form.email.data,
             created=created_dt,
-            modified=created_dt,
-            active=False)
+            modified=created_dt)
         user.set_password(form.password.data)
         db.session.add(user)
 
@@ -430,7 +429,8 @@ def signup():
         if ap:
             ap.association[0].active = False
 
-        association = PersonaAssociation(user=user, persona=persona, active=True)
+        association = PersonaAssociation(
+            user=user, persona=persona, active=True)
         db.session.add(association)
         try:
             db.session.commit()
@@ -443,10 +443,10 @@ def signup():
             send_validation_email(user, db)
             login_user(user, remember=True)
 
-            flash("Just one more step: Check your email and click on the confirmation link in the message we just sent you.".format(form.username.data))
+            flash("Welcome to RKTIK! Click the link in the activation email we just sent you to be able to reset your account when you loose your password.".format(form.username.data))
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
-        return form.redirect(url_for('.index'))
+        return form.redirect(url_for('web.index'))
     return render_template('signup.html', form=form)
 
 
@@ -460,8 +460,8 @@ def signup_validation(id, signup_code):
     if user is None:
         flash("This signup link is invalid.")
 
-    elif user.active:
-        flash("Your account is already activated. You're good to go.")
+    elif user.validated:
+        flash("Your email address is already validated. You're good to go.")
 
     elif not user.valid_signup_code(signup_code):
         app.logger.error("User {} tried validating with invalid signup code {}.".format(user, signup_code))
@@ -470,9 +470,9 @@ def signup_validation(id, signup_code):
     else:
         login_user(user, remember=False)
         session["active_persona"] = user.active_persona.id
-        user.active = True
+        user.validate()
         db.session.add(user)
         db.session.commit()
-        app.logger.info("{} activated their account.".format(user))
-        flash("Yay! Welcome to RKTIK.")
+        app.logger.info("{} validated their email address.".format(user))
+        flash("Your email address is now verified.")
     return redirect(url_for('.index'))
