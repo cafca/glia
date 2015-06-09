@@ -53,7 +53,7 @@ class AnonymousPersona(object):
         return False
 
     def is_anonymous(self):
-        return False
+        return True
 
 
 class ProxiedRequest(Request):
