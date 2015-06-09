@@ -54,7 +54,7 @@ $(document).ready(function() {
         {% if context|length > 0 %}
         <blockquote style="padding-bottom: -20px">
         {% for s in context %}
-        {{ star_macros.star_line(s, controlled_personas, no_planets=True) }}
+        <p>{{ star_macros.short(s) }}</p>
         {% endfor %}
         </blockquote>
         {% endif %}
