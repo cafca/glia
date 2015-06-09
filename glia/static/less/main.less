@@ -69,6 +69,29 @@ a > .fa:hover {
 }
 
 //
+// CREATE STAR UI
+//
+
+.rk-create {
+    .rk-create-extend {
+        display: none;
+    }
+
+    .rk-create-counter {
+        padding-right: 6px;
+    }
+}
+
+.rk-longform-longform {
+    height: 200px !important;
+}
+
+.over {
+    color: red;
+    font-weight: bold;
+}
+
+//
 // CHAT
 //
 
@@ -106,8 +129,17 @@ a > .fa:hover {
             margin-right: 5px;
         }
 
+        .rk-chatline > p {
+            overflow-wrap: break-word;
+        }
+
         .rk-chat-planet {
             background-color: #fafafa;
+        }
+
+        .rk-system {
+            padding: 0 15px;
+            background-color: lighten(yellow, 45%);
         }
     }
 
@@ -231,6 +263,10 @@ a > .fa:hover {
     .rk-star-line {
         max-width: 30em;
     }
+
+    .rk-create {
+        display: none;
+    }
 }
 
 .rk-replies {
@@ -271,6 +307,10 @@ a > .fa:hover {
 .rk-favicon-small {
     width: 16px;
     height: 16px;
+}
+
+.rk-text {
+    overflow-wrap: break-word;
 }
 
 //

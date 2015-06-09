@@ -84,24 +84,17 @@ def text(message):
     star_id = uuid4().hex
     errors = ""
     author = current_user.active_persona
+    parent_star = None
 
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
 
-    map = Starmap.query.get(message["map_id"]) if "map_id" in message else None
-
-    if not message["parent_id"]:
-        if isinstance(map, Starmap):
-            # check whether there really is no post yet in the map
-            map_content = map.index.first()
-            if map_content is None:
-                parent_star = None
-            else:
-                errors += "Please try submitting your message again: '{}' ".format(
-                    message["msg"])
-        else:
-            errors += "Neither map nor parent specified"
+    if "map_id" not in message:
+        errors += "No Starmap context given."
     else:
+        map = Starmap.query.get(message["map_id"])
+
+    if message["parent_id"]:
         parent_star = Star.query.get(message["parent_id"])
         if parent_star is None:
             errors += "Could not find the message before yours. "
@@ -113,12 +106,9 @@ def text(message):
             author=author,
             parent=parent_star,
             created=star_created,
-            modified=star_created)
+            modified=star_created,
+            starmap_id=map.id)
         db.session.add(star)
-
-        if isinstance(map, Starmap):
-            map.index.append(star)
-            db.session.add(map)
 
         text, planets = process_attachments(star.text)
         star.text = text
@@ -138,22 +128,29 @@ def text(message):
             app.logger.error("Error adding to chat starmap: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
-            app.logger.info(u"{} {}: {}".format(map, author.username, star.text))
+            app.logger.info(u"{} {}: {}".format(
+                map, author.username, star.text))
 
-            # Render using template
-            template = current_app.jinja_env.get_template('chatline.html')
+            # Render using templates
+            chatline_template = current_app.jinja_env.get_template(
+                'chatline.html')
+            star_macros_template = current_app.jinja_env.get_template(
+                'macros/star.html')
+            star_macros = star_macros_template.make_module(
+                {'request': request})
+
             data = {
                 'username': author.username,
-                'msg': template.render(star=star),
+                'msg': chatline_template.render(star=star),
                 'star_id': star.id,
+                'parent_id': star.parent_id,
+                'parent_short': star_macros.short(star.parent),
                 'vote_count': star.oneup_count()
             }
             emit('message', data, room=message["room_id"])
 
-            template = current_app.jinja_env.get_template('macros/star.html')
-            template_module = template.make_module({'request': request})
             reply_data = {
-                'msg': template_module.comment(star),
+                'msg': star_macros.comment(star),
                 'parent_id': star.parent.id if star.parent else None
             }
             emit('comment', reply_data, room=message["room_id"])
@@ -215,20 +212,26 @@ def repost(message):
         else:
             app.logger.info(u"Repost {} {}: {}".format(map, author.username, star.text))
 
-            # Render using template
-            template = current_app.jinja_env.get_template('chatline.html')
+            # Render using templates
+            chatline_template = current_app.jinja_env.get_template(
+                'chatline.html')
+            star_macros_template = current_app.jinja_env.get_template(
+                'macros/star.html')
+            star_macros = star_macros_template.make_module(
+                {'request': request})
+
             data = {
                 'username': author.username,
-                'msg': template.render(star=star),
+                'msg': chatline_template.render(star=star),
                 'star_id': star.id,
+                'parent_id': star.parent_id,
+                'parent_short': star_macros.short(star.parent),
                 'vote_count': star.oneup_count()
             }
             emit('message', data, room=map.id)
 
-            template = current_app.jinja_env.get_template('macros/star.html')
-            template_module = template.make_module({'request': request})
             reply_data = {
-                'msg': template_module.comment(star),
+                'msg': star_macros.comment(star),
                 'parent_id': star.parent.id if star.parent else None
             }
             emit('comment', reply_data, room=message["room_id"])

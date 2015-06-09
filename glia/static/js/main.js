@@ -62,7 +62,7 @@ $(document).ready(function(){
     });
 
     socket.on('message', function(data) {
-        append_timeline(data.username, data.msg, data.star_id, data.vote_count);
+        append_timeline(data.username, data.msg, data);
         $("#rk-chat-parent").val(data.star_id);
     });
 
@@ -87,12 +87,26 @@ $(document).ready(function(){
     });
 
     // DOM manipulation
-    function append_timeline (from, msg, star_id, vote_count) {
+    function append_timeline (from, msg, data) {
+        if (typeof data == 'undefined') {
+            data = {};
+        }
+        var star_id = data.star_id;
+        var parent_id = data.parent_id;
+        var parent_short = data.parent_short;
+        var vote_count = data.vote_count;
+
         if (star_id === undefined) {
             // Server message
-            $('#rk-chat-lines').append($('<li class="list-group-item">').append($('<em>').text(msg)));
+            $('#rk-chat-lines').append($('<li class="list-group-item rk-system">').append($('<em>').text(msg)));
         } else {
             // Star post
+            if (parent_id != $("#rk-chat-parent").val()) {
+                $('#rk-chat-lines')
+                    .append($('<li class="list-group-item rk-system">')
+                        .append("Comment on "+parent_short)
+                    );
+            }
             $('#rk-chat-lines').append(msg);
             $('#rk-chat-lines .oneup').click(function () {request_upvote(this.dataset.id); return false;});
 
@@ -101,7 +115,23 @@ $(document).ready(function(){
     }
 
     function insert_reply(parent_id, rendered_content) {
-        $(".rk-star-"+parent_id+" > .rk-replies").prepend(rendered_content);
+        reply_box = $(".rk-star-"+parent_id).siblings(".rk-replies").first();
+        if (reply_box.length == 0) {
+            $(".rk-star-"+parent_id).after("<div><p>Additional replies hidden.</p></div>");
+        } else {
+            reply_box
+                .prepend(rendered_content)
+                .find(".oneup").click(function () {
+                    request_upvote(this.dataset.id);
+                    return false;
+                });
+        }
+    }
+
+    function show_reply_box(star_id) {
+        var $form = $(".rk-star-"+star_id+" .rk-create");
+        $form.css("display", "block");
+        $form.find("textarea").focus();
     }
 
     function get_chat_height() {
@@ -159,6 +189,8 @@ $(document).ready(function(){
             });
     }
 
+
+
     $(function () {
         //
         // UPVOTE BUTTON
@@ -188,31 +220,59 @@ $(document).ready(function(){
           });
 
         //
-        // CHAT BEHAVIOR
+        // CREATE STAR
         //
 
-        $('.rk-create').submit(function () {
+        $('.rk-create').submit(function(event) {
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
             var $parent = $(this).find('.rk-create-parent').val();
 
-            $btn.button('loading');
-            socket.emit('text', {
-                    'msg': $text,
-                    'room_id': window.room_id,
-                    'map_id': window.map_id,
-                    'parent_id': $parent
-                }, function(data) {
-                    $btn.button('reset');
-            });
-            clear();
-            return false;
+            if ($(this).find($(".rk-create-counter")).hasClass("safe")) {
+                $btn.button('loading');
+                socket.emit('text', {
+                        'msg': $text,
+                        'room_id': window.room_id,
+                        'map_id': window.map_id,
+                        'parent_id': $parent
+                    }, function(data) {
+                        $btn.button('reset');
+                });
+                clear();
+                event.preventDefault();
+            }
         });
 
+        $('.rk-create-text').each(function(index, obj) {
+            $(obj).simplyCountable({
+                counter:            ":parent:parent .rk-create-counter",
+                countType:          'characters',
+                maxCount:           140,
+                strictMax:          false,
+                countDirection:     'down',
+                safeClass:          'safe',
+                overClass:          'over',
+                thousandSeparator:  ',',
+                onOverCount:        function(count, countable, counter){
+                    form = countable.closest(".rk-create");
+                    form.find(".rk-create-submit").prop("disabled", true);
+                    form.find(".rk-create-extend").toggle("highlight");
+                },
+                onSafeCount:        function(count, countable, counter){
+                    form = countable.closest(".rk-create");
+                    form.find(".rk-create-submit").prop("disabled", false);
+                    form.find(".rk-create-extend").toggle("highlight");
+                },
+                onMaxCount:         function(count, countable, counter){}
+            });
+        })
+
+        //
+        // CHAT BEHAVIOR
+        //
+
         $(".rk-create-display-toggle").click(function() {
-            var $form = $(".rk-star-"+$(this).data("id")+" .rk-create");
-            $form.css("display", "block");
-            $form.find("textarea").focus();
+            show_reply_box($(this).data("id"));
             return false;
         });
 

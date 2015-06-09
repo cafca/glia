@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% import "macros/star.html" as star_macros %}
+
+{% block script %}
+$(document).ready(function() {
+  $('.rk-longform-text').simplyCountable({
+      counter:            '#rk-create-counter',
+      countType:          'characters',
+      maxCount:           140,
+      strictMax:          false,
+      countDirection:     'down',
+      safeClass:          'safe',
+      overClass:          'over',
+      thousandSeparator:  ',',
+      onOverCount:        function(count, countable, counter){
+          $(".rk-create-submit").prop("disabled", true);
+          counter.tooltip('show');
+      },
+      onSafeCount:        function(count, countable, counter){
+          $(".rk-create-submit").prop("disabled", false);
+          counter.tooltip('hide');
+      },
+      onMaxCount:         function(count, countable, counter){}
+  });
+});
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-sm-6 col-sm-push-3">
+<h1>Create Star</h1>
+
+<form method="POST" action="{{ url_for('web.create_star') }}" class="rk-longform">
+  {{ form.hidden_tag() }}
+  {% if parent %}
+  <p class="lead">In response to:</p>
+  <blockquote style="font-size: 14px;">
+    <div class="panel panel-default">
+      <div class="panel-body">{{ star_macros.star_line(parent) }}</div>
+    </div>
+  </blockquote>
+  {% endif %}
+
+  <div class="form-group {% if form.text.errors %}has-error{% endif %}">
+    {% if form.text.errors %}
+    <label for="text">{% for error in form.text.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+    <label for="text">Text *</label>
+    {% endif %}
+    <span id="rk-create-counter" class="pull-right" data-toggle="tooltip" data-placement="right" data-trigger="manual" data-title="Please make a shorter title"></span>
+    {{ form.text(class_="form-control rk-longform-text") }}
+  </div>
+
+  <div class="form-group {% if form.longform.errors %}has-error{% endif %}">
+    {% if form.longform.errors %}
+    <label for="longform">{% for error in form.longform.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+    <label for="longform">Longform</label>
+    {% endif %}
+    {{ form.longform(class_="form-control rk-longform-longform") }}
+  </div>
+
+  <div class="form-group {% if form.lfsource.errors %}has-error{% endif %}">
+    {% if form.lfsource.errors %}
+    <label for="lfsource">{% for error in form.lfsource.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+    <label for="lfsource">Source</label>
+    {% endif %}
+    {{ form.lfsource(class_="form-control rk-longform-source") }}
+  </div>
+
+  <div class="pull-right">
+  {% if starmap %}
+  <a class="btn btn-default rk-create-cancel" href="{{ starmap.get_absolute_url() }}">Cancel</a>
+  <input type="submit" class="btn btn-primary rk-create-submit" value="Send to {{ starmap.name }}" \>
+  {% else %}
+  <input type="submit" class="btn btn-primary rk-create-submit" value="Create" \>
+  {% endif %}
+  </div>
+</form>
+</div>
+</div>
+{% endblock %}

@@ -10,21 +10,23 @@
 import datetime
 import traceback
 
-from flask import request, redirect, render_template, flash, url_for, session
+from flask import request, redirect, render_template, flash, url_for, session, \
+    current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from forms import LoginForm, SignupForm, CreateMovementForm
+from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
+    DeleteStarForm, CreateStarForm
 from uuid import uuid4
 from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import app
-from glia.web.forms import DeleteStarForm, CreateStarForm
+from .. import socketio
 from glia.web.dev_helpers import http_auth
-from glia.web.helpers import send_validation_email
+from glia.web.helpers import send_validation_email, process_attachments
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
-    PlanetAssociation
+    PlanetAssociation, TextPlanet
 
 
 @app.before_request
@@ -143,7 +145,7 @@ def star(id=None):
         flash("This Star is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
-    reply_form = CreateStarForm(parent=star.id)
+    reply_form = CreateReplyForm(parent=star.id)
 
     return render_template("star.html", star=star, context=context,
         reply_form=reply_form)
@@ -263,11 +265,96 @@ def movement_blog(id, page=1):
     return render_template('movement_blog.html', movement=movement, stars=star_selection)
 
 
-@app.route('/stars/', methods=["POST"])
+@app.route('/create', methods=["GET", "POST"])
 @http_auth.login_required
 def create_star():
     """Post a new Star"""
-    pass
+
+    form = CreateStarForm()
+    star_created = datetime.datetime.utcnow()
+    star_id = uuid4().hex
+    author = current_user.active_persona
+    sm = None
+    parent = None
+
+    # Prepopulate form if redirected here from chat
+    if not form.longform.raw_data and "text" in request.args:
+        form.longform.data = request.args.get("text")
+
+    if "starmap" in request.args:
+        form.starmap.data = request.args['starmap']
+
+    if "parent" in request.args:
+        form.parent.data = request.args['parent']
+
+    sm = Starmap.query.get_or_404(form.starmap.data)
+    parent = Star.query.get_or_404(form.parent.data) if form.parent.data else None
+
+    if form.validate_on_submit():
+        star = Star(
+            id=star_id,
+            text=form.text.data,
+            author=author,
+            parent=parent,
+            created=star_created,
+            modified=star_created,
+            starmap_id=sm.id)
+        db.session.add(star)
+
+        text, planets = process_attachments(star.text)
+        star.text = text
+
+        if len(form.longform.data) > 0:
+            lftext, lfplanets = process_attachments(form.longform.data)
+            planets = planets + lfplanets
+
+            lftext_planet = TextPlanet.get_or_create(lftext,
+                source=form.lfsource.data)
+            planets.append(lftext_planet)
+
+        for planet in planets:
+            db.session.add(planet)
+
+            assoc = PlanetAssociation(star=star, planet=planet, author=author)
+            star.planet_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(planet, star))
+            db.session.add(assoc)
+
+        try:
+            db.session.commit()
+        except SQLAlchemyError, e:
+            db.session.rollback()
+            app.logger.error("Error creating longform star: {}".format(e))
+            flash("An error occured saving your message. Please try again.")
+        else:
+            app.logger.info(u"{} {}: {}".format(sm, author.username, star.text))
+
+            # Render using templates
+            star_macros_template = current_app.jinja_env.get_template(
+                'macros/star.html')
+            star_macros = star_macros_template.make_module(
+                {'request': request})
+
+            data = {
+                'username': author.username,
+                'msg': render_template("chatline.html", star=star),
+                'star_id': star_id,
+                'parent_id': star.parent_id,
+                'parent_short': star_macros.short(star.parent) if star.parent else None,
+                'vote_count': star.oneup_count()
+            }
+            socketio.emit('message', data, room=form.starmap.data)
+
+            reply_data = {
+                'msg': star_macros.comment(star),
+                'parent_id': form.parent.data
+            }
+            socketio.emit('comment', reply_data, room=form.parent.data)
+            flash("Great success! Your new post is ready.")
+            return redirect(url_for("web.star", id=star_id))
+
+    return render_template("create_star.html",
+        form=form, starmap=sm, parent=parent)
 
 
 @app.route('/login', methods=["GET", "POST"])
