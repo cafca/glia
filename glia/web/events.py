@@ -164,8 +164,6 @@ def text(message):
 @socketio.on('repost', namespace='/movements')
 def repost(message):
     """Sent by client when the user reposts a Star."""
-    star_created = datetime.datetime.utcnow()
-    star_id = uuid4().hex
     errors = ""
     author = current_user.active_persona
 
@@ -182,26 +180,8 @@ def repost(message):
             errors += "Could not find the original post. "
 
     if errors == "":
-        star = Star(
-            id=star_id,
-            text=message['text'],
-            author=author,
-            parent=parent_star,
-            created=star_created,
-            modified=star_created)
+        star = Star.clone(parent_star, author, map)
         db.session.add(star)
-
-        map.index.append(star)
-        db.session.add(map)
-
-        text, planets = process_attachments(star.text)
-        star.text = text
-
-        for planet_asc in parent_star.planet_assocs:
-            assoc = PlanetAssociation(star=star, planet=planet_asc.planet, author=author)
-            star.planet_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(planet_asc.planet, star))
-            db.session.add(assoc)
 
         try:
             db.session.commit()
@@ -210,7 +190,8 @@ def repost(message):
             app.logger.error("Error completing Star repost: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
-            app.logger.info(u"Repost {} {}: {}".format(map, author.username, star.text))
+            app.logger.info(u"Repost {} {}: {}".format(
+                map if map else "[no starmap]", author.username, star.text))
 
             # Render using templates
             chatline_template = current_app.jinja_env.get_template(
@@ -220,19 +201,20 @@ def repost(message):
             star_macros = star_macros_template.make_module(
                 {'request': request})
 
-            data = {
-                'username': author.username,
-                'msg': chatline_template.render(star=star),
-                'star_id': star.id,
-                'parent_id': star.parent_id,
-                'parent_short': star_macros.short(star.parent),
-                'vote_count': star.oneup_count()
-            }
-            emit('message', data, room=map.id)
+            if map is not None:
+                data = {
+                    'username': author.username,
+                    'msg': chatline_template.render(star=star),
+                    'star_id': star.id,
+                    'parent_id': star.parent_id,
+                    'parent_short': star_macros.short(star.parent),
+                    'vote_count': star.oneup_count()
+                }
+                emit('message', data, room=map.id)
 
             reply_data = {
                 'msg': star_macros.comment(star),
-                'parent_id': star.parent.id if star.parent else None
+                'parent_id': parent_star.id
             }
             emit('comment', reply_data, room=message["room_id"])
 
