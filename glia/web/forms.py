@@ -2,10 +2,11 @@ import logging
 
 from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
+from flask.ext.login import current_user
 from flask_wtf import Form
 from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
 
-from nucleus.nucleus.models import User, Star
+from nucleus.nucleus.models import User, Star, Persona
 
 logger = logging.getLogger('web')
 
@@ -80,6 +81,25 @@ class SignupForm(RedirectForm):
         user = User.query.filter_by(email=self.email.data).first()
         if user:
             self.email.errors.append("A user with this email already exists. Please send an email to admin@rktik.com if someone else signed up with your address.")
+            rv = False
+        return rv
+
+
+class CreatePersonaForm(Form):
+    username = SignupForm.username
+    password = SignupForm.password
+
+    def validate(self):
+        rv = Form.validate(self)
+        if not rv:
+            return False
+
+        if current_user.check_password(self.password.data) is False:
+            self.password.errors.append("Your password was not correct. Try again?")
+            rv = False
+
+        if current_user.associations.join(Persona).filter(Persona.username == self.username.data).count() > 0:
+            self.username.errors.append("You already have a Persona going by that username")
             rv = False
 
         return rv

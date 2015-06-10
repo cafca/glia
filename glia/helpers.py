@@ -91,15 +91,6 @@ class ProxiedRequest(Request):
 # app.request_class = ProxiedRequest
 
 
-def get_active_persona():
-    """ Return the currently active persona. """
-    from nucleus.nucleus.models import Persona
-    if session.get("active_persona"):
-        return Persona.query.get(session['active_persona'])
-    else:
-        return None
-
-
 @evalcontextfilter
 def inject_mentions(eval_ctx, text, star, nolink=False):
     """Replace portions of Star text with a link to the mentioned Identity for
