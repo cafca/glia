@@ -218,11 +218,11 @@ def create_persona():
 
         db.session.add(persona)
 
-        for asc in current_user.associations.filter_by(active=True):
-            asc.active = False
+        current_user.active_persona = persona
+        db.session.add(current_user)
 
         association = PersonaAssociation(
-            user=current_user, persona=persona, active=True)
+            user=current_user, persona=persona)
         db.session.add(association)
         try:
             db.session.commit()
@@ -469,15 +469,6 @@ def signup():
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
-        user = User(
-            id=uuid4().hex,
-            email=form.email.data,
-            created=created_dt,
-            modified=created_dt)
-        user.set_password(form.password.data)
-        db.session.add(user)
-
-        created_dt = datetime.datetime.utcnow()
         persona = Persona(
             id=uuid4().hex,
             username=form.username.data,
@@ -490,9 +481,15 @@ def signup():
 
         db.session.add(persona)
 
-        ap = user.active_persona
-        if ap:
-            ap.association[0].active = False
+        created_dt = datetime.datetime.utcnow()
+        user = User(
+            id=uuid4().hex,
+            email=form.email.data,
+            active_persona=persona,
+            created=created_dt,
+            modified=created_dt)
+        user.set_password(form.password.data)
+        db.session.add(user)
 
         association = PersonaAssociation(
             user=user, persona=persona, active=True)

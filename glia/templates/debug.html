@@ -74,6 +74,8 @@
 <dl class="dl-horizontal">
   <dt>Active</dt>
   <dd>{{user.active}}</dd>
+  <dt>Validated</dt>
+  <dd>{{user.validated_on|localtime|naturaltime}}</dd>
   <dt>Authenticated</dt>
   <dd>{{user.authenticated}}</dd>
   <dt>Created</dt>
@@ -100,7 +102,11 @@
       {% for asc in user.associations %}
       {% set persona=asc.persona %}
       <tr>
-        <td>{{ persona.id }}{% if persona.stub %} (stub){% endif %}</td>
+        <td>
+          {{ persona.id }}
+          {% if persona.stub %} (stub){% endif %}
+          {% if persona == user.active_persona %} (active){% endif %}
+        </td>
         <td>{{ persona.username }}</td>
         <td>{{ persona.email }}</td>
         <td>{{ persona.modified }}</td>
