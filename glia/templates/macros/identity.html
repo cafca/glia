@@ -11,3 +11,11 @@
   {% if flair %}<span class="rk-flair">{{ flair }}</span>{% endif %}
 {% if nolink == False %}</a>{% endif %}
 {% endmacro %}
+
+{% macro identity(i, flair=None, nolink=False) %}
+{% if i.kind == "persona" %}
+{{ persona(i, flair, nolink) }}
+{% else %}
+{{ movement(i, flair, nolink) }}
+{% endif %}
+{% endmacro %}

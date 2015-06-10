@@ -215,8 +215,8 @@ def async_promote(movement_id):
     if movement.current_role() != "admin":
         raise InvalidUsage("Only the admin may promote a Star")
 
-    movement.blog.index.append(star)
-    db.session.add(movement)
+    blog_star = Star.clone(star, movement, movement.blog)
+    db.session.add(blog_star)
 
     try:
         db.session.commit()
@@ -249,7 +249,6 @@ def async_star(star_id):
     if current_user.active_persona.id != star.author_id:
         raise InvalidUsage(message="Only author may edit Stars")
 
-    # Validata input
     if request.form.get("name") == "context_length":
         try:
             context_length = int(request.form.get("value"))

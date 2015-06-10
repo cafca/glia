@@ -258,6 +258,7 @@ def movement_blog(id, page=1):
     movement = Movement.query.get_or_404(id)
 
     star_selection = movement.blog.index \
+        .filter_by(author_id=movement.id) \
         .filter(Star.state >= 0) \
         .order_by(Star.created.desc()) \
         .paginate(page, 5)
