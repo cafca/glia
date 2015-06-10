@@ -89,7 +89,7 @@ $(document).ready(function() {
 
   <div class="col-sm-3 col-sm-push-1">
     <h3>Info</h3>
-    <p>Original post by {{ id_macros.persona(star.author) }} {{star.created|localtime|naturaltime}}.</p>
+    <p>Original post by {{ id_macros.identity(star.author) }} {{star.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-star-context-length"></a></p>
 
     <p>Posted on <a href="{{ star.starmap.get_absolute_url() }}">{{ star.starmap.name }}</a></p>
