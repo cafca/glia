@@ -246,14 +246,14 @@ def activate_persona(id):
     try:
         db.session.add(current_user)
         db.session.commit()
-        app.logger.info("Switched user {} active persona to {}".format(
-            current_user, p))
     except SQLAlchemyError, e:
         db.session.rollback()
         flash("There was an error activating your Persona. Please try again.")
         app.logger.error(
             "Error switching active persona on user {}\n{}".format(
                 current_user, e))
+    else:
+        app.logger.info("{} activated {}".format(current_user, p))
     return redirect(request.referrer or url_for("web.index"))
 
 
