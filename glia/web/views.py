@@ -23,6 +23,7 @@ from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, process_attachments
+from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
@@ -245,7 +246,8 @@ def create_persona(for_movement=None):
                 flash("New Persona {} created".format(form.username.data))
                 app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
                 return redirect(url_for("web.persona", id=persona.id))
-    return render_template('create_persona.html', form=form, movement=movement, movement_id=for_movement)
+    return render_template('create_persona.html',
+        form=form, movement=movement, movement_id=for_movement, allowed_colors=ALLOWED_COLORS.keys())
 
 
 @app.route('/persona/<id>/activate')
@@ -521,7 +523,7 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         return form.redirect(url_for('web.index'))
-    return render_template('signup.html', form=form)
+    return render_template('signup.html', form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])

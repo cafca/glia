@@ -16,11 +16,11 @@ $("#rk-colorpicker").spectrum({
   showPalette:true,
   flat: true,
   showInput: true,
-  color: 'blanchedalmond',
+  color: '#0B3954',
   palette: [
-    ['black', 'white', 'blanchedalmond',
-    'rgb(255, 128, 0);', 'hsv 100 70 50'],
-    ['red', 'yellow', 'green', 'blue', 'violet']
+    {% for color in allowed_colors %}
+    '#{{ color }}',
+    {% endfor %}
   ]
 });
 
@@ -31,7 +31,7 @@ $(".rk-signup-form").submit(function() {
 
 {% block content %}
 <div class="row">
-<div class="col-sm-6 col-sm-push-3">
+<div class="col-sm-4 col-sm-push-4">
 
 {% if movement %}
 <h1>Join movement <strong>{{ id_macros.movement(movement) }}</strong> as a new Persona</h1>

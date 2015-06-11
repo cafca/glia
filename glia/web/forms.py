@@ -6,6 +6,7 @@ from flask.ext.login import current_user
 from flask_wtf import Form
 from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
 
+from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.models import User, Star, Persona
 
 logger = logging.getLogger('web')
@@ -72,7 +73,7 @@ class SignupForm(RedirectForm):
     email = TextField('Email', [validators.Required(), validators.Email(), validators.Length(max=128)])
     password = PasswordField('Password', [validators.Required(), validators.Length(min=8)])
     username = TextField('Username', [validators.Required(), validators.Regexp("\S{3,20}")])
-    color = TextField('Color', [validators.Regexp("[0-9a-fA-F]{6,6}")])
+    color = TextField('Color', [validators.Required(), validators.AnyOf(ALLOWED_COLORS.keys())])
 
     def validate(self):
         rv = Form.validate(self)
