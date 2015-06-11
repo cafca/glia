@@ -2,6 +2,27 @@
 
 {% import "macros/identity.html" as id_macros %}
 
+{% block extra_styles %}
+<link rel='stylesheet' href='{{ url_for("static", filename="css/spectrum.css") }}' />
+{% endblock %}
+
+{% block extra_scripts %}
+<script src='{{ url_for("static", filename="js/spectrum.js") }}'></script>
+{% endblock %}
+
+{% block script %}
+$("#rk-colorpicker").spectrum({
+  showPaletteOnly: true,
+  showPalette:true,
+  color: 'blanchedalmond',
+  palette: [
+    ['black', 'white', 'blanchedalmond',
+    'rgb(255, 128, 0);', 'hsv 100 70 50'],
+    ['red', 'yellow', 'green', 'blue', 'violet']
+  ]
+});
+{% endblock %}
+
 {% block content %}
 <div class="row">
 <div class="col-sm-6 col-sm-push-3">
@@ -30,6 +51,15 @@
       <label for="password">Enter your password again</label>
     {% endif %}
     <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+  </div>
+
+  <div class="form-group {% if form.color.errors %}has-error{% endif %}">
+    {% if form.color.errors %}
+      <label for="color">{% for error in form.color.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="color">Choose a color</label>
+    {% endif %}
+    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" /></p>p
   </div>
 
   {% if movement %}

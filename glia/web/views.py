@@ -244,7 +244,7 @@ def create_persona(for_movement=None):
                 flash("New Persona {} created".format(form.username.data))
                 app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
                 return redirect(url_for("web.persona", id=persona.id))
-    return render_template('create_persona.html', form=form, movement=movement, movement_id=movement.id)
+    return render_template('create_persona.html', form=form, movement=movement, movement_id=for_movement)
 
 
 @app.route('/persona/<id>/activate')
