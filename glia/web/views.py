@@ -3,7 +3,7 @@
     glia.views
     ~~~~~
 
-    Implements public Glia API.
+    Implements views for Glia webapp
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
@@ -210,7 +210,8 @@ def create_persona(for_movement=None):
             id=uuid4().hex,
             username=form.username.data,
             created=created_dt,
-            modified=created_dt)
+            modified=created_dt,
+            color=form.color.data)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -483,7 +484,8 @@ def signup():
             id=uuid4().hex,
             username=form.username.data,
             created=created_dt,
-            modified=created_dt)
+            modified=created_dt,
+            color=form.color.data)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
