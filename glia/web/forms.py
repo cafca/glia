@@ -88,6 +88,7 @@ class SignupForm(RedirectForm):
 class CreatePersonaForm(Form):
     username = SignupForm.username
     password = SignupForm.password
+    movement = HiddenField()
 
     def validate(self):
         rv = Form.validate(self)

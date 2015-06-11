@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
+{% import "macros/identity.html" as id_macros %}
+
 {% block content %}
-<h1><a href="{{ url_for('web.index') }}">Home</a> > Signup</h1>
-
-
 <div class="row">
-<div class="col-xs-4">
+<div class="col-sm-6 col-sm-push-3">
 
-<p class="lead">Add a new Persona to your account</p>
+{% if movement %}
+<h1>Join movement <strong>{{ id_macros.movement(movement) }}</strong> as a new Persona</h1>
+{% else %}
+<h1>Add a new Persona to your account</h1>
+{% endif %}
 
-<form method="POST" action="{{ url_for('.create_persona') }}">
+<form method="POST" action="{{ url_for('.create_persona', for_movement=movement_id) }}">
   {{ form.hidden_tag() }}
   <div class="form-group {% if form.username.errors %}has-error{% endif %}">
     {% if form.username.errors %}
@@ -29,7 +32,11 @@
     <input type="password" class="form-control" id="password" name="password" placeholder="Password">
   </div>
 
+  {% if movement %}
+  <button type="submit" class="btn btn-default">Join now</button>
+  {% else %}
   <button type="submit" class="btn btn-default">Add Persona</button>
+  {% endif %}
 </form>
 </div>
 </div>

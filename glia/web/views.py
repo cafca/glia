@@ -194,15 +194,15 @@ def delete_star(id=None):
 
 
 @app.route('/persona/create', methods=["GET", "POST"])
+@app.route('/movement/<for_movement>/create_persona', methods=["GET", "POST"])
 @http_auth.login_required
-def create_persona():
+def create_persona(for_movement=None):
     """View for creating a new persona"""
-    if request.args.get("for_movement"):
-        movement = Movement.query.get(request.args.get("for_movement"))
-    else:
-        movement = None
-
     form = CreatePersonaForm()
+
+    movement = None
+    if for_movement:
+        movement = Movement.query.get_or_404(for_movement)
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
@@ -224,17 +224,27 @@ def create_persona():
         association = PersonaAssociation(
             user=current_user, persona=persona)
         db.session.add(association)
+
+        if movement:
+            persona.toggle_movement_membership(movement=movement)
+
         try:
             db.session.commit()
-        except IntegrityError, e:
+        except SQLAlchemyError, e:
             app.logger.error("Error creating new Persona: {}".format(e))
             db.session.rollback()
             flash("Sorry! There was an error creating your new Persona. Please try again.", "error")
         else:
-            flash("New Persona {} created".format(form.username.data))
-            app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
-            return redirect(url_for("web.persona", id=persona.id))
-    return render_template('create_persona.html', form=form, movement=movement)
+            if movement:
+                flash("Your new Persona {} is now a member of {}".format(persona.username, movement.username))
+                app.logger.debug("Created new Persona {} for user {} and joined {}.".format(
+                    persona, current_user, movement))
+                return redirect(url_for("web.movement_mindspace", id=movement.id))
+            else:
+                flash("New Persona {} created".format(form.username.data))
+                app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
+                return redirect(url_for("web.persona", id=persona.id))
+    return render_template('create_persona.html', form=form, movement=movement, movement_id=movement.id)
 
 
 @app.route('/persona/<id>/activate')
