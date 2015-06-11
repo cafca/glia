@@ -72,6 +72,7 @@ class SignupForm(RedirectForm):
     email = TextField('Email', [validators.Required(), validators.Email(), validators.Length(max=128)])
     password = PasswordField('Password', [validators.Required(), validators.Length(min=8)])
     username = TextField('Username', [validators.Required(), validators.Regexp("\S{3,20}")])
+    color = TextField('Color', [validators.Regexp("[0-9a-fA-F]{6,6}")])
 
     def validate(self):
         rv = Form.validate(self)
@@ -88,6 +89,7 @@ class SignupForm(RedirectForm):
 class CreatePersonaForm(Form):
     username = SignupForm.username
     password = SignupForm.password
+    color = SignupForm.color
     movement = HiddenField()
 
     def validate(self):
