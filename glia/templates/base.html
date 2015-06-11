@@ -48,12 +48,16 @@
           {% for asc in current_user.associations %}
             {% if asc.right_id == current_user.active_persona.id %}
             <li class="active">
-              {{ id_macros.persona(current_user.active_persona) }}
-              <span class="sr-only">(active)</span></li>
+              <a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">{{ id_macros.persona(asc.persona, nolink=True) }}</a>
+              <span class="sr-only">(active)</span>
+            </li>
             {% else %}
-            <li>{{ id_macros.persona(current_user.active_persona) }}</li>
+            <li><a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">
+              {{ id_macros.persona(asc.persona, nolink=True) }}
+            </a></li>
             {% endif %}
           {% endfor %}
+            <li><a href="{{ url_for('web.create_persona') }}"web.><i class="fa fa-plus"></i> Add a new Persona</a></li>
           </ul>
 
           <!-- Toolbox -->

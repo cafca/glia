@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% import "macros/identity.html" as id_macros %}
+
+{% block content %}
+<div class="row">
+<div class="col-sm-6 col-sm-push-3">
+
+{% if movement %}
+<h1>Join movement <strong>{{ id_macros.movement(movement) }}</strong> as a new Persona</h1>
+{% else %}
+<h1>Add a new Persona to your account</h1>
+{% endif %}
+
+<form method="POST" action="{{ url_for('.create_persona', for_movement=movement_id) }}">
+  {{ form.hidden_tag() }}
+  <div class="form-group {% if form.username.errors %}has-error{% endif %}">
+    {% if form.username.errors %}
+      <label for="username">{% for error in form.username.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="username">Your new username</label>
+    {% endif %}
+    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username">
+  </div>
+
+  <div class="form-group {% if form.password.errors %}has-error{% endif %}">
+    {% if form.password.errors %}
+      <label for="password">{% for error in form.password.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="password">Enter your password again</label>
+    {% endif %}
+    <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+  </div>
+
+  {% if movement %}
+  <button type="submit" class="btn btn-default">Join now</button>
+  {% else %}
+  <button type="submit" class="btn btn-default">Add Persona</button>
+  {% endif %}
+</form>
+</div>
+</div>
+{% endblock %}

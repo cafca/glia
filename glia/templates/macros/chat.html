@@ -7,7 +7,7 @@
 <li class="list-group-item">
   {{ star_macros.oneup(star) }}
   <span class="rk-chatline">
-    {{ id_macros.persona(star.author) }}
+    {{ id_macros.identity(star.author) }}
     <a href="{{ url_for('web.star', id=star.id) }}">{{star.created|localtime|naturaltime}} </a>
     {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(star) }}
   </span>

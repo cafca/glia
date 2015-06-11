@@ -14,7 +14,7 @@ from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteStarForm, CreateStarForm
+    DeleteStarForm, CreateStarForm, CreatePersonaForm
 from uuid import uuid4
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -193,6 +193,80 @@ def delete_star(id=None):
     return render_template("delete_star.html", star=star, form=form)
 
 
+@app.route('/persona/create', methods=["GET", "POST"])
+@app.route('/movement/<for_movement>/create_persona', methods=["GET", "POST"])
+@http_auth.login_required
+def create_persona(for_movement=None):
+    """View for creating a new persona"""
+    form = CreatePersonaForm()
+
+    movement = None
+    if for_movement:
+        movement = Movement.query.get_or_404(for_movement)
+
+    if form.validate_on_submit():
+        created_dt = datetime.datetime.utcnow()
+        persona = Persona(
+            id=uuid4().hex,
+            username=form.username.data,
+            created=created_dt,
+            modified=created_dt)
+
+        # Create keypairs
+        app.logger.info("Generating private keys for {}".format(persona))
+        persona.generate_keys(form.password.data)
+
+        db.session.add(persona)
+
+        current_user.active_persona = persona
+        db.session.add(current_user)
+
+        association = PersonaAssociation(
+            user=current_user, persona=persona)
+        db.session.add(association)
+
+        if movement:
+            persona.toggle_movement_membership(movement=movement)
+
+        try:
+            db.session.commit()
+        except SQLAlchemyError, e:
+            app.logger.error("Error creating new Persona: {}".format(e))
+            db.session.rollback()
+            flash("Sorry! There was an error creating your new Persona. Please try again.", "error")
+        else:
+            if movement:
+                flash("Your new Persona {} is now a member of {}".format(persona.username, movement.username))
+                app.logger.debug("Created new Persona {} for user {} and joined {}.".format(
+                    persona, current_user, movement))
+                return redirect(url_for("web.movement_mindspace", id=movement.id))
+            else:
+                flash("New Persona {} created".format(form.username.data))
+                app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
+                return redirect(url_for("web.persona", id=persona.id))
+    return render_template('create_persona.html', form=form, movement=movement, movement_id=movement.id)
+
+
+@app.route('/persona/<id>/activate')
+@http_auth.login_required
+def activate_persona(id):
+    """Activate a Persona and redirect to origin"""
+    p = Persona.query.get_or_404(id)
+    current_user.active_persona = p
+    try:
+        db.session.add(current_user)
+        db.session.commit()
+    except SQLAlchemyError, e:
+        db.session.rollback()
+        flash("There was an error activating your Persona. Please try again.")
+        app.logger.error(
+            "Error switching active persona on user {}\n{}".format(
+                current_user, e))
+    else:
+        app.logger.info("{} activated {}".format(current_user, p))
+    return redirect(request.referrer or url_for("web.index"))
+
+
 @app.route('/persona/<id>/')
 @http_auth.login_required
 def persona(id=None):
@@ -201,7 +275,7 @@ def persona(id=None):
     if persona == current_user.active_persona:
         chat = current_user.active_persona.mindspace
     else:
-        chat = Starmap.query.join(Persona, Starmap.id == Persona.profile_id)
+        chat = Starmap.query.join(Persona, Starmap.id == persona.mindspace_id)
 
     movements = MovementMemberAssociation.query \
         .filter_by(active=True) \
@@ -258,6 +332,7 @@ def movement_blog(id, page=1):
     movement = Movement.query.get_or_404(id)
 
     star_selection = movement.blog.index \
+        .filter_by(author_id=movement.id) \
         .filter(Star.state >= 0) \
         .order_by(Star.created.desc()) \
         .paginate(page, 5)
@@ -404,15 +479,6 @@ def signup():
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
-        user = User(
-            id=uuid4().hex,
-            email=form.email.data,
-            created=created_dt,
-            modified=created_dt)
-        user.set_password(form.password.data)
-        db.session.add(user)
-
-        created_dt = datetime.datetime.utcnow()
         persona = Persona(
             id=uuid4().hex,
             username=form.username.data,
@@ -425,9 +491,15 @@ def signup():
 
         db.session.add(persona)
 
-        ap = user.active_persona
-        if ap:
-            ap.association[0].active = False
+        created_dt = datetime.datetime.utcnow()
+        user = User(
+            id=uuid4().hex,
+            email=form.email.data,
+            active_persona=persona,
+            created=created_dt,
+            modified=created_dt)
+        user.set_password(form.password.data)
+        db.session.add(user)
 
         association = PersonaAssociation(
             user=user, persona=persona, active=True)

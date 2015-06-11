@@ -80,7 +80,7 @@
 
     <span class="attribute">
         <span class="caption">
-            {{ id_macros.persona(star.author) }}
+            {{ id_macros.identity(star.author) }}
         </span>
     </span>
   </div>
@@ -180,7 +180,7 @@
   <div class="rk-line-container">
     <div class="rk-star-meta">
       <span class="small">
-        by {{ id_macros.persona(star.author) }} {{ star.created|localtime|naturaltime }}
+        by {{ id_macros.identity(star.author) }} {{ star.created|localtime|naturaltime }}
         <a href="{{ url_for('web.star', id=star.id) }}">link</a>
       </span>
     </div>
