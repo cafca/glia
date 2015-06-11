@@ -13,13 +13,13 @@ import os
 from blinker import Namespace
 from flask import Flask
 from flask.ext.socketio import SocketIO
-from flask.ext.login import LoginManager
+from flask.ext.login import LoginManager, current_user
 from flask.ext.misaka import Misaka
 from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
 from humanize.time import naturaldelta
 
-from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona, get_active_persona
+from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona
 from glia.helpers import inject_mentions
@@ -80,7 +80,7 @@ def create_app(log_info=True):
         """Makes controlled_personas available in templates"""
         return dict(
             controlled_personas=Persona.list_controlled(),
-            active_persona=get_active_persona()
+            active_persona=current_user.active_persona
         )
 
     # Setup markdown support for templates
