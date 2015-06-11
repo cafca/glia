@@ -14,12 +14,18 @@
 $("#rk-colorpicker").spectrum({
   showPaletteOnly: true,
   showPalette:true,
+  flat: true,
+  showInput: true,
   color: 'blanchedalmond',
   palette: [
     ['black', 'white', 'blanchedalmond',
     'rgb(255, 128, 0);', 'hsv 100 70 50'],
     ['red', 'yellow', 'green', 'blue', 'violet']
   ]
+});
+
+$(".rk-signup-form").submit(function() {
+  $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
 });
 {% endblock %}
 
@@ -33,7 +39,7 @@ $("#rk-colorpicker").spectrum({
 <h1>Add a new Persona to your account</h1>
 {% endif %}
 
-<form method="POST" action="{{ url_for('.create_persona', for_movement=movement_id) }}">
+<form method="POST" class="rk-signup-form" action="{{ url_for('.create_persona', for_movement=movement_id) }}">
   {{ form.hidden_tag() }}
   <div class="form-group {% if form.username.errors %}has-error{% endif %}">
     {% if form.username.errors %}
