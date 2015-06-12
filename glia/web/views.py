@@ -439,6 +439,9 @@ def create_star():
 @http_auth.login_required
 def login():
     """Login a user"""
+    if not current_user.is_anonymous():
+        return redirect(url_for("web.index"))
+
     form = LoginForm()
     if form.validate_on_submit():
         form.user.authenticated = True
