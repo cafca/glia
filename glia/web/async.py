@@ -15,8 +15,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
+from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Star, Starmap, Movement
+from nucleus.nucleus.models import Star, Starmap, Movement, Persona
 
 
 class InvalidUsage(Exception):
@@ -152,6 +153,47 @@ def async_toggle_movement_membership(movement_id):
         "persona_id": current_user.active_persona.id,
         "association": rv
     }, )
+
+
+@app.route("/async/persona/<id>/", methods=["POST"])
+@login_required
+@http_auth.login_required
+def async_persona(id):
+    """Edit a Persona
+
+    Expects a POST request with fields 'key' and 'value'
+    """
+    persona = Persona.query.get(id)
+    if persona is None:
+        raise InvalidUsage(message="Persona not found", code=404)
+
+    if current_user.active_persona != persona:
+        raise InvalidUsage(message="Activate this Persona to edit it")
+
+    if request.form.get("name") == "username":
+        form = CreatePersonaForm()
+        form.username.data = request.form.get("value")
+        form.validate()
+
+        if form.username.errors:
+            raise InvalidUsage(message=". ".join(form.username.errors))
+
+        app.logger.info("Changing username of {} to {}".format(
+            persona, form.username.data))
+
+        persona.username = form.username.data
+
+        try:
+            db.session.add(persona)
+            db.session.commit()
+        except SQLAlchemyError, e:
+            db.sesion.rollback()
+            app.logger.error("Error changing username\n{}".format(e))
+            raise InvalidUsage(
+                message="Error changing username. Please try again")
+
+        return jsonify({"message": "Username was changed to {}".format(
+            form.username.data)})
 
 
 @app.route("/async/movement/<movement_id>/", methods=["POST"])

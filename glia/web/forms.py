@@ -95,8 +95,6 @@ class CreatePersonaForm(Form):
 
     def validate(self):
         rv = Form.validate(self)
-        if not rv:
-            return False
 
         if current_user.check_password(self.password.data) is False:
             self.password.errors.append("Your password was not correct. Try again?")

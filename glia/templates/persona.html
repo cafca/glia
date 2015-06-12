@@ -10,6 +10,23 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.movement_id = "{{  persona.id }}";
 window.admin_id = "{{ persona.id }}";
+
+$(document).ready(function() {
+  {% if persona == active_persona %}
+  $('.rk-persona-identity .rk-username').editable({
+    type: 'text',
+    pk: '{{persona.id}}',
+    name: 'username',
+    value: '{{ persona.username }}',
+    url: '{{ url_for('web.async_persona', id=persona.id) }}',
+    mode: 'inline',
+    error: function(response, newValue) {
+      $(".editable-error-block").addClass("small");
+      return response.responseJSON.message;
+    },
+  });
+  {% endif %}
+});
 {% endblock %}
 
 {% block content %}
@@ -31,7 +48,7 @@ window.admin_id = "{{ persona.id }}";
       </div>
 
       <div class="col-sm-6 rk-persona-identity">
-        <h1>{{ id_macros.persona(persona) }}</h1>
+        <h1>{{ id_macros.persona(persona, nolink=True) }}</h1>
         <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
       </div>
 
