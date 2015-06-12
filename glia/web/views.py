@@ -113,7 +113,8 @@ def movements(id=None):
             description=form.mission.data,
             admin=current_user.active_persona,
             created=movement_created,
-            modified=movement_created)
+            modified=movement_created,
+            color=form.color.data)
         current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
         try:
             db.session.add(movement)
@@ -126,7 +127,7 @@ def movements(id=None):
             app.logger.debug("{} created new movement {}".format(current_user.active_persona, movement))
             return redirect(url_for('.movement', id=movement_id))
 
-    return render_template("movements.html", form=form)
+    return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
 @app.route('/star/<id>/')

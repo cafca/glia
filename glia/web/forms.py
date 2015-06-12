@@ -111,6 +111,11 @@ class CreateMovementForm(Form):
     id = HiddenField()
     name = TextField('Choose a name for your Movement *', [validators.Required(), validators.Length(min=3, max=20)])
     mission = TextField('Describe your mission', [validators.Length(max=140)])
+    color = SignupForm.color
+
+    def validate(self):
+        print self.color.data
+        return Form.validate(self)
 
 
 class CreateStarForm(Form):
