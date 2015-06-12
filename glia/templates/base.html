@@ -49,10 +49,17 @@
           <!-- Link movements, sorted by identity, here -->
           {% for asc in current_user.associations %}
             {% if asc.right_id == current_user.active_persona.id %}
-            <li class="active">
-              <a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">{{ id_macros.persona(asc.persona, nolink=True) }}</a>
-              <span class="sr-only">(active)</span>
-            </li>
+              <li class="active dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                  {{ id_macros.persona(asc.persona, nolink=True) }} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="{{ url_for('web.persona', id=asc.persona.id) }}">Mindspace</a></li>
+                  <li><a href="#">Blog</a></li>
+                  <li class="divider"></li>
+                  <li><a href="#">Preferences</a></li>
+                </ul>
+              </li>
             {% else %}
             <li><a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">
               {{ id_macros.persona(asc.persona, nolink=True) }}
