@@ -6,6 +6,7 @@ from flask.ext.login import current_user
 from flask_wtf import Form
 from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
 
+from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.models import User, Star, Persona
 
 logger = logging.getLogger('web')
@@ -72,6 +73,7 @@ class SignupForm(RedirectForm):
     email = TextField('Email', [validators.Required(), validators.Email(), validators.Length(max=128)])
     password = PasswordField('Password', [validators.Required(), validators.Length(min=8)])
     username = TextField('Username', [validators.Required(), validators.Regexp("\S{3,20}")])
+    color = TextField('Color', [validators.Required(), validators.AnyOf(ALLOWED_COLORS.keys())])
 
     def validate(self):
         rv = Form.validate(self)
@@ -88,12 +90,11 @@ class SignupForm(RedirectForm):
 class CreatePersonaForm(Form):
     username = SignupForm.username
     password = SignupForm.password
+    color = SignupForm.color
     movement = HiddenField()
 
     def validate(self):
         rv = Form.validate(self)
-        if not rv:
-            return False
 
         if current_user.check_password(self.password.data) is False:
             self.password.errors.append("Your password was not correct. Try again?")
@@ -110,6 +111,11 @@ class CreateMovementForm(Form):
     id = HiddenField()
     name = TextField('Choose a name for your Movement *', [validators.Required(), validators.Length(min=3, max=20)])
     mission = TextField('Describe your mission', [validators.Length(max=140)])
+    color = SignupForm.color
+
+    def validate(self):
+        print self.color.data
+        return Form.validate(self)
 
 
 class CreateStarForm(Form):

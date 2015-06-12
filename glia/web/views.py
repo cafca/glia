@@ -3,7 +3,7 @@
     glia.views
     ~~~~~
 
-    Implements public Glia API.
+    Implements views for Glia webapp
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
@@ -23,6 +23,7 @@ from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, process_attachments
+from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
@@ -112,7 +113,8 @@ def movements(id=None):
             description=form.mission.data,
             admin=current_user.active_persona,
             created=movement_created,
-            modified=movement_created)
+            modified=movement_created,
+            color=form.color.data)
         current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
         try:
             db.session.add(movement)
@@ -125,7 +127,7 @@ def movements(id=None):
             app.logger.debug("{} created new movement {}".format(current_user.active_persona, movement))
             return redirect(url_for('.movement', id=movement_id))
 
-    return render_template("movements.html", form=form)
+    return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
 @app.route('/star/<id>/')
@@ -210,7 +212,8 @@ def create_persona(for_movement=None):
             id=uuid4().hex,
             username=form.username.data,
             created=created_dt,
-            modified=created_dt)
+            modified=created_dt,
+            color=form.color.data)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -244,7 +247,8 @@ def create_persona(for_movement=None):
                 flash("New Persona {} created".format(form.username.data))
                 app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
                 return redirect(url_for("web.persona", id=persona.id))
-    return render_template('create_persona.html', form=form, movement=movement, movement_id=movement.id)
+    return render_template('create_persona.html',
+        form=form, movement=movement, movement_id=for_movement, allowed_colors=ALLOWED_COLORS.keys())
 
 
 @app.route('/persona/<id>/activate')
@@ -436,6 +440,9 @@ def create_star():
 @http_auth.login_required
 def login():
     """Login a user"""
+    if not current_user.is_anonymous():
+        return redirect(url_for("web.index"))
+
     form = LoginForm()
     if form.validate_on_submit():
         form.user.authenticated = True
@@ -477,13 +484,17 @@ def signup():
     from uuid import uuid4
     form = SignupForm()
 
+    if not current_user.is_anonymous():
+        return redirect(url_for("web.index"))
+
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
         persona = Persona(
             id=uuid4().hex,
             username=form.username.data,
             created=created_dt,
-            modified=created_dt)
+            modified=created_dt,
+            color=form.color.data)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -502,7 +513,7 @@ def signup():
         db.session.add(user)
 
         association = PersonaAssociation(
-            user=user, persona=persona, active=True)
+            user=user, persona=persona)
         db.session.add(association)
         try:
             db.session.commit()
@@ -519,7 +530,7 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         return form.redirect(url_for('web.index'))
-    return render_template('signup.html', form=form)
+    return render_template('signup.html', form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])

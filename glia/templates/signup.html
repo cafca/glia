@@ -1,15 +1,39 @@
 {% extends "base.html" %}
 
+{% block extra_styles %}
+<link rel='stylesheet' href='{{ url_for("static", filename="css/spectrum.css") }}' />
+{% endblock %}
+
+{% block extra_scripts %}
+<script src='{{ url_for("static", filename="js/spectrum.js") }}'></script>
+{% endblock %}
+
+{% block script %}
+$("#rk-colorpicker").spectrum({
+  showPaletteOnly: true,
+  showPalette:true,
+  flat: true,
+  showInput: true,
+  color: '#0B3954',
+  palette: [
+    {% for color in allowed_colors %}
+    '#{{ color }}',
+    {% endfor %}
+  ]
+});
+
+$(".rk-signup-form").submit(function() {
+  $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+});
+{% endblock %}
+
 {% block content %}
-<h1><a href="{{ url_for('web.index') }}">Home</a> > Signup</h1>
-
-
 <div class="row">
-<div class="col-xs-4">
+<div class="col-sm-4 col-sm-push-4">
 
-<p class="lead">Create your own account here.</p>
+<h1>Create your own account</h1>
 
-<form method="POST" action="{{ url_for('.signup') }}">
+<form method="POST" class="rk-signup-form" action="{{ url_for('.signup') }}">
   {{ form.hidden_tag() }}
   <div class="form-group {% if form.username.errors %}has-error{% endif %}">
     {% if form.username.errors %}
@@ -36,6 +60,15 @@
       <label for="password">Password</label>
     {% endif %}
     <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+  </div>
+
+  <div class="form-group {% if form.color.errors %}has-error{% endif %}">
+    {% if form.color.errors %}
+      <label for="color">{% for error in form.color.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="color">Choose a color for your first Persona</label>
+    {% endif %}
+    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" /></p>
   </div>
 
   <p>We care about your privacy, and we never spam. By creating an account, you agree to RKTIK's User Agreement and Privacy Policy.</p>

@@ -19,6 +19,8 @@
     <!-- Glia Styles -->
     <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
 
+    {% block extra_styles %}{% endblock %}
+
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -47,17 +49,26 @@
           <!-- Link movements, sorted by identity, here -->
           {% for asc in current_user.associations %}
             {% if asc.right_id == current_user.active_persona.id %}
-            <li class="active">
-              <a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">{{ id_macros.persona(asc.persona, nolink=True) }}</a>
-              <span class="sr-only">(active)</span>
-            </li>
+              <li class="active dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                  {{ id_macros.persona(asc.persona, nolink=True) }} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="{{ url_for('web.persona', id=asc.persona.id) }}">Mindspace</a></li>
+                  <li><a href="#">Blog</a></li>
+                  <li class="divider"></li>
+                  <li><a href="#">Preferences</a></li>
+                </ul>
+              </li>
             {% else %}
             <li><a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">
               {{ id_macros.persona(asc.persona, nolink=True) }}
             </a></li>
             {% endif %}
           {% endfor %}
+          {% if not current_user.is_anonymous() %}
             <li><a href="{{ url_for('web.create_persona') }}"web.><i class="fa fa-plus"></i> Add a new Persona</a></li>
+          {% endif %}
           </ul>
 
           <!-- Toolbox -->
@@ -143,6 +154,7 @@
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/jquery.simplyCountable.js') }}"></script>
     <!-- Glia JS -->
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
     <script type="text/javascript" charset="utf-8">{% block script %}
     window.user_id = "{{ current_user.active_persona.id }}";
     window.user_name = "{{  current_user.active_persona.username }}";

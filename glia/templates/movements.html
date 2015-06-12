@@ -1,23 +1,67 @@
 {% extends "base.html" %}
 
+{% block extra_styles %}
+<link rel='stylesheet' href='{{ url_for("static", filename="css/spectrum.css") }}' />
+{% endblock %}
+
+{% block extra_scripts %}
+<script src='{{ url_for("static", filename="js/spectrum.js") }}'></script>
+{% endblock %}
+
+{% block script %}
+$("#rk-colorpicker").spectrum({
+  showPaletteOnly: true,
+  showPalette:true,
+  flat: true,
+  showInput: true,
+  color: '#0B3954',
+  palette: [
+    {% for color in allowed_colors %}
+    '#{{ color }}',
+    {% endfor %}
+  ]
+});
+
+$(".rk-movement-form").submit(function() {
+  $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+});
+{% endblock %}
+
 {% block content %}
 
 <div class="row">
   <div class="col-sm-6 col-sm-offset-3">
-    <form action="{{ url_for('web.movements') }}" method="POST">
+    <form action="{{ url_for('web.movements') }}" method="POST" class="rk-movement-form">
       <h1>Start Your Movement Today</h1>
       {{ form.hidden_tag() }}
-      <div class="form-group">
-        {{ form.name.label }}
+      <div class="form-group {% if form.name.errors %}has-error{% endif %}">
+        {% if form.name.errors %}
+          <label for="name">{% for error in form.name.errors %}{{ error }} {% endfor %}</label>
+        {% else %}
+          <label for="name">Choose a name for your movement *</label>
+        {% endif %}
+
         {{ form.name(class_="form-control") }}
-        {% if form.name.errors %} {{form.name.errors}} {% endif %}
       </div>
-      <div class="form-group">
-        {{ form.mission.label }}
+      <div class="form-group {% if form.mission.errors %}has-error{% endif %}">
+        {% if form.mission.errors %}
+          <label for="mission">{% for error in form.mission.errors %}{{ error }} {% endfor %}</label>
+        {% else %}
+          <label for="mission">Describe your mission</label>
+        {% endif %}
+
         {{ form.mission(class_="form-control") }}
-        {% if form.mission.errors %} {{form.mission.errors}} {% endif %}
       </div>
-      <button type="submit" class="btn">Go to new movement</button>
+
+      <div class="form-group {% if form.color.errors %}has-error{% endif %}">
+        {% if form.color.errors %}
+          <label for="color">{% for error in form.color.errors %}{{ error }} {% endfor %}</label>
+        {% else %}
+          <label for="color">Choose a color</label>
+        {% endif %}
+        <p><input type='text' name="color" class="form-control" id="rk-colorpicker" /></p>
+      </div>
+      <button type="submit" class="btn btn-primary">Go to new movement</button>
     </form>
   </div>
 </div>
