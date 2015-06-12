@@ -483,6 +483,9 @@ def signup():
     from uuid import uuid4
     form = SignupForm()
 
+    if not current_user.is_anonymous():
+        return redirect(url_for("web.index"))
+
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
         persona = Persona(
@@ -509,7 +512,7 @@ def signup():
         db.session.add(user)
 
         association = PersonaAssociation(
-            user=user, persona=persona, active=True)
+            user=user, persona=persona)
         db.session.add(association)
         try:
             db.session.commit()
