@@ -14,11 +14,11 @@ $("#rk-colorpicker").spectrum({
   showPalette:true,
   flat: true,
   showInput: true,
-  color: 'blanchedalmond',
+  color: '#0B3954',
   palette: [
-    ['black', 'white', 'blanchedalmond',
-    'rgb(255, 128, 0);', 'hsv 100 70 50'],
-    ['red', 'yellow', 'green', 'blue', 'violet']
+    {% for color in allowed_colors %}
+    '#{{ color }}',
+    {% endfor %}
   ]
 });
 
