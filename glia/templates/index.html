@@ -22,7 +22,7 @@
       <div class="panel-body">
         <h3>Discover Movements</h3>
       </div>
-      <ul class="list-group" id="rk-chat-lines">
+      <ul class="list-group">
       {% for movement in more_movements %}
       <li class="list-group-item">{{ id_macros.movement(movement) }} {{ movement.description|default("", True) }}</li>
       {% endfor %}

@@ -22,8 +22,6 @@ def inject_repost_starmaps():
         # Followed movements
         # rv = rv + [m.mindspace for m in current_user.active_persona.movements_followed]
 
-        print [m.name for m in rv if m is not None]
-
     return dict(
         repost_starmaps=rv
     )
