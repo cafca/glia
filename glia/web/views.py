@@ -335,8 +335,13 @@ def movement_mindspace(id):
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
+    recent_blog_post = movement.blog.index.order_by(Star.created.desc()).first()
+    if recent_blog_post and datetime.datetime.utcnow() \
+            - recent_blog_post.created > datetime.timedelta(days=1):
+        recent_blog_post = None
+
     return render_template('movement_mindspace.html',
-        movement=movement, stars=top_posts)
+        movement=movement, stars=top_posts, recent_blog_post=recent_blog_post)
 
 
 @app.route('/movement/<id>/blog/', methods=["GET"])

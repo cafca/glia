@@ -84,6 +84,13 @@ $(document).ready(function() {
       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       <p>This is the movement's <strong>mindspace</strong>. On the right hand side you can chat with other members, show them stuff and plan your next move. Below you see content from the chat with the most votes.
     </div>
+
+    {% if recent_blog_post %}
+      <div class="alert alert-info">
+        <h4>{{ star_macros.star_line(recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
+      </div>
+    {% endif %}
+
     {% for star in stars %}
       {% if loop.first %}
         {{ star_macros.star_lead(star, controlled_personas, promote_to=star.promote_target) }}
