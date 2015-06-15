@@ -63,10 +63,16 @@ def index():
     """Front page"""
     movementform = CreateMovementForm()
 
-    # Collect data for TOC
+    def movement_sort(movement):
+        s = movement.mindspace.index \
+            .filter(Star.state >= 0) \
+            .order_by(Star.created.desc()) \
+            .first()
+        return s.created if s is not None else datetime.datetime.fromtimestamp(0)
+
     movements = current_user.active_persona.movements_followed
     movement_data = []
-    for g in movements:
+    for g in sorted(movements, key=movement_sort, reverse=True):
         g_star_selection = g.mindspace.index.filter(Star.state >= 0)
         g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
 
