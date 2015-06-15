@@ -76,9 +76,15 @@ def index():
         g_star_selection = g.mindspace.index.filter(Star.state >= 0)
         g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
 
+        recent_blog_post = g.blog.index.order_by(Star.created.desc()).first()
+        if recent_blog_post and datetime.datetime.utcnow() \
+                - recent_blog_post.created > datetime.timedelta(days=1):
+            recent_blog_post = None
+
         movement_data.append({
             'movement': g,
-            'top_posts': g_top_posts
+            'top_posts': g_top_posts,
+            'recent_blog_post': recent_blog_post
         })
 
     more_movements = Movement.query \

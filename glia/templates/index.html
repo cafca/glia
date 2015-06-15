@@ -40,25 +40,29 @@
     {% for m in movement_data %}
       <div class="panel panel-default">
         <div class="panel-heading">
-          <h1>{{ id_macros.movement(m.movement) }}</h1>
+          <h4>{{ id_macros.movement(m.movement) }}</h4>
           <p><em>{{ m.movement.description }}</em></p>
         </div>
 
-        {% if m.top_posts|length > 0 %}
         <div class="panel-body">
-          {% for star in m.top_posts %}
-            {% if loop.first %}
-              {{ star_macros.star_lead(m.top_posts[0], controlled_personas) }}
-            {% else %}
-              {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
-            {% endif %}
-          {% endfor %}
+          {% if m.recent_blog_post %}
+          <div class="alert alert-info">
+            <h4>{{ star_macros.star_line(m.recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
+          </div>
+          {% endif %}
+
+          {% if m.top_posts|length > 0 %}
+            {% for star in m.top_posts %}
+              {% if loop.first %}
+                {{ star_macros.star_lead(m.top_posts[0], controlled_personas) }}
+              {% else %}
+                {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <p>Peek in and post something now, it's empty!</p>
+          {% endif %}
         </div>
-        {% else %}
-        <div class="panel-body">
-          <p>Peek in and post something now, it's empty!</p>
-        </div>
-        {% endif %}
       </div> <!-- ./ movement panel -->
     {% endfor %}
     </div>

@@ -54,7 +54,12 @@ $(document).ready(function() {
         {% if context|length > 0 %}
         <blockquote style="padding-bottom: -20px">
         {% for s in context %}
-        <p>{{ star_macros.short(s) }}</p>
+        <p>
+          {{ star_macros.short(s) }}
+          {% if s.starmap != star.starmap %}
+          <span class="label label-default">{{s.starmap.name}}</span>
+          {% endif %}
+        </p>
         {% endfor %}
         </blockquote>
         {% endif %}

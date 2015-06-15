@@ -32,13 +32,29 @@
 {% endif %}
 {% endmacro %}
 
+{% macro label_badges(labels) %}
+    {% if labels %}
+      {% for label in labels %}
+          {% if not label.kind %}
+              {% set kind = "default" %}
+          {% else %}
+              {% set kind = label.kind %}
+          {% endif %}
+          <span class="label label-{{kind}}">{{ label.text }}</span>
+      {% endfor %}
+    {% endif %}
+{% endmacro %}
 
-{% macro star_lead(star, controlled_personas, truncate=True, promote_to=None) %}
+
+{% macro star_lead(star, controlled_personas, truncate=True, promote_to=None, labels=None) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-lead rk-star-{{ star.id }}">
   <span class="rk-star-title">
-    <a href="{{ url_for('web.star', id=star.id) }}"><h2>{{ star.text|mentions(star, nolink=True) }}</h2></a>
+    <h2>
+      {{ label_badges(labels) }}
+      <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text|mentions(star, nolink=True) }}</a>
+    </h2>
   </span>
 
   <!-- Attachments -->
@@ -89,7 +105,7 @@
 
 
 
-{% macro star_line(star, controlled_personas, truncate=True, no_planets=False, promote_to=None) %}
+{% macro star_line(star, controlled_personas, truncate=True, no_planets=False, promote_to=None, labels=None) %}
 
 <!-- STAR {{star.id}} -->
 <div class="rk-star rk-star-line rk-star-{{ star.id }} clearfix">
@@ -105,10 +121,13 @@
 
   <div class="rk-line-container">
     <div class="rk-star-title">
+      <p>
+      {{ label_badges(labels) }}
       <a href="{{ url_for('web.star', id=star.id) }}">{{ star.text|mentions(star, nolink=True) }}</a>
       {% if no_planets %}
       {% for planet_assoc in star.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
       {% endif %}
+      </p>
     </div>
 
     {% if no_planets == False and star.planet_assocs.count() > 0 %}
@@ -180,7 +199,11 @@
   <div class="rk-line-container">
     <div class="rk-star-meta">
       <span class="small">
-        by {{ id_macros.identity(star.author) }} {{ star.created|localtime|naturaltime }}
+        {{ id_macros.identity(star.author) }}
+        {% if star.starmap and star.starmap != star.parent.starmap %}
+        on <a href="{{ star.starmap.get_absolute_url() }}"><span class="label label-default">{{ star.starmap.name }}</span></a>
+        {% endif %}
+        {{ star.created|localtime|naturaltime }}
         <a href="{{ url_for('web.star', id=star.id) }}">link</a>
       </span>
     </div>
