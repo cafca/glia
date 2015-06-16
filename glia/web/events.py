@@ -85,6 +85,7 @@ def text(message):
     errors = ""
     author = current_user.active_persona
     parent_star = None
+    notifications = list()
 
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
@@ -120,6 +121,9 @@ def text(message):
             star.planet_assocs.append(assoc)
             app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
+
+            # if isinstance(planet, Mention):
+            #     planet.send_notifications()
 
         try:
             db.session.commit()

@@ -27,7 +27,7 @@ from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
-    PlanetAssociation, TextPlanet
+    PlanetAssociation, TextPlanet, Notification
 
 
 @app.before_request
@@ -240,6 +240,13 @@ def create_persona(for_movement=None):
             user=current_user, persona=persona)
         db.session.add(association)
 
+        notification = Notification(
+            text="Welcome to RKTIK, {}!".format(persona.username),
+            recipient=persona,
+            domain="system"
+        )
+        db.session.add(notification)
+
         if movement:
             persona.toggle_movement_membership(movement=movement)
 
@@ -256,7 +263,6 @@ def create_persona(for_movement=None):
                     persona, current_user, movement))
                 return redirect(url_for("web.movement_mindspace", id=movement.id))
             else:
-                flash("New Persona {} created".format(form.username.data))
                 app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
                 return redirect(url_for("web.persona", id=persona.id))
     return render_template('create_persona.html',
@@ -518,6 +524,13 @@ def signup():
         persona.generate_keys(form.password.data)
 
         db.session.add(persona)
+
+        notification = Notification(
+            text="Welcome to RKTIK, {}!".format(persona.username),
+            recipient=persona,
+            domain="system"
+        )
+        db.session.add(notification)
 
         created_dt = datetime.datetime.utcnow()
         user = User(

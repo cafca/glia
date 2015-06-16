@@ -61,7 +61,7 @@
                   <li><a href="{{ url_for('web.persona', id=asc.persona.id) }}">Personal Mindspace</a></li>
                   <li class="divider"></li>
                   {% for notification in asc.persona.notifications %}
-                    <li class="{% if notification.unread %}rk-unread{% endif %}"><a href="{{ notification.url }}">{{ notification.text }}</a></li>
+                    <li class="{% if notification.unread %}rk-unread{% endif %} rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
                   {% else %}
                     <li><a>No notifications</a></li>
                   {% endfor %}
