@@ -22,7 +22,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
-from glia.web.helpers import send_validation_email, process_attachments
+from glia.web.helpers import send_validation_email, process_attachments, \
+    send_external_notifications
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
@@ -450,6 +451,7 @@ def create_star():
             if isinstance(planet, Mention):
                 notification = MentionNotification(planet,
                     author, url_for('web.star', id=star_id))
+                send_external_notifications(notification)
                 db.session.add(notification)
 
             assoc = PlanetAssociation(star=star, planet=planet, author=author)
@@ -460,6 +462,7 @@ def create_star():
         if parent:
             notif = ReplyNotification(parent_star=parent, author=author,
                 url=url_for('web.star', id=star_id))
+            send_external_notifications(notif)
             db.session.add(notif)
 
         try:

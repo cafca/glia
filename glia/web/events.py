@@ -19,7 +19,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
-from glia.web.helpers import process_attachments, find_mentions
+from glia.web.helpers import process_attachments, find_mentions, \
+    send_external_notifications
 from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
     Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
@@ -119,6 +120,7 @@ def text(message):
             if isinstance(planet, Mention):
                 notification = MentionNotification(planet,
                     author, url_for('web.star', id=star_id))
+                send_external_notifications(notification)
                 db.session.add(notification)
 
             assoc = PlanetAssociation(star=star, planet=planet, author=author)
@@ -129,6 +131,7 @@ def text(message):
         if parent_star:
             notif = ReplyNotification(parent_star=parent_star, author=author,
                 url=url_for('web.star', id=star_id))
+            send_external_notifications(notif)
             db.session.add(notif)
 
         try:
@@ -201,12 +204,14 @@ def repost(message):
                 mention = Mention(identity=ident, text=mention_text)
                 notification = MentionNotification(
                     mention, author, url_for('web.star', id=star.id))
+                send_external_notifications(notification)
                 db.session.add(mention)
                 db.session.add(notification)
 
         if parent_star:
             notif = ReplyNotification(parent_star=parent_star, author=author,
                 url=url_for('web.star', id=star.id))
+            send_external_notifications(notif)
             db.session.add(notif)
 
         try:

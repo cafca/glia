@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <p>Hello {{ notification.recipient.username }},</p>
+
+    <p>&nbsp;</p>
+
+    <p>{{ notification.text }}</p>
+
+    <p><strong><a href="{{ notification.url }}">View on RKTIK</a></strong></p>
+
+
+    <p>Thank you for using RKTIK,<br />
+    - The RKTIK Team</p>
+    <p><a href="{{ url_for('web.index', _external=True) }}">RKTIK</a></p>
+  </body>
+</html>

@@ -82,6 +82,28 @@ def send_validation_email(user, db):
         user.validate()
 
 
+def send_external_notifications(notification):
+    """Send Email and trigger Desktop notification"""
+
+    message = sendgrid.Mail()
+    message.add_to("{} <{}>".format(
+        notification.recipient.username, notification.recipient.user.email))
+    message.set_subject(notification.text)
+    message.set_html(render_template("email/notification.html",
+        notification=notification))
+    message.set_from('RKTIK Notifications')
+
+    logger.info("Sending email notification to {}: {}".format(
+        notification.recipient, notification.recipient.user.email))
+
+    try:
+        status, msg = send_email(message)
+    except SendGridClientError, e:
+        logger.error("Client error sending notification email: {}".format(e))
+    except SendGridServerError, e:
+        logger.error("Server error sending notification email: {}".format(e))
+
+
 def find_links(text):
     """Given a text, find all alive links inside
 
