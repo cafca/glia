@@ -27,7 +27,8 @@ from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
-    PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification
+    PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification, \
+    ReplyNotification
 
 
 @app.before_request
@@ -455,6 +456,11 @@ def create_star():
             star.planet_assocs.append(assoc)
             app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
+
+        if parent:
+            notif = ReplyNotification(parent_star=parent, author=author,
+                url=url_for('web.star', id=star_id))
+            db.session.add(notif)
 
         try:
             db.session.commit()

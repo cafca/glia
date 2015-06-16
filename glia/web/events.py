@@ -21,7 +21,7 @@ from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments, find_mentions
 from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
-    Persona, Mention, MentionNotification
+    Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
@@ -126,8 +126,10 @@ def text(message):
             app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
 
-            # if isinstance(planet, Mention):
-            #     planet.send_notifications()
+        if parent_star:
+            notif = ReplyNotification(parent_star=parent_star, author=author,
+                url=url_for('web.star', id=star_id))
+            db.session.add(notif)
 
         try:
             db.session.commit()
@@ -201,6 +203,11 @@ def repost(message):
                     mention, author, url_for('web.star', id=star.id))
                 db.session.add(mention)
                 db.session.add(notification)
+
+        if parent_star:
+            notif = ReplyNotification(parent_star=parent_star, author=author,
+                url=url_for('web.star', id=star.id))
+            db.session.add(notif)
 
         try:
             db.session.commit()
