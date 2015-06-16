@@ -261,7 +261,7 @@ def create_persona(for_movement=None):
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
-            domain="system"
+            source="system"
         )
         db.session.add(notification)
 
@@ -572,7 +572,7 @@ def signup():
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
-            domain="system"
+            source="system"
         )
         db.session.add(notification)
 
