@@ -19,9 +19,9 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
-from glia.web.helpers import process_attachments
+from glia.web.helpers import process_attachments, find_mentions
 from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
-    Persona
+    Persona, Mention, MentionNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
@@ -85,7 +85,6 @@ def text(message):
     errors = ""
     author = current_user.active_persona
     parent_star = None
-    notifications = list()
 
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
@@ -116,6 +115,11 @@ def text(message):
 
         for planet in planets:
             db.session.add(planet)
+
+            if isinstance(planet, Mention):
+                notification = MentionNotification(planet,
+                    author, url_for('web.star', id=star_id))
+                db.session.add(notification)
 
             assoc = PlanetAssociation(star=star, planet=planet, author=author)
             star.planet_assocs.append(assoc)
@@ -185,7 +189,18 @@ def repost(message):
 
     if errors == "":
         star = Star.clone(parent_star, author, map)
+        star.text = message['text']
         db.session.add(star)
+
+        mentions = find_mentions(star.text)
+        for mention_text, ident in mentions:
+            if star.planet_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:
+                app.logger.info("Adding new mention of {}".format(ident))
+                mention = Mention(identity=ident, text=mention_text)
+                notification = MentionNotification(
+                    mention, author, url_for('web.star', id=star.id))
+                db.session.add(mention)
+                db.session.add(notification)
 
         try:
             db.session.commit()

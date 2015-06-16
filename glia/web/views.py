@@ -27,7 +27,7 @@ from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
-    PlanetAssociation, TextPlanet, Notification
+    PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification
 
 
 @app.before_request
@@ -306,6 +306,20 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
+@app.route('/notifications')
+@app.route('/notifications/page-<page>')
+@login_required
+@http_auth.login_required
+def notifications(page=1):
+    notifications = current_user.active_persona \
+        .notifications \
+        .order_by(Notification.modified.desc()) \
+        .paginate(page, 25)
+
+    return(render_template('notifications.html',
+        notifications=notifications))
+
+
 @app.route('/movement/<id>/')
 @login_required
 @http_auth.login_required
@@ -416,6 +430,11 @@ def create_star():
 
         for planet in planets:
             db.session.add(planet)
+
+            if isinstance(planet, Mention):
+                notification = MentionNotification(planet,
+                    author, url_for('web.star', id=star_id))
+                db.session.add(notification)
 
             assoc = PlanetAssociation(star=star, planet=planet, author=author)
             star.planet_assocs.append(assoc)

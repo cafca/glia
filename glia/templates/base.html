@@ -52,26 +52,28 @@
               <li class="active dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                   {{ id_macros.persona(asc.persona, nolink=True) }}
-                  {% if asc.persona.notifications|length > 0 %}
-                  <span class="badge">{{ asc.persona.notifications|length }}</span>
+                  {% if asc.persona.notification_list()|length > 0 %}
+                  <span class="badge">{{ asc.persona.notification_list()|length }}</span>
                   {% endif %}
                   <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu rk-notifications" role="menu">
                   <li><a href="{{ url_for('web.persona', id=asc.persona.id) }}">Personal Mindspace</a></li>
                   <li class="divider"></li>
-                  {% for notification in asc.persona.notifications %}
-                    <li class="{% if notification.unread %}rk-unread{% endif %} rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
+                  {% for notification in asc.persona.notification_list() %}
+                    <li class="rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
                   {% else %}
-                    <li><a>No notifications</a></li>
+                    <li><a href="#">No unread notifications</a></li>
                   {% endfor %}
+                  <li class="divider"></li>
+                  <li><a href="{{ url_for('web.notifications') }}">All notifications</a></li>
                 </ul>
               </li>
             {% else %}
             <li><a href="{{ url_for('web.activate_persona', id=asc.persona.id) }}">
               {{ id_macros.persona(asc.persona, nolink=True) }}
-              {% if asc.persona.notifications|length > 0 %}
-              <span class="badge">{{ asc.persona.notifications|length }}</span>
+              {% if asc.persona.notification_list()|length > 0 %}
+              <span class="badge">{{ asc.persona.notification_list()|length }}</span>
               {% endif %}
             </a></li>
             {% endif %}
