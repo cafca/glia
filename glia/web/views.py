@@ -36,6 +36,21 @@ def account_notifications():
         flash("Your account is not activated. Please click the link in the email that we sent you.")
 
 
+@app.before_request
+def mark_notifications_read():
+    notifications = Notification.query \
+        .filter_by(url=request.path) \
+        .filter_by(recipient=current_user.active_persona) \
+        .filter_by(unread=True)
+
+    for n in notifications:
+        n.unread = False
+        db.session.add(n)
+        app.logger.info("Marked {} read".format(n))
+
+    db.session.commit()
+
+
 @app.route('/debug/')
 @http_auth.login_required
 def debug():
