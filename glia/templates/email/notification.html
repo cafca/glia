@@ -10,7 +10,7 @@
 
     <p>{{ notification.text }}</p>
 
-    <p><strong><a href="{{ notification.url }}">View on RKTIK</a></strong></p>
+    <p><strong><a href="http://{{ config.get('SERVER_HOST') }}{{ notification.url }}">View on RKTIK</a></strong></p>
 
 
     <p>Thank you for using RKTIK,<br />
