@@ -22,18 +22,35 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
-from glia.web.helpers import send_validation_email, process_attachments
+from glia.web.helpers import send_validation_email, process_attachments, \
+    send_external_notifications
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
-    PlanetAssociation, TextPlanet
+    PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification, \
+    ReplyNotification
 
 
 @app.before_request
 def account_notifications():
     if not current_user.is_anonymous and not current_user.is_active:
         flash("Your account is not activated. Please click the link in the email that we sent you.")
+
+
+@app.before_request
+def mark_notifications_read():
+    notifications = Notification.query \
+        .filter_by(url=request.path) \
+        .filter_by(recipient=current_user.active_persona) \
+        .filter_by(unread=True)
+
+    for n in notifications:
+        n.unread = False
+        db.session.add(n)
+        app.logger.info("Marked {} read".format(n))
+
+    db.session.commit()
 
 
 @app.route('/debug/')
@@ -240,6 +257,13 @@ def create_persona(for_movement=None):
             user=current_user, persona=persona)
         db.session.add(association)
 
+        notification = Notification(
+            text="Welcome to RKTIK, {}!".format(persona.username),
+            recipient=persona,
+            domain="system"
+        )
+        db.session.add(notification)
+
         if movement:
             persona.toggle_movement_membership(movement=movement)
 
@@ -256,7 +280,6 @@ def create_persona(for_movement=None):
                     persona, current_user, movement))
                 return redirect(url_for("web.movement_mindspace", id=movement.id))
             else:
-                flash("New Persona {} created".format(form.username.data))
                 app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
                 return redirect(url_for("web.persona", id=persona.id))
     return render_template('create_persona.html',
@@ -298,6 +321,20 @@ def persona(id=None):
         .filter_by(persona_id=persona.id)
 
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
+
+
+@app.route('/notifications')
+@app.route('/notifications/page-<page>')
+@login_required
+@http_auth.login_required
+def notifications(page=1):
+    notifications = current_user.active_persona \
+        .notifications \
+        .order_by(Notification.modified.desc()) \
+        .paginate(page, 25)
+
+    return(render_template('notifications.html',
+        notifications=notifications))
 
 
 @app.route('/movement/<id>/')
@@ -411,10 +448,22 @@ def create_star():
         for planet in planets:
             db.session.add(planet)
 
+            if isinstance(planet, Mention):
+                notification = MentionNotification(planet,
+                    author, url_for('web.star', id=star_id))
+                send_external_notifications(notification)
+                db.session.add(notification)
+
             assoc = PlanetAssociation(star=star, planet=planet, author=author)
             star.planet_assocs.append(assoc)
             app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
+
+        if parent:
+            notif = ReplyNotification(parent_star=parent, author=author,
+                url=url_for('web.star', id=star_id))
+            send_external_notifications(notif)
+            db.session.add(notif)
 
         try:
             db.session.commit()
@@ -518,6 +567,13 @@ def signup():
         persona.generate_keys(form.password.data)
 
         db.session.add(persona)
+
+        notification = Notification(
+            text="Welcome to RKTIK, {}!".format(persona.username),
+            recipient=persona,
+            domain="system"
+        )
+        db.session.add(notification)
 
         created_dt = datetime.datetime.utcnow()
         user = User(

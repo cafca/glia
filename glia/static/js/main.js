@@ -8,13 +8,27 @@
 */
 
 var socket;
+var psocket;
 
 $(document).ready(function(){
     PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
+
+    console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/personas')
+    psocket = io.connect('http://' + document.domain + ':' + location.port + '/personas');
+    psocket.on('connect', function() {
+        console.log("Receiving personal messages");
+    })
+
+    psocket.on('message', function(data) {
+        notification(data.title, data.msg);
+    })
+
+
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/movements')
     socket = io.connect('http://' + document.domain + ':' + location.port + '/movements');
     socket.on('connect', function() {
+        console.log("Receiving movement messages");
         $('#rk-chat-meta').addClass('rk-chat-connected');
         socket.emit('joined', {'room_id': window.room_id});
         load_more_chatlines(update_last=true);

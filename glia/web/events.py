@@ -19,9 +19,10 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
-from glia.web.helpers import process_attachments
+from glia.web.helpers import process_attachments, find_mentions, \
+    send_external_notifications
 from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
-    Persona
+    Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
@@ -37,6 +38,28 @@ def socketio_authenticated_only(f):
         else:
             return f(*args, **kwargs)
     return wrapped
+
+
+#
+# PERSONAL WEBSOCKET
+#
+
+
+@socketio.on_error(namespace='/personas')
+def chat_error_handlerp(e):
+    app.logger.error('An error has occurred: ' + str(e))
+
+
+@socketio_authenticated_only
+@socketio.on('connect', namespace="/personas")
+def connectp():
+    request.namespace.join_room(current_user.active_persona.id)
+    app.logger.info("{} logged in".format(current_user.active_persona))
+
+
+#
+# MOVEMENT WEBSOCKET
+#
 
 
 @socketio_authenticated_only
@@ -116,10 +139,22 @@ def text(message):
         for planet in planets:
             db.session.add(planet)
 
+            if isinstance(planet, Mention):
+                notification = MentionNotification(planet,
+                    author, url_for('web.star', id=star_id))
+                send_external_notifications(notification)
+                db.session.add(notification)
+
             assoc = PlanetAssociation(star=star, planet=planet, author=author)
             star.planet_assocs.append(assoc)
             app.logger.info("Attached {} to new {}".format(planet, star))
             db.session.add(assoc)
+
+        if parent_star:
+            notif = ReplyNotification(parent_star=parent_star, author=author,
+                url=url_for('web.star', id=star_id))
+            send_external_notifications(notif)
+            db.session.add(notif)
 
         try:
             db.session.commit()
@@ -181,7 +216,25 @@ def repost(message):
 
     if errors == "":
         star = Star.clone(parent_star, author, map)
+        star.text = message['text']
         db.session.add(star)
+
+        mentions = find_mentions(star.text)
+        for mention_text, ident in mentions:
+            if star.planet_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:
+                app.logger.info("Adding new mention of {}".format(ident))
+                mention = Mention(identity=ident, text=mention_text)
+                notification = MentionNotification(
+                    mention, author, url_for('web.star', id=star.id))
+                send_external_notifications(notification)
+                db.session.add(mention)
+                db.session.add(notification)
+
+        if parent_star:
+            notif = ReplyNotification(parent_star=parent_star, author=author,
+                url=url_for('web.star', id=star.id))
+            send_external_notifications(notif)
+            db.session.add(notif)
 
         try:
             db.session.commit()
