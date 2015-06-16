@@ -40,17 +40,18 @@ def account_notifications():
 
 @app.before_request
 def mark_notifications_read():
-    notifications = Notification.query \
-        .filter_by(url=request.path) \
-        .filter_by(recipient=current_user.active_persona) \
-        .filter_by(unread=True)
+    if not current_user.is_anonymous():
+        notifications = Notification.query \
+            .filter_by(url=request.path) \
+            .filter_by(recipient=current_user.active_persona) \
+            .filter_by(unread=True)
 
-    for n in notifications:
-        n.unread = False
-        db.session.add(n)
-        app.logger.info("Marked {} read".format(n))
+        for n in notifications:
+            n.unread = False
+            db.session.add(n)
+            app.logger.info("Marked {} read".format(n))
 
-    db.session.commit()
+        db.session.commit()
 
 
 @app.route('/debug/')
