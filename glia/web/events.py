@@ -40,6 +40,28 @@ def socketio_authenticated_only(f):
     return wrapped
 
 
+#
+# PERSONAL WEBSOCKET
+#
+
+
+@socketio.on_error(namespace='/personas')
+def chat_error_handlerp(e):
+    app.logger.error('An error has occurred: ' + str(e))
+
+
+@socketio_authenticated_only
+@socketio.on('connect', namespace="/personas")
+def connectp():
+    request.namespace.join_room(current_user.active_persona.id)
+    app.logger.info("{} logged in".format(current_user.active_persona))
+
+
+#
+# MOVEMENT WEBSOCKET
+#
+
+
 @socketio_authenticated_only
 @socketio.on('joined', namespace='/movements')
 def joined(message):

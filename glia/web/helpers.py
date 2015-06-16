@@ -11,6 +11,7 @@ from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy import inspect
 
+from .. import socketio
 from nucleus.nucleus.models import LinkPlanet, LinkedPicturePlanet, \
     TextPlanet, TagPlanet, Identity, Mention
 
@@ -84,6 +85,16 @@ def send_validation_email(user, db):
 
 def send_external_notifications(notification):
     """Send Email and trigger Desktop notification"""
+
+    # Desktop notifications
+    data = {
+        'title': notification.source,
+        'msg': notification.text
+    }
+    socketio.emit('message', data,
+        room=notification.recipient.id, namespace="/personas")
+
+    # Email notification
 
     message = sendgrid.Mail()
     message.add_to("{} <{}>".format(
