@@ -87,7 +87,7 @@ $(document).ready(function() {
 
     {% if recent_blog_post %}
       <div class="alert alert-info">
-        <h4>{{ thought_macros.thought_line(recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
+        <h4>{{ thought_macros.thought_line(recent_blog_post, labels=[{"text": "Blog", }], no_percepts=True) }}</h4>
       </div>
     {% endif %}
 
@@ -95,7 +95,7 @@ $(document).ready(function() {
       {% if loop.first %}
         {{ thought_macros.thought_lead(thought, controlled_personas, promote_to=thought.promote_target) }}
       {% else %}
-        {{ thought_macros.thought_line(thought, controlled_personas, no_planets=True, promote_to=thought.promote_target) }}
+        {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True, promote_to=thought.promote_target) }}
       {% endif %}
     {% endfor %}
   </div> <!-- ./ thought listing -->

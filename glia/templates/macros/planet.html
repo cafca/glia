@@ -1,45 +1,45 @@
-{% macro planet(planet, scale=True, icon=True, truncate=True, size="small") %}
-<!-- PLANET: {{planet.kind}} {{planet.id}} -->
-{% if planet.kind == 'tag' %}
-<span class="rk-tag"><a href="{{ url_for('web.tag', name=planet.tag.name) }}">#{{ planet.title }}</a></span>
-{% elif planet.kind == 'picture' %}
+{% macro percept(percept, scale=True, icon=True, truncate=True, size="small") %}
+<!-- PERCEPT: {{percept.kind}} {{percept.id}} -->
+{% if percept.kind == 'tag' %}
+<span class="rk-tag"><a href="{{ url_for('web.tag', name=percept.tag.name) }}">#{{ percept.title }}</a></span>
+{% elif percept.kind == 'picture' %}
 <span class="rk-imagewrap">
-  <img src="{{ url_for('attachment', filename=planet.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
+  <img src="{{ url_for('attachment', filename=percept.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
 </span>
-{% elif planet.kind == 'linkedpicture' %}
+{% elif percept.kind == 'linkedpicture' %}
 <span class="rk-image">
-  <img src="{{ planet.url }}" class="img-responsive img-rounded" alt="{{ planet.title }}"/>
+  <img src="{{ percept.url }}" class="img-responsive img-rounded" alt="{{ percept.title }}"/>
 </span>
-{% elif planet.kind == 'link' %}
-  {% if planet.iframe_url() %}
+{% elif percept.kind == 'link' %}
+  {% if percept.iframe_url() %}
   <div class="embed-responsive embed-responsive-16by9">
-    <iframe class="embed-responsive-item" src="{{ planet.iframe_url() }}" allowfullscreen></iframe>
+    <iframe class="embed-responsive-item" src="{{ percept.iframe_url() }}" allowfullscreen></iframe>
   </div>
   {% else %}
-  <a class="rk-link" href="{{ planet.url }}">
+  <a class="rk-link" href="{{ percept.url }}">
     {% if icon == True %}
-    <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ planet.favicon_url() }}" /> &nbsp;
+    <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ percept.favicon_url() }}" /> &nbsp;
     {% endif %}
-    {% if planet.title %}
-    {{ planet.title }}
+    {% if percept.title %}
+    {{ percept.title }}
     {% else %}
-    {{ planet.url }}
+    {{ percept.url }}
     {% endif %}
   </a>
   {% endif %}
-{% elif planet.kind == 'text' %}
+{% elif percept.kind == 'text' %}
 <span class="rk-text">
   {% if truncate %}
   <p>
-    <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
+    <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
   </p>
-  {{ planet.text|truncate()|markdown|striptags}}
+  {{ percept.text|truncate()|markdown|striptags}}
   {% else %}
   <p>
-    <i class="fa fa-file-text-o"></i>  Read {{ planet.reading_time()|naturaldelta }}
-    <i class="fa fa-link"></i>  Source {{ planet.source|urlize }}
+    <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
+    <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
   </p>
-  {{ planet.text|markdown}}
+  {{ percept.text|markdown}}
   {% endif %}
 </span>
 {% endif %}
@@ -47,23 +47,23 @@
 {% endmacro %}
 
 
-{% macro planet_icon(planet) %}
-<!-- PLANET: {{planet.id}} -->
+{% macro percept_icon(percept) %}
+<!-- PERCEPT: {{percept.id}} -->
 
-{% if planet.kind == 'picture' %}
+{% if percept.kind == 'picture' %}
 <button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
-{% elif planet.kind == 'tag' %}
-<button disabled="disabled" class="btn btn-xs">#{{ planet.title }}</button>
-{% elif planet.kind == 'linkedpicture' %}
+{% elif percept.kind == 'tag' %}
+<button disabled="disabled" class="btn btn-xs">#{{ percept.title }}</button>
+{% elif percept.kind == 'linkedpicture' %}
 <button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
-{% elif planet.kind == 'link' %}
+{% elif percept.kind == 'link' %}
 <button disabled="disabled" class="btn btn-xs">
   <i class="fa fa-link"></i>
-  <img class="rk-favicon-small" src="{{ planet.favicon_url() }}" />
+  <img class="rk-favicon-small" src="{{ percept.favicon_url() }}" />
 </button>
-{% elif planet.kind == 'text' %}
+{% elif percept.kind == 'text' %}
 <button disabled="disabled" href="#" class="btn btn-xs">
-  <i class="fa fa-file-text-o"></i> read {{ planet.reading_time()|naturaldelta }}
+  <i class="fa fa-file-text-o"></i> read {{ percept.reading_time()|naturaldelta }}
 </button>
 {% endif %}
 

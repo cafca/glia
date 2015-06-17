@@ -47,7 +47,7 @@
         <div class="panel-body">
           {% if m.recent_blog_post %}
           <div class="alert alert-info">
-            <h4>{{ thought_macros.thought_line(m.recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
+            <h4>{{ thought_macros.thought_line(m.recent_blog_post, labels=[{"text": "Blog", }], no_percepts=True) }}</h4>
           </div>
           {% endif %}
 
@@ -56,7 +56,7 @@
               {% if loop.first %}
                 {{ thought_macros.thought_lead(m.top_posts[0], controlled_personas) }}
               {% else %}
-                {{ thought_macros.thought_line(thought, controlled_personas, no_planets=True) }}
+                {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True) }}
               {% endif %}
             {% endfor %}
           {% else %}

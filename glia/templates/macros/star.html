@@ -1,4 +1,4 @@
-{% import "macros/planet.html" as planet_macros %}
+{% import "macros/percept.html" as percept_macros %}
 {% import "macros/identity.html" as id_macros %}
 
 {% macro oneup(thought) %}
@@ -58,18 +58,18 @@
   </span>
 
   <!-- Attachments -->
-  <div class="rk-planet">
+  <div class="rk-percept">
     <div class="row">
-    {% for planet_assoc in thought.planet_assocs|sort(attribute='sort_rank') %}
-      {% if planet_assoc.planet.kind == "linkedpicture" %}
+    {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
+      {% if percept_assoc.percept.kind == "linkedpicture" %}
       <div class="col-sm-4">
-        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
       </div>
-      {% elif planet_assoc.planet.kind == 'tag' %}
-        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+      {% elif percept_assoc.percept.kind == 'tag' %}
+        {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
       {% else %}
       <div class="col-sm-12">
-        {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
+        {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True, truncate=truncate)}}
       </div>
       {% endif %}
     {% endfor %}
@@ -105,7 +105,7 @@
 
 
 
-{% macro thought_line(thought, controlled_personas, truncate=True, no_planets=False, promote_to=None, labels=None) %}
+{% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote_to=None, labels=None) %}
 
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
@@ -124,26 +124,26 @@
       <p>
       {{ label_badges(labels) }}
       <a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text|mentions(thought, nolink=True) }}</a>
-      {% if no_planets %}
-      {% for planet_assoc in thought.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
+      {% if no_percepts %}
+      {% for percept_assoc in thought.percept_assocs %}{{ percept_macros.percept_icon(percept_assoc.percept)}}{% endfor %}
       {% endif %}
       </p>
     </div>
 
-    {% if no_planets == False and thought.planet_assocs.count() > 0 %}
+    {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    <div class="rk-planet">
+    <div class="rk-percept">
       <div class="row">
-      {% for planet_assoc in thought.planet_assocs|sort(attribute='sort_rank') %}
-        {% if planet_assoc.planet.kind == "linkedpicture" %}
+      {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
+        {% if percept_assoc.percept.kind == "linkedpicture" %}
         <div class="col-sm-4">
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
         </div>
-        {% elif planet_assoc.planet.kind == 'tag' %}
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {% elif percept_assoc.percept.kind == 'tag' %}
+          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
         {% else %}
         <div class="col-sm-12">
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
+          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True, truncate=truncate)}}
         </div>
         {% endif %}
       {% endfor %}
@@ -164,8 +164,8 @@
     <a href="{{ url_for('web.thought', id=thought.id) }}">
       <div class="rk-thought-box-content">
         <p>{{ thought.text|mentions(thought, nolink=True) }}</p>
-        <div class="rk-thought-box-planets">{% for planet_assoc in thought.planet_assocs|sort(attribute='sort_rank') %}
-        {{ planet_macros.planet_icon(planet_assoc.planet)}}
+        <div class="rk-thought-box-percepts">{% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
+        {{ percept_macros.percept_icon(percept_assoc.percept)}}
         {% endfor %}</div>
       </div>
     </a>
@@ -188,7 +188,7 @@
 
 
 
-{% macro comment(thought, controlled_personas, no_planets=False, truncate=True) %}
+{% macro comment(thought, controlled_personas, no_percepts=False, truncate=True) %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
@@ -210,25 +210,25 @@
 
     <div class="rk-thought-title">
       <p>{{ thought.text|mentions(thought) }}</p>
-      {% if no_planets %}
-      {% for planet_assoc in thought.planet_assocs %}{{ planet_macros.planet_icon(planet_assoc.planet)}}{% endfor %}
+      {% if no_percepts %}
+      {% for percept_assoc in thought.percept_assocs %}{{ percept_macros.percept_icon(percept_assoc.percept)}}{% endfor %}
       {% endif %}
     </div>
 
-    {% if no_planets == False and thought.planet_assocs.count() > 0 %}
+    {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    <div class="rk-planet">
+    <div class="rk-percept">
       <div class="row">
-      {% for planet_assoc in thought.planet_assocs|sort(attribute='sort_rank') %}
-        {% if planet_assoc.planet.kind == "linkedpicture" %}
+      {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
+        {% if percept_assoc.percept.kind == "linkedpicture" %}
         <div class="col-sm-4">
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
         </div>
-        {% elif planet_assoc.planet.kind == 'tag' %}
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True)}}
+        {% elif percept_assoc.percept.kind == 'tag' %}
+          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
         {% else %}
         <div class="col-sm-12">
-          {{ planet_macros.planet(planet_assoc.planet, scale=True, icon=True, truncate=truncate)}}
+          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True, truncate=truncate)}}
         </div>
         {% endif %}
       {% endfor %}

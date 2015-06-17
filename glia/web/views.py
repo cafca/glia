@@ -27,8 +27,8 @@ from glia.web.helpers import send_validation_email, process_attachments, \
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
-    Thought, Mindset, Planet, MovementMemberAssociation, Tag, TagPlanet, \
-    PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification, \
+    Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
+    PerceptAssociation, TextPercept, MentionNotification, Mention, Notification, \
     ReplyNotification
 
 
@@ -59,7 +59,7 @@ def mark_notifications_read():
 def debug():
     """ Display raw data """
     thoughts = Thought.query.all()
-    planets = Planet.query.all()
+    percepts = Percept.query.all()
     movements = Movement.query.all()
     mindsets = Mindset.query.all()
     users = User.query.all()
@@ -68,7 +68,7 @@ def debug():
         'debug.html',
         thoughts=thoughts,
         users=users,
-        planets=planets,
+        percepts=percepts,
         movements=movements,
         mindsets=mindsets
     )
@@ -188,7 +188,7 @@ def thought(id=None):
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
-    thoughts = Thought.query.join(PlanetAssociation).join(TagPlanet).filter(TagPlanet.tag_id == tag.id)
+    thoughts = Thought.query.join(PerceptAssociation).join(TagPercept).filter(TagPercept.tag_id == tag.id)
 
     return render_template("tag.html", tag=tag, thoughts=thoughts)
 
@@ -435,29 +435,29 @@ def create_thought():
             mindset_id=sm.id)
         db.session.add(thought)
 
-        text, planets = process_attachments(thought.text)
+        text, percepts = process_attachments(thought.text)
         thought.text = text
 
         if len(form.longform.data) > 0:
-            lftext, lfplanets = process_attachments(form.longform.data)
-            planets = planets + lfplanets
+            lftext, lfpercepts = process_attachments(form.longform.data)
+            percepts = percepts + lfpercepts
 
-            lftext_planet = TextPlanet.get_or_create(lftext,
+            lftext_percept = TextPercept.get_or_create(lftext,
                 source=form.lfsource.data)
-            planets.append(lftext_planet)
+            percepts.append(lftext_percept)
 
-        for planet in planets:
-            db.session.add(planet)
+        for percept in percepts:
+            db.session.add(percept)
 
-            if isinstance(planet, Mention):
-                notification = MentionNotification(planet,
+            if isinstance(percept, Mention):
+                notification = MentionNotification(percept,
                     author, url_for('web.thought', id=thought_id))
                 send_external_notifications(notification)
                 db.session.add(notification)
 
-            assoc = PlanetAssociation(thought=thought, planet=planet, author=author)
-            thought.planet_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(planet, thought))
+            assoc = PerceptAssociation(thought=thought, percept=percept, author=author)
+            thought.percept_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(percept, thought))
             db.session.add(assoc)
 
         if parent:

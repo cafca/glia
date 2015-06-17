@@ -21,7 +21,7 @@ from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments, find_mentions, \
     send_external_notifications
-from nucleus.nucleus.models import Mindset, Thought, PlanetAssociation, Movement, \
+from nucleus.nucleus.models import Mindset, Thought, PerceptAssociation, Movement, \
     Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
@@ -133,21 +133,21 @@ def text(message):
             mindset_id=map.id)
         db.session.add(thought)
 
-        text, planets = process_attachments(thought.text)
+        text, percepts = process_attachments(thought.text)
         thought.text = text
 
-        for planet in planets:
-            db.session.add(planet)
+        for percept in percepts:
+            db.session.add(percept)
 
-            if isinstance(planet, Mention):
-                notification = MentionNotification(planet,
+            if isinstance(percept, Mention):
+                notification = MentionNotification(percept,
                     author, url_for('web.thought', id=thought_id))
                 send_external_notifications(notification)
                 db.session.add(notification)
 
-            assoc = PlanetAssociation(thought=thought, planet=planet, author=author)
-            thought.planet_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(planet, thought))
+            assoc = PerceptAssociation(thought=thought, percept=percept, author=author)
+            thought.percept_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(percept, thought))
             db.session.add(assoc)
 
         if parent_thought:
@@ -221,7 +221,7 @@ def repost(message):
 
         mentions = find_mentions(thought.text)
         for mention_text, ident in mentions:
-            if thought.planet_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:
+            if thought.percept_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:
                 app.logger.info("Adding new mention of {}".format(ident))
                 mention = Mention(identity=ident, text=mention_text)
                 notification = MentionNotification(

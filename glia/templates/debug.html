@@ -118,7 +118,7 @@
 </table>
 {% endfor %}
 
-<h1>Planets</h1>
+<h1>Percepts</h1>
 <table class="table">
     <thead>
         <tr>
@@ -132,15 +132,15 @@
         </tr>
     </thead>
     <tbody>
-      {% for planet in planets %}
+      {% for percept in percepts %}
       <tr>
-        <td>{{ planet.id }}</td>
-        <td>{{ planet.kind }}</td>
-        <td>{{ planet.title }}</td>
-        <td>{{ planet.created }}</td>
-        <td>{{ planet.modified }}</td>
-        <td>{{ planet.source }}</td>
-        <td>{{ planet.vesicles | length }}</td>
+        <td>{{ percept.id }}</td>
+        <td>{{ percept.kind }}</td>
+        <td>{{ percept.title }}</td>
+        <td>{{ percept.created }}</td>
+        <td>{{ percept.modified }}</td>
+        <td>{{ percept.source }}</td>
+        <td>{{ percept.vesicles | length }}</td>
       </tr>
       {% endfor %}
     </tbody>

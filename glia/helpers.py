@@ -100,7 +100,7 @@ def inject_mentions(eval_ctx, text, thought, nolink=False):
     env = Environment(loader=PackageLoader('glia', 'templates'))
     env.globals['url_for'] = url_for
     template = env.get_template('macros/identity.html')
-    mentions = [pa.planet for pa in thought.planet_assocs.all() if pa.planet.kind == "mention"]
+    mentions = [pa.percept for pa in thought.percept_assocs.all() if pa.percept.kind == "mention"]
 
     for mention in mentions:
         if mention.identity.kind == "persona":
