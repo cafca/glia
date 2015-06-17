@@ -249,6 +249,17 @@ def create_persona(for_movement=None):
         app.logger.info("Generating private keys for {}".format(persona))
         persona.generate_keys(form.password.data)
 
+        # Create mindspace and blog
+        persona.mindspace = Mindset(
+            id=uuid4().hex,
+            author=persona,
+            kind="persona_mspace")
+
+        persona.blog = Mindset(
+            id=uuid4().hex,
+            author=persona,
+            kind="persona_blog")
+
         db.session.add(persona)
 
         current_user.active_persona = persona
@@ -569,6 +580,17 @@ def signup():
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
         persona.generate_keys(form.password.data)
+
+        # Create mindspace and blog
+        persona.mindspace = Mindset(
+            id=uuid4().hex,
+            author=persona,
+            kind="persona_mspace")
+
+        persona.blog = Mindset(
+            id=uuid4().hex,
+            author=persona,
+            kind="persona_blog")
 
         db.session.add(persona)
 
