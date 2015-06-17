@@ -58,8 +58,8 @@
   </span>
 
   <!-- Attachments -->
-  <div class="rk-percept">
-    <div class="row">
+  <div class="rk-percept panel panel-default">
+    <div class="row panel-body">
     {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
       {% if percept_assoc.percept.kind == "linkedpicture" %}
       <div class="col-sm-4">
@@ -132,8 +132,8 @@
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    <div class="rk-percept">
-      <div class="row">
+    <div class="rk-percept panel panel-default">
+      <div class="row panel-body">
       {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
         {% if percept_assoc.percept.kind == "linkedpicture" %}
         <div class="col-sm-4">
@@ -217,8 +217,8 @@
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    <div class="rk-percept">
-      <div class="row">
+    <div class="rk-percept panel panel-default">
+      <div class="row panel-body">
       {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
         {% if percept_assoc.percept.kind == "linkedpicture" %}
         <div class="col-sm-4">
