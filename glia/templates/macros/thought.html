@@ -220,7 +220,7 @@
 {% if deep > 0 %}
   {% set new_deep=(deep-1) %}
   <div class="rk-replies clearfix">
-    {% for c in thought.comments %}
+    {% for c in thought.comments|sort_hot %}
       {% if c.context_length > 0 %}
       {{ comment_tree(c, controlled_personas, deep=new_deep) }}
       {% else %}

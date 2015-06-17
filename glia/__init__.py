@@ -22,7 +22,7 @@ from humanize.time import naturaldelta
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona
-from glia.helpers import inject_mentions, gallery_col_width
+from glia.helpers import inject_mentions, gallery_col_width, sort_hot
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -96,6 +96,7 @@ def create_app(log_info=True):
     # Additional template filters and extensions
     app.jinja_env.filters['mentions'] = inject_mentions
     app.jinja_env.filters['gallery_col_width'] = gallery_col_width
+    app.jinja_env.filters['sort_hot'] = sort_hot
     app.jinja_env.add_extension('jinja2.ext.do')
 
     # Setup debug toolbar

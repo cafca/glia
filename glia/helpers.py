@@ -125,3 +125,9 @@ def gallery_col_width(pa_list):
     else:
         rv = 4
     return rv
+
+
+def sort_hot(query):
+    """Sort thoughts by their hotness"""
+    from nucleus.nucleus.models import Thought
+    return sorted(query, key=Thought.hot, reverse=True)
