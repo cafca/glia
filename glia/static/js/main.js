@@ -217,7 +217,7 @@ $(document).ready(function(){
         //
 
         $('.rk-promote').click(function() {
-            $(this).prop("disabled", "true");
+            $(this).prop("disabled", true);
             $(this).button("loading");
             var data = {
                 "thought_id": $(this).data("thought-id"),
