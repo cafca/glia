@@ -119,7 +119,7 @@ def index():
     top_posts = []
     while len(top_posts) < min([9, len(top_post_selection)]):
         candidate = top_post_selection.pop(0)
-        if candidate.oneup_count() > 0:
+        if candidate.upvote_count() > 0:
             top_posts.append(candidate)
 
     return render_template('index.html', movementform=movementform,
@@ -370,7 +370,7 @@ def movement_mindspace(id):
         candidate = thought_selection.pop(0)
         candidate.promote_target = None if candidate in movement.blog \
             else movement
-        if candidate.oneup_count() > 0:
+        if candidate.upvote_count() > 0:
             top_posts.append(candidate)
 
     recent_blog_post = movement.blog.index.order_by(Thought.created.desc()).first()
@@ -487,7 +487,7 @@ def create_thought():
                 'thought_id': thought_id,
                 'parent_id': thought.parent_id,
                 'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
-                'vote_count': thought.oneup_count()
+                'vote_count': thought.upvote_count()
             }
             socketio.emit('message', data, room=form.mindset.data)
 

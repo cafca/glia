@@ -93,11 +93,11 @@ $(document).ready(function(){
         console.log("Thought "+thought_id+" now has "+vote_count+" votes.");
 
         if (author_id == window.user_id) {
-            $(".oneup-"+thought_id).toggleClass("btn-default");
-            $(".oneup-"+thought_id).toggleClass("btn-inverse");
+            $(".upvote-"+thought_id).toggleClass("btn-default");
+            $(".upvote-"+thought_id).toggleClass("btn-inverse");
         }
 
-        $(".oneup-count-"+thought_id).text(vote_count);
+        $(".upvote-count-"+thought_id).text(vote_count);
     });
 
     // DOM manipulation
@@ -122,7 +122,7 @@ $(document).ready(function(){
                     );
             }
             $('#rk-chat-lines').append(msg);
-            $('#rk-chat-lines .oneup').click(function () {request_upvote(this.dataset.id); return false;});
+            $('#rk-chat-lines .upvote').click(function () {request_upvote(this.dataset.id); return false;});
 
         }
         scroll();
@@ -135,7 +135,7 @@ $(document).ready(function(){
         } else {
             reply_box
                 .prepend(rendered_content)
-                .find(".oneup").click(function () {
+                .find(".upvote").click(function () {
                     request_upvote(this.dataset.id);
                     return false;
                 });
@@ -197,8 +197,8 @@ $(document).ready(function(){
                 $('#rk-chat-more').ready(function() {
                     scroll(0);
                     $('#rk-chat-more-button').button('reset');
-                    $(".oneup").unbind("click");
-                    $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
+                    $(".upvote").unbind("click");
+                    $(".upvote").click(function () {request_upvote(this.dataset.id); return false;});
                 });
             });
     }
@@ -210,7 +210,7 @@ $(document).ready(function(){
         // UPVOTE BUTTON
         //
 
-        $(".oneup").click(function () {request_upvote(this.dataset.id); return false;});
+        $(".upvote").click(function () {request_upvote(this.dataset.id); return false;});
 
         //
         // PROMOTE BUTTON

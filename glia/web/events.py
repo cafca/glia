@@ -180,7 +180,7 @@ def text(message):
                 'thought_id': thought.id,
                 'parent_id': thought.parent_id,
                 'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
-                'vote_count': thought.oneup_count()
+                'vote_count': thought.upvote_count()
             }
             emit('message', data, room=message["room_id"])
 
@@ -261,7 +261,7 @@ def repost(message):
                     'thought_id': thought.id,
                     'parent_id': thought.parent_id,
                     'parent_short': thought_macros.short(thought.parent),
-                    'vote_count': thought.oneup_count()
+                    'vote_count': thought.upvote_count()
                 }
                 emit('message', data, room=map.id)
 
@@ -313,7 +313,7 @@ def vote_request(message):
     if len(error_message) == 0:
         thought = Thought.query.get_or_404(thought_id)
         try:
-            upvote = thought.toggle_oneup()
+            upvote = thought.toggle_upvote()
         except PersonaNotFoundError:
             error_message += "Please activate a Persona for voting. "
             upvote = None
@@ -334,7 +334,7 @@ def vote_request(message):
         data = {
             "votes": [{
                 "thought_id": thought.id,
-                "vote_count": thought.oneup_count(),
+                "vote_count": thought.upvote_count(),
                 "author_id": upvote.author_id
             }]
         }
@@ -343,7 +343,7 @@ def vote_request(message):
             "author_id": upvote.author_id,
             "action": "insert" if len(upvote.vesicles) == 0 else "update",
             "object_id": upvote.id,
-            "object_type": "Oneup",
+            "object_type": "Upvote",
             "recipients": thought.author.contacts.all() + [thought.author, ]
         }
 

@@ -1,9 +1,9 @@
 {% import "macros/percept.html" as percept_macros %}
 {% import "macros/identity.html" as id_macros %}
 
-{% macro oneup(thought) %}
-<button class="oneup btn btn-xs {% if thought.oneupped() %}btn-inverse{% else %}btn-default{% endif %} oneup-{{thought.id}}" data-id="{{thought.id}}" type="button">
-  <span class="oneup-count oneup-count-{{thought.id}}">{{thought.oneup_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+{% macro upvote(thought) %}
+<button class="upvote btn btn-xs {% if thought.upvoted() %}btn-inverse{% else %}btn-default{% endif %} upvote-{{thought.id}}" data-id="{{thought.id}}" type="button">
+  <span class="upvote-count upvote-count-{{thought.id}}">{{thought.upvote_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
 </button>
 {% endmacro %}
 
@@ -19,7 +19,7 @@
 {% macro comments_button(thought) %}
 <span>
     <a class="btn btn-xs btn-default" href="{{ url_for('web.thought', id=thought.id, _anchor='comments') }}">
-        <span class="oneup-count" id="comment-count-{{thought.id}}">{{thought.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
+        <span class="upvote-count" id="comment-count-{{thought.id}}">{{thought.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
     </a>
 </span>
 {% endmacro %}
@@ -78,7 +78,7 @@
 
   <!-- Meta -->
   <div class="rk-thought-meta">
-    {{ oneup(thought) }}
+    {{ upvote(thought) }}
 
     {{ comments_button(thought) }}
 
@@ -111,7 +111,7 @@
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
   <span class="rk-thought-meta">
-    {{ oneup(thought) }}
+    {{ upvote(thought) }}
     {{ comments_button(thought) }}
 
     {% if promote_to != None %}
@@ -171,7 +171,7 @@
     </a>
   </div>
   <p>
-    {{ oneup(thought) }}
+    {{ upvote(thought) }}
 
     <span class="caption">
         <a href="{{ url_for('web.thought', id=thought.id) }}" title="{{thought.created}}">
@@ -193,7 +193,7 @@
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
   <span class="rk-thought-meta">
-    {{ oneup(thought) }}
+    {{ upvote(thought) }}
   </span>
 
   <div class="rk-line-container">
