@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% import "macros/chat.html" as chat_macros %}
-{% import "macros/star.html" as star_macros %}
+{% import "macros/thought.html" as thought_macros %}
 {% import "macros/identity.html" as id_macros %}
 
 {% block script %}
@@ -78,9 +78,9 @@ $(document).ready(function() {
           <p>Currently a {{ mma.role }}, joined {{ mma.created|localtime|naturaltime }}.</p>
         </div>
 
-        <div class="col-sm-9 rk-persona-movements-posts star-listing">
-          {% for star in mma.movement.blog.index.limit(3) %}
-            {{ star_macros.star_line(star, controlled_personas) }}
+        <div class="col-sm-9 rk-persona-movements-posts thought-listing">
+          {% for thought in mma.movement.blog.index.limit(3) %}
+            {{ thought_macros.thought_line(thought, controlled_personas) }}
           {% endfor %}
         </div>
       </div>

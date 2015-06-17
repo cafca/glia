@@ -2,7 +2,7 @@
 
 {% block content %}
 {{ controlled_personas }}
-<h1>Stars</h1>
+<h1>Thoughts</h1>
 <table class="table">
     <thead>
         <tr>
@@ -18,18 +18,18 @@
         </tr>
     </thead>
     <tbody>
-      {% for star in stars %}
+      {% for thought in thoughts %}
       <tr>
-        <td>{{ star.id }}</td>
-        <td>{{ star.text }}</td>
-        <td>{{ star.author.username}}</td>
-        <td>{{ star.modified | localtime|naturaltime }}</td>
-        <td>{{ star.created | localtime|naturaltime}} </td>
-        <td>{{ star.get_state()}}</td>
-        <td>{{ star.parent_id }}</td>
-        <td>{{ star.vesicles | length }}</td>
-        {% if star.get_state() >= 0 and star.author.controlled() %}
-            <td><form action="{{url_for('.delete_star', id=star.id)}}" method="POST">
+        <td>{{ thought.id }}</td>
+        <td>{{ thought.text }}</td>
+        <td>{{ thought.author.username}}</td>
+        <td>{{ thought.modified | localtime|naturaltime }}</td>
+        <td>{{ thought.created | localtime|naturaltime}} </td>
+        <td>{{ thought.get_state()}}</td>
+        <td>{{ thought.parent_id }}</td>
+        <td>{{ thought.vesicles | length }}</td>
+        {% if thought.get_state() >= 0 and thought.author.controlled() %}
+            <td><form action="{{url_for('.delete_thought', id=thought.id)}}" method="POST">
                 <button class="btn" type="submit">Delete</a>
             </form></td>
         {% else %}
@@ -40,7 +40,7 @@
     </tbody>
 </table>
 
-<h1>Starmaps</h1>
+<h1>Mindsets</h1>
 <table class="table">
     <thead>
         <tr>
@@ -49,20 +49,20 @@
             <th>Author</th>
             <th>Modified</th>
             <th>State</th>
-            <th>Stars</th>
+            <th>Thoughts</th>
             <th>Vesicles</th>
         </tr>
     </thead>
     <tbody>
-      {% for starmap in starmaps %}
+      {% for mindset in mindsets %}
       <tr>
-        <td>{{ starmap.id }}</td>
-        <td>{{ starmap.kind }}</td>
-        <td>{{ starmap.author.username}}</td>
-        <td>{{ starmap.modified | localtime|naturaltime }}</td>
-        <td>{{ starmap.get_state()}}</td>
-        <td>{% for star in starmap.index %}{{star}}<br />{% endfor %}</td>
-        <td>{{ starmap.vesicles | length }}</td>
+        <td>{{ mindset.id }}</td>
+        <td>{{ mindset.kind }}</td>
+        <td>{{ mindset.author.username}}</td>
+        <td>{{ mindset.modified | localtime|naturaltime }}</td>
+        <td>{{ mindset.get_state()}}</td>
+        <td>{% for thought in mindset.index %}{{thought}}<br />{% endfor %}</td>
+        <td>{{ mindset.vesicles | length }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -118,7 +118,7 @@
 </table>
 {% endfor %}
 
-<h1>Planets</h1>
+<h1>Percepts</h1>
 <table class="table">
     <thead>
         <tr>
@@ -132,15 +132,15 @@
         </tr>
     </thead>
     <tbody>
-      {% for planet in planets %}
+      {% for percept in percepts %}
       <tr>
-        <td>{{ planet.id }}</td>
-        <td>{{ planet.kind }}</td>
-        <td>{{ planet.title }}</td>
-        <td>{{ planet.created }}</td>
-        <td>{{ planet.modified }}</td>
-        <td>{{ planet.source }}</td>
-        <td>{{ planet.vesicles | length }}</td>
+        <td>{{ percept.id }}</td>
+        <td>{{ percept.kind }}</td>
+        <td>{{ percept.title }}</td>
+        <td>{{ percept.created }}</td>
+        <td>{{ percept.modified }}</td>
+        <td>{{ percept.source }}</td>
+        <td>{{ percept.vesicles | length }}</td>
       </tr>
       {% endfor %}
     </tbody>

@@ -1,23 +1,23 @@
-{% import "macros/planet.html" as planet_macros %}
-{% import "macros/star.html" as star_macros %}
+{% import "macros/percept.html" as percept_macros %}
+{% import "macros/thought.html" as thought_macros %}
 {% import "macros/identity.html" as id_macros %}
 
 
-{% macro chatline(star) %}
+{% macro chatline(thought) %}
 <li class="list-group-item">
-  {{ star_macros.oneup(star) }}
+  {{ thought_macros.upvote(thought) }}
   <span class="rk-chatline">
-    {{ id_macros.identity(star.author) }}
-    <a href="{{ url_for('web.star', id=star.id) }}">{{star.created|localtime|naturaltime}} </a>
-    {{ star.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(star) }}
+    {{ id_macros.identity(thought.author) }}
+    <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.created|localtime|naturaltime}} </a>
+    {{ thought.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(thought) }}
   </span>
   <div>
-  {% for tagp in star.tags %}<a href="{{ url_for('web.tag', name=tagp.planet.tag.name) }}">#{{ tagp.planet.title }}</a>&nbsp;{% endfor %}
+  {% for tagp in thought.tags %}<a href="{{ url_for('web.tag', name=tagp.percept.tag.name) }}">#{{ tagp.percept.title }}</a>&nbsp;{% endfor %}
 </li>
 
-{% for planet_assoc in star.attachments %}
-<li class="list-group-item rk-chat-planet">
-  {{ planet_macros.planet(planet_assoc.planet, scale=True, size='small') }}
+{% for percept_assoc in thought.attachments %}
+<li class="list-group-item rk-chat-percept">
+  {{ percept_macros.percept(percept_assoc.percept, scale=True, size='small') }}
 </li>
 {% endfor %}
 
@@ -28,13 +28,13 @@
 
 <ul class="list-group" id="rk-chat-lines">
   <li class="list-group-item text-center" id="rk-chat-more">
-    <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', starmap_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
+    <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', mindset_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
   </li>
 </ul>
 
 <div class="panel-footer">
-<form class="rk-create" class="form-inline" action="{{ url_for('web.create_star') }}" method="GET">
-  <input type="hidden" name="starmap" value="{{ map.id }}" />
+<form class="rk-create" class="form-inline" action="{{ url_for('web.create_thought') }}" method="GET">
+  <input type="hidden" name="mindset" value="{{ map.id }}" />
   <input id="rk-chat-parent" class="rk-create-parent" name="parent" type="hidden" value="" />
   <div>
     <span>&nbsp;</span>

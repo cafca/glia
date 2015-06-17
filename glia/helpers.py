@@ -92,15 +92,15 @@ class ProxiedRequest(Request):
 
 
 @evalcontextfilter
-def inject_mentions(eval_ctx, text, star, nolink=False):
-    """Replace portions of Star text with a link to the mentioned Identity for
-    every mention registered on the Star"""
+def inject_mentions(eval_ctx, text, thought, nolink=False):
+    """Replace portions of Thought text with a link to the mentioned Identity for
+    every mention registered on the Thought"""
 
     from flask import url_for
     env = Environment(loader=PackageLoader('glia', 'templates'))
     env.globals['url_for'] = url_for
     template = env.get_template('macros/identity.html')
-    mentions = [pa.planet for pa in star.planet_assocs.all() if pa.planet.kind == "mention"]
+    mentions = [pa.percept for pa in thought.percept_assocs.all() if pa.percept.kind == "mention"]
 
     for mention in mentions:
         if mention.identity.kind == "persona":

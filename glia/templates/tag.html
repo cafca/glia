@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% import "macros/star.html" as star_macros %}
+{% import "macros/thought.html" as thought_macros %}
 
 {% block content %}
 <div class="row">
@@ -14,10 +14,10 @@
   </div>
 </div>
 
-{% for star in stars %}
+{% for thought in thoughts %}
 <div class="row">
   <div class="col-sm-push-2 col-sm-10">
-    {{ star_macros.star_line(star) }}
+    {{ thought_macros.thought_line(thought) }}
   </div>
 </div>
 {% endfor %}

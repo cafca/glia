@@ -1,0 +1,70 @@
+{% macro percept(percept, scale=True, icon=True, truncate=True, size="small") %}
+<!-- PERCEPT: {{percept.kind}} {{percept.id}} -->
+{% if percept.kind == 'tag' %}
+<span class="rk-tag"><a href="{{ url_for('web.tag', name=percept.tag.name) }}">#{{ percept.title }}</a></span>
+{% elif percept.kind == 'picture' %}
+<span class="rk-imagewrap">
+  <img src="{{ url_for('attachment', filename=percept.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
+</span>
+{% elif percept.kind == 'linkedpicture' %}
+<span class="rk-image">
+  <img src="{{ percept.url }}" class="img-responsive img-rounded" alt="{{ percept.title }}"/>
+</span>
+{% elif percept.kind == 'link' %}
+  {% if percept.iframe_url() %}
+  <div class="embed-responsive embed-responsive-16by9">
+    <iframe class="embed-responsive-item" src="{{ percept.iframe_url() }}" allowfullscreen></iframe>
+  </div>
+  {% else %}
+  <a class="rk-link" href="{{ percept.url }}">
+    {% if icon == True %}
+    <img class="rk-favicon{% if size == 'small' %}-small{% endif %}" src="{{ percept.favicon_url() }}" /> &nbsp;
+    {% endif %}
+    {% if percept.title %}
+    {{ percept.title }}
+    {% else %}
+    {{ percept.url }}
+    {% endif %}
+  </a>
+  {% endif %}
+{% elif percept.kind == 'text' %}
+<span class="rk-text">
+  {% if truncate %}
+  <p>
+    <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
+  </p>
+  {{ percept.text|truncate()|markdown|striptags}}
+  {% else %}
+  <p>
+    <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
+    <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
+  </p>
+  {{ percept.text|markdown}}
+  {% endif %}
+</span>
+{% endif %}
+
+{% endmacro %}
+
+
+{% macro percept_icon(percept) %}
+<!-- PERCEPT: {{percept.id}} -->
+
+{% if percept.kind == 'picture' %}
+<button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
+{% elif percept.kind == 'tag' %}
+<button disabled="disabled" class="btn btn-xs">#{{ percept.title }}</button>
+{% elif percept.kind == 'linkedpicture' %}
+<button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
+{% elif percept.kind == 'link' %}
+<button disabled="disabled" class="btn btn-xs">
+  <i class="fa fa-link"></i>
+  <img class="rk-favicon-small" src="{{ percept.favicon_url() }}" />
+</button>
+{% elif percept.kind == 'text' %}
+<button disabled="disabled" href="#" class="btn btn-xs">
+  <i class="fa fa-file-text-o"></i> read {{ percept.reading_time()|naturaldelta }}
+</button>
+{% endif %}
+
+{% endmacro %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% import "macros/star.html" as star_macros %}
+{% import "macros/thought.html" as thought_macros %}
 
 {% block script %}
 $(document).ready(function() {
@@ -29,15 +29,15 @@ $(document).ready(function() {
 {% block content %}
 <div class="row">
 <div class="col-sm-6 col-sm-push-3">
-<h1>Create Star</h1>
+<h1>Create Thought</h1>
 
-<form method="POST" action="{{ url_for('web.create_star') }}" class="rk-longform">
+<form method="POST" action="{{ url_for('web.create_thought') }}" class="rk-longform">
   {{ form.hidden_tag() }}
   {% if parent %}
   <p class="lead">In response to:</p>
   <blockquote style="font-size: 14px;">
     <div class="panel panel-default">
-      <div class="panel-body">{{ star_macros.star_line(parent) }}</div>
+      <div class="panel-body">{{ thought_macros.thought_line(parent) }}</div>
     </div>
   </blockquote>
   {% endif %}
@@ -71,9 +71,9 @@ $(document).ready(function() {
   </div>
 
   <div class="pull-right">
-  {% if starmap %}
-  <a class="btn btn-default rk-create-cancel" href="{{ starmap.get_absolute_url() }}">Cancel</a>
-  <input type="submit" class="btn btn-primary rk-create-submit" value="Send to {{ starmap.name }}" \>
+  {% if mindset %}
+  <a class="btn btn-default rk-create-cancel" href="{{ mindset.get_absolute_url() }}">Cancel</a>
+  <input type="submit" class="btn btn-primary rk-create-submit" value="Send to {{ mindset.name }}" \>
   {% else %}
   <input type="submit" class="btn btn-primary rk-create-submit" value="Create" \>
   {% endif %}

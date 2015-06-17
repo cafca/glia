@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% import "macros/chat.html" as chat_macros %}
-{% import "macros/star.html" as star_macros %}
+{% import "macros/thought.html" as thought_macros %}
 {% import "macros/movement.html" as movement_macros %}
 {% import "macros/helpers.html" as helper_macros %}
 
@@ -15,7 +15,7 @@ window.admin_id = "{{ movement.admin_id }}";
 
 {% block content %}
 <section class="row">
-  <div class="star-listing col-sm-8 col-sm-push-2">
+  <div class="thought-listing col-sm-8 col-sm-push-2">
     <div class="jumbotron">
       <h1>{{ movement.username }}</h1>
       <p>{{ movement.description }}</p>
@@ -35,22 +35,22 @@ window.admin_id = "{{ movement.admin_id }}";
 
 
 
-    {% for star in stars.items %}
+    {% for thought in thoughts.items %}
       {% if loop.first %}
-        {{ star_macros.star_lead(star, controlled_personas) }}
+        {{ thought_macros.thought_lead(thought, controlled_personas) }}
       {% else %}
-        {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
+        {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True) }}
       {% endif %}
     {% else %}
-      <div class="rk-star rk-star-lead">
+      <div class="rk-thought rk-thought-lead">
         <h1>No blog posts found</h1>
-        <p class="lead">This movement is just getting started. You can become a member now to help them out or follow this movement, then wait and see.</p>
+        <p class="lead">This movement is just getting thoughtted. You can become a member now to help them out or follow this movement, then wait and see.</p>
       </div>
     {% endfor %}
 
-    {{ helper_macros.paginate(stars) }}
+    {{ helper_macros.paginate(thoughts) }}
 
-  </div> <!-- ./ star listing -->
+  </div> <!-- ./ thought listing -->
 
   <div class="col-sm-8 col-sm-push-2">
     <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
@@ -117,7 +117,7 @@ window.admin_id = "{{ movement.admin_id }}";
           </a></dd>
         </dl>
 
-        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
+        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to thoughtt chatting and collaborating with other
         members of this movement </p> -->
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->

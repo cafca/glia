@@ -12,8 +12,8 @@ from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy import inspect
 
 from .. import socketio
-from nucleus.nucleus.models import LinkPlanet, LinkedPicturePlanet, \
-    TextPlanet, TagPlanet, Identity, Mention
+from nucleus.nucleus.models import LinkPercept, LinkedPicturePercept, \
+    TextPercept, TagPercept, Identity, Mention
 
 logger = logging.getLogger('web')
 
@@ -213,10 +213,10 @@ def find_mentions(text):
 
 def process_attachments(text):
     """Given some text a user entered, extract all attachments
-    hinted at and return user message plus a list of Planet objects.
+    hinted at and return user message plus a list of Percept objects.
 
     All trailing links in user message are removed. If, as a result of this,
-    the message becomes empty, the first linked planet's page title is set as
+    the message becomes empty, the first linked percept's page title is set as
     the new user message.
 
     Args:
@@ -225,49 +225,49 @@ def process_attachments(text):
     Return:
         Tuple
             0: Message with some attachment hints removed (URLs)
-            1: List of Planet instances extracted from text
+            1: List of Percept instances extracted from text
     """
     g = Goose()
-    planets = list()
+    percepts = list()
 
     tags, text = find_tags(text)
     for tag in tags:
-        tagplanet = TagPlanet(title=tag)
-        planets.append(tagplanet)
+        tagpercept = TagPercept(title=tag)
+        percepts.append(tagpercept)
 
     mentions = find_mentions(text)
     for mention_text, ident in mentions:
         mention = Mention(identity=ident, text=mention_text)
-        planets.append(mention)
+        percepts.append(mention)
 
     links, text = find_links(text)
     for link in links:
         if "content-type" in link.headers and link.headers["content-type"][:5] == "image":
-            linkplanet = LinkedPicturePlanet.get_or_create(link.url)
+            linkpercept = LinkedPicturePercept.get_or_create(link.url)
 
             # Use picture filename as user message if empty
             if len(text) == 0:
                 text = link.url[(link.url.rfind('/') + 1):]
         else:
-            linkplanet = LinkPlanet.get_or_create(link.url)
+            linkpercept = LinkPercept.get_or_create(link.url)
             page = g.extract(url=link.url)
 
-            # Add metadata if planet object is newly created
-            if inspect(linkplanet).transient is True:
-                linkplanet.title = page.title
+            # Add metadata if percept object is newly created
+            if inspect(linkpercept).transient is True:
+                linkpercept.title = page.title
 
-            # Extract article contents as new Planet
+            # Extract article contents as new Percept
             if len(page.cleaned_text) > 300:
-                textplanet = TextPlanet.get_or_create(page.cleaned_text)
-                textplanet.source = link.url
+                textpercept = TextPercept.get_or_create(page.cleaned_text)
+                textpercept.source = link.url
 
-                planets.append(textplanet)
+                percepts.append(textpercept)
 
             if len(text) == 0:
                 text = page.title
-        planets.append(linkplanet)
+        percepts.append(linkpercept)
 
-    return (text, planets)
+    return (text, percepts)
 
 
 def localtime(value, tzval="UTC"):
