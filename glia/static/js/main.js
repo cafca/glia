@@ -129,7 +129,7 @@ $(document).ready(function(){
     }
 
     function insert_reply(parent_id, rendered_content) {
-        reply_box = $(".rk-star-"+parent_id).siblings(".rk-replies").first();
+        var reply_box = $(".rk-star-"+parent_id).siblings(".rk-replies").first();
         if (reply_box.length == 0) {
             $(".rk-star-"+parent_id).after("<div><p>Additional replies hidden.</p></div>");
         } else {

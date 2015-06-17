@@ -68,14 +68,14 @@ $(document).ready(function() {
       </div>
     </div> <!-- ./ star listing -->
 
-    <a id="comments" />
+    <a id="comments"></a>
     <div class="rk-star-reply row">
       <div class="col-sm-6">
         <form class="rk-create">
-        <div class="pull-right rk-create-counter"></div>
-        <div class="rk-create-extend">
-          <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
-        </div>
+          <div class="pull-right rk-create-counter"></div>
+          <div class="rk-create-extend">
+            <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
+          </div>
           <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
           <div class="form-group">
             <textarea class="form-control rk-create-text" name="text"></textarea>
@@ -86,6 +86,7 @@ $(document).ready(function() {
     </div> <!-- ./ top-level reply form -->
 
     <div class="rk-star-listing rk-comments rk-replies">
+    &nbsp;
     {% for s in star.comments %}
       {{ star_macros.comment_tree(s, controlled_personas, truncate=True) }}
     {% endfor %}
