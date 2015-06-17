@@ -1,11 +1,7 @@
-{% macro percept(percept, scale=True, icon=True, truncate=True, size="small") %}
+{% macro percept(percept, icon=True, truncate=True, size="small") %}
 <!-- PERCEPT: {{percept.kind}} {{percept.id}} -->
 {% if percept.kind == 'tag' %}
 <span class="rk-tag"><a href="{{ url_for('web.tag', name=percept.tag.name) }}">#{{ percept.title }}</a></span>
-{% elif percept.kind == 'picture' %}
-<span class="rk-imagewrap">
-  <img src="{{ url_for('attachment', filename=percept.filename) }}" onload="OnImageLoad(event, {% if scale %}scale=true{%else%}scale=false{%endif%});"/>
-</span>
 {% elif percept.kind == 'linkedpicture' %}
 <span class="rk-image">
   <img src="{{ percept.url }}" class="img-responsive img-rounded" alt="{{ percept.title }}"/>
@@ -67,4 +63,47 @@
 </button>
 {% endif %}
 
+{% endmacro %}
+
+
+{% macro render_all(thought, icon=True, truncate=True, size="small") %}
+{% set attachments = thought.attachments %}
+<div class="rk-percept">
+  <!-- Linked Pictures -->
+  {% if attachments["linkedpicture"]|length != 0 %}
+  <div class="row">
+    {% for pa in attachments["linkedpicture"] %}
+    <div class="col-sm-{{ attachments['linkedpicture']|gallery_col_width }}">
+      {{ percept(pa.percept, icon=icon)}}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if attachments["link"]|length != 0 %}
+  <ul>
+    {% for pa in attachments["link"] %}
+    <li>
+    {{ percept(pa.percept, icon=True, truncate=truncate)}}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if attachments["text"]|length != 0 %}
+  <!-- Text Percepts -->
+  <div class="row panel panel-default">
+    {% for pa in percept_assocs %}
+    <div class="col-sm-12 panel-body">
+      {{ percept(pa.percept, icon=True, truncate=truncate)}}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Tags -->
+  {% for pa in attachments["tag"] %}
+    {{ percept(pa.percept, icon=True)}}
+  {% endfor %}
+</div> <!-- ./rk-percepts -->
 {% endmacro %}

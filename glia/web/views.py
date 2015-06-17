@@ -408,21 +408,24 @@ def create_thought():
     thought_created = datetime.datetime.utcnow()
     thought_id = uuid4().hex
     author = current_user.active_persona
-    sm = None
+    ms = None
     parent = None
 
     # Prepopulate form if redirected here from chat
     if not form.longform.raw_data and "text" in request.args:
         form.longform.data = request.args.get("text")
 
-    if "mindset" in request.args:
-        form.mindset.data = request.args['mindset']
-
-    if "parent" in request.args:
+    if "parent" in request.args and request.args['parent'] is not None:
         form.parent.data = request.args['parent']
-
-    sm = Mindset.query.get_or_404(form.mindset.data)
     parent = Thought.query.get_or_404(form.parent.data) if form.parent.data else None
+
+    if "mindset" in request.args and request.args['mindset'] is not None:
+        form.mindset.data = request.args['mindset']
+        ms = Mindset.query.get(form.mindset.data)
+    elif parent is not None:
+        ms = parent.mindset
+    else:
+        ms = current_user.active_persona.mindspace
 
     if form.validate_on_submit():
         thought = Thought(
@@ -432,7 +435,7 @@ def create_thought():
             parent=parent,
             created=thought_created,
             modified=thought_created,
-            mindset_id=sm.id)
+            mindset_id=ms.id)
         db.session.add(thought)
 
         text, percepts = process_attachments(thought.text)
@@ -440,11 +443,11 @@ def create_thought():
 
         if len(form.longform.data) > 0:
             lftext, lfpercepts = process_attachments(form.longform.data)
-            percepts = percepts + lfpercepts
+            percepts = percepts.union(lfpercepts)
 
             lftext_percept = TextPercept.get_or_create(lftext,
                 source=form.lfsource.data)
-            percepts.append(lftext_percept)
+            percepts.add(lftext_percept)
 
         for percept in percepts:
             db.session.add(percept)
@@ -473,7 +476,7 @@ def create_thought():
             app.logger.error("Error creating longform thought: {}".format(e))
             flash("An error occured saving your message. Please try again.")
         else:
-            app.logger.info(u"{} {}: {}".format(sm, author.username, thought.text))
+            app.logger.info(u"{} {}: {}".format(ms, author.username, thought.text))
 
             # Render using templates
             thought_macros_template = current_app.jinja_env.get_template(
@@ -500,7 +503,7 @@ def create_thought():
             return redirect(url_for("web.thought", id=thought_id))
 
     return render_template("create_thought.html",
-        form=form, mindset=sm, parent=parent)
+        form=form, mindset=ms, parent=parent)
 
 
 @app.route('/login', methods=["GET", "POST"])

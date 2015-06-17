@@ -116,3 +116,12 @@ def inject_mentions(eval_ctx, text, thought, nolink=False):
         text = Markup(text)
 
     return text
+
+
+def gallery_col_width(pa_list):
+    """Return the right column width for displaying a number of images"""
+    if len(pa_list) <= 4:
+        rv = 12 / len(pa_list)
+    else:
+        rv = 4
+    return rv

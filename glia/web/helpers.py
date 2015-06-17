@@ -228,17 +228,17 @@ def process_attachments(text):
             1: List of Percept instances extracted from text
     """
     g = Goose()
-    percepts = list()
+    percepts = set()
 
     tags, text = find_tags(text)
     for tag in tags:
         tagpercept = TagPercept(title=tag)
-        percepts.append(tagpercept)
+        percepts.add(tagpercept)
 
     mentions = find_mentions(text)
     for mention_text, ident in mentions:
         mention = Mention(identity=ident, text=mention_text)
-        percepts.append(mention)
+        percepts.add(mention)
 
     links, text = find_links(text)
     for link in links:
@@ -261,11 +261,11 @@ def process_attachments(text):
                 textpercept = TextPercept.get_or_create(page.cleaned_text)
                 textpercept.source = link.url
 
-                percepts.append(textpercept)
+                percepts.add(textpercept)
 
             if len(text) == 0:
                 text = page.title
-        percepts.append(linkpercept)
+        percepts.add(linkpercept)
 
     return (text, percepts)
 

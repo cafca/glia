@@ -15,10 +15,12 @@
   {% for tagp in thought.tags %}<a href="{{ url_for('web.tag', name=tagp.percept.tag.name) }}">#{{ tagp.percept.title }}</a>&nbsp;{% endfor %}
 </li>
 
-{% for percept_assoc in thought.attachments %}
+{% for category, percepts in thought.attachments.items() %}
+{% for percept_assoc in percepts %}
 <li class="list-group-item rk-chat-percept">
-  {{ percept_macros.percept(percept_assoc.percept, scale=True, size='small') }}
+  {{ percept_macros.percept(percept_assoc.percept, size='small') }}
 </li>
+{% endfor %}
 {% endfor %}
 
 {% endmacro %}

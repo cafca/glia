@@ -58,23 +58,7 @@
   </span>
 
   <!-- Attachments -->
-  <div class="rk-percept panel panel-default">
-    <div class="row panel-body">
-    {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
-      {% if percept_assoc.percept.kind == "linkedpicture" %}
-      <div class="col-sm-4">
-        {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
-      </div>
-      {% elif percept_assoc.percept.kind == 'tag' %}
-        {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
-      {% else %}
-      <div class="col-sm-12">
-        {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True, truncate=truncate)}}
-      </div>
-      {% endif %}
-    {% endfor %}
-    </div>
-  </div>
+  {{ percept_macros.render_all(thought) }}
 
   <!-- Meta -->
   <div class="rk-thought-meta">
@@ -132,23 +116,7 @@
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    <div class="rk-percept panel panel-default">
-      <div class="row panel-body">
-      {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
-        {% if percept_assoc.percept.kind == "linkedpicture" %}
-        <div class="col-sm-4">
-          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
-        </div>
-        {% elif percept_assoc.percept.kind == 'tag' %}
-          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
-        {% else %}
-        <div class="col-sm-12">
-          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True, truncate=truncate)}}
-        </div>
-        {% endif %}
-      {% endfor %}
-      </div>
-    </div>
+    {{ percept_macros.render_all(thought) }}
     {% endif %}
   </div>
 </div>
@@ -164,7 +132,7 @@
     <a href="{{ url_for('web.thought', id=thought.id) }}">
       <div class="rk-thought-box-content">
         <p>{{ thought.text|mentions(thought, nolink=True) }}</p>
-        <div class="rk-thought-box-percepts">{% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
+        <div class="rk-thought-box-percepts">{% for percept_assoc in thought.percept_assocs %}
         {{ percept_macros.percept_icon(percept_assoc.percept)}}
         {% endfor %}</div>
       </div>
@@ -217,23 +185,7 @@
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    <div class="rk-percept panel panel-default">
-      <div class="row panel-body">
-      {% for percept_assoc in thought.percept_assocs|sort(attribute='sort_rank') %}
-        {% if percept_assoc.percept.kind == "linkedpicture" %}
-        <div class="col-sm-4">
-          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
-        </div>
-        {% elif percept_assoc.percept.kind == 'tag' %}
-          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True)}}
-        {% else %}
-        <div class="col-sm-12">
-          {{ percept_macros.percept(percept_assoc.percept, scale=True, icon=True, truncate=truncate)}}
-        </div>
-        {% endif %}
-      {% endfor %}
-      </div>
-    </div>
+    {{ percept_macros.render_all(thought) }}
     {% endif %}
 
     <div class="rk-thought-meta">

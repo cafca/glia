@@ -71,7 +71,7 @@ $(document).ready(function() {
     <a id="comments"></a>
     <div class="rk-thought-reply row">
       <div class="col-sm-6">
-        <form class="rk-create">
+        <form class="rk-create" action="{{ url_for('web.create_thought') }}" method="GET">
           <div class="pull-right rk-create-counter"></div>
           <div class="rk-create-extend">
             <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
