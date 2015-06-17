@@ -77,7 +77,7 @@ $(document).ready(function(){
 
     socket.on('message', function(data) {
         append_timeline(data.username, data.msg, data);
-        $("#rk-chat-parent").val(data.star_id);
+        $("#rk-chat-parent").val(data.thought_id);
     });
 
     socket.on('comment', function(data) {
@@ -87,17 +87,17 @@ $(document).ready(function(){
     socket.on('vote', function(data) {
         window.votedata = data;
 
-        star_id = data.votes[0].star_id;
+        thought_id = data.votes[0].thought_id;
         author_id = data.votes[0].author_id;
         vote_count = data.votes[0].vote_count;
-        console.log("Star "+star_id+" now has "+vote_count+" votes.");
+        console.log("Thought "+thought_id+" now has "+vote_count+" votes.");
 
         if (author_id == window.user_id) {
-            $(".oneup-"+star_id).toggleClass("btn-default");
-            $(".oneup-"+star_id).toggleClass("btn-inverse");
+            $(".oneup-"+thought_id).toggleClass("btn-default");
+            $(".oneup-"+thought_id).toggleClass("btn-inverse");
         }
 
-        $(".oneup-count-"+star_id).text(vote_count);
+        $(".oneup-count-"+thought_id).text(vote_count);
     });
 
     // DOM manipulation
@@ -105,16 +105,16 @@ $(document).ready(function(){
         if (typeof data == 'undefined') {
             data = {};
         }
-        var star_id = data.star_id;
+        var thought_id = data.thought_id;
         var parent_id = data.parent_id;
         var parent_short = data.parent_short;
         var vote_count = data.vote_count;
 
-        if (star_id === undefined) {
+        if (thought_id === undefined) {
             // Server message
             $('#rk-chat-lines').append($('<li class="list-group-item rk-system">').append($('<em>').text(msg)));
         } else {
-            // Star post
+            // Thought post
             if (parent_id != $("#rk-chat-parent").val()) {
                 $('#rk-chat-lines')
                     .append($('<li class="list-group-item rk-system">')
@@ -129,9 +129,9 @@ $(document).ready(function(){
     }
 
     function insert_reply(parent_id, rendered_content) {
-        var reply_box = $(".rk-star-"+parent_id).siblings(".rk-replies").first();
+        var reply_box = $(".rk-thought-"+parent_id).siblings(".rk-replies").first();
         if (reply_box.length == 0) {
-            $(".rk-star-"+parent_id).after("<div><p>Additional replies hidden.</p></div>");
+            $(".rk-thought-"+parent_id).after("<div><p>Additional replies hidden.</p></div>");
         } else {
             reply_box
                 .prepend(rendered_content)
@@ -142,8 +142,8 @@ $(document).ready(function(){
         }
     }
 
-    function show_reply_box(star_id) {
-        var $form = $(".rk-star-"+star_id+" .rk-create");
+    function show_reply_box(thought_id) {
+        var $form = $(".rk-thought-"+thought_id+" .rk-create");
         $form.css("display", "block");
         $form.find("textarea").focus();
     }
@@ -164,9 +164,9 @@ $(document).ready(function(){
         }, duration);
     }
 
-    function request_upvote(star_id) {
-        console.log("Voting Star "+star_id);
-        socket.emit('vote_request', {'star_id': star_id});
+    function request_upvote(thought_id) {
+        console.log("Voting Thought "+thought_id);
+        socket.emit('vote_request', {'thought_id': thought_id});
     }
 
     function notification(title, message) {
@@ -220,21 +220,21 @@ $(document).ready(function(){
             $(this).prop("disabled", "true");
             $(this).button("loading");
             var data = {
-                "star_id": $(this).data("star-id"),
+                "thought_id": $(this).data("thought-id"),
             }
             $.post($(this).data("promote-url"), data)
               .done(function(data) {
-                notification("Star Promotion", data["message"]);
+                notification("Thought Promotion", data["message"]);
                 $(".rk-promote").button("reset");
               })
               .error(function(data) {
-                notification("Error promoting Star", data["message"]);
+                notification("Error promoting Thought", data["message"]);
                 $(".rk-promote").button("reset");
               });
           });
 
         //
-        // CREATE STAR
+        // CREATE THOUGHT
         //
 
         $('.rk-create').submit(function(event) {
@@ -336,8 +336,8 @@ $(document).ready(function(){
 
         $('#rk-repost').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget);
-            var id = button.data('star-id');
-            var text = button.data('star-text');
+            var id = button.data('thought-id');
+            var text = button.data('thought-text');
 
             var modal = $(this)
             modal.find('#rk-repost-username').text(window.user_name);

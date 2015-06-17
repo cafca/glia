@@ -7,7 +7,7 @@ from flask_wtf import Form
 from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
 
 from nucleus.nucleus import ALLOWED_COLORS
-from nucleus.nucleus.models import User, Star, Persona
+from nucleus.nucleus.models import User, Thought, Persona
 
 logger = logging.getLogger('web')
 
@@ -27,8 +27,8 @@ def get_redirect_target():
             return target
 
 
-class DeleteStarForm(Form):
-    star_id = HiddenField()
+class DeleteThoughtForm(Form):
+    thought_id = HiddenField()
 
 
 class RedirectForm(Form):
@@ -118,7 +118,7 @@ class CreateMovementForm(Form):
         return Form.validate(self)
 
 
-class CreateStarForm(Form):
+class CreateThoughtForm(Form):
     parent = HiddenField()
     mindset = HiddenField()
     text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
@@ -128,19 +128,19 @@ class CreateStarForm(Form):
     def validate(self):
         rv = Form.validate(self)
         if rv and self.parent.data:
-            parent = Star.query.get(self.parent.data)
+            parent = Thought.query.get(self.parent.data)
             if parent is None:
                 rv = False
-                logger.warning("Create Star form failed because parent '{}' could not \
+                logger.warning("Create Thought form failed because parent '{}' could not \
                     be found.".format(self.parent.data))
                 self.parent.errors.append("Can't find the post you are \
                     replying to. Please try reloading the page.")
         return rv
 
 
-class CreateReplyForm(CreateStarForm):
+class CreateReplyForm(CreateThoughtForm):
     def validate(self):
-        rv = CreateStarForm.validate(self)
+        rv = CreateThoughtForm.validate(self)
         if rv and self.parent.data is None:
             logger.warning("Reply form failed because no parent id was given")
             self.parent.errors.append("Can't find the post you are \

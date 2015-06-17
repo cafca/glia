@@ -21,7 +21,7 @@ from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments, find_mentions, \
     send_external_notifications
-from nucleus.nucleus.models import Mindset, Star, PlanetAssociation, Movement, \
+from nucleus.nucleus.models import Mindset, Thought, PlanetAssociation, Movement, \
     Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
@@ -103,11 +103,11 @@ def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
 
-    star_created = datetime.datetime.utcnow()
-    star_id = uuid4().hex
+    thought_created = datetime.datetime.utcnow()
+    thought_id = uuid4().hex
     errors = ""
     author = current_user.active_persona
-    parent_star = None
+    parent_thought = None
 
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
@@ -118,41 +118,41 @@ def text(message):
         map = Mindset.query.get(message["map_id"])
 
     if message["parent_id"]:
-        parent_star = Star.query.get(message["parent_id"])
-        if parent_star is None:
+        parent_thought = Thought.query.get(message["parent_id"])
+        if parent_thought is None:
             errors += "Could not find the message before yours. "
 
     if errors == "":
-        star = Star(
-            id=star_id,
+        thought = Thought(
+            id=thought_id,
             text=message['msg'],
             author=author,
-            parent=parent_star,
-            created=star_created,
-            modified=star_created,
+            parent=parent_thought,
+            created=thought_created,
+            modified=thought_created,
             mindset_id=map.id)
-        db.session.add(star)
+        db.session.add(thought)
 
-        text, planets = process_attachments(star.text)
-        star.text = text
+        text, planets = process_attachments(thought.text)
+        thought.text = text
 
         for planet in planets:
             db.session.add(planet)
 
             if isinstance(planet, Mention):
                 notification = MentionNotification(planet,
-                    author, url_for('web.star', id=star_id))
+                    author, url_for('web.thought', id=thought_id))
                 send_external_notifications(notification)
                 db.session.add(notification)
 
-            assoc = PlanetAssociation(star=star, planet=planet, author=author)
-            star.planet_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(planet, star))
+            assoc = PlanetAssociation(thought=thought, planet=planet, author=author)
+            thought.planet_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(planet, thought))
             db.session.add(assoc)
 
-        if parent_star:
-            notif = ReplyNotification(parent_star=parent_star, author=author,
-                url=url_for('web.star', id=star_id))
+        if parent_thought:
+            notif = ReplyNotification(parent_thought=parent_thought, author=author,
+                url=url_for('web.thought', id=thought_id))
             send_external_notifications(notif)
             db.session.add(notif)
 
@@ -164,41 +164,41 @@ def text(message):
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info(u"{} {}: {}".format(
-                map, author.username, star.text))
+                map, author.username, thought.text))
 
             # Render using templates
             chatline_template = current_app.jinja_env.get_template(
                 'chatline.html')
-            star_macros_template = current_app.jinja_env.get_template(
-                'macros/star.html')
-            star_macros = star_macros_template.make_module(
+            thought_macros_template = current_app.jinja_env.get_template(
+                'macros/thought.html')
+            thought_macros = thought_macros_template.make_module(
                 {'request': request})
 
             data = {
                 'username': author.username,
-                'msg': chatline_template.render(star=star),
-                'star_id': star.id,
-                'parent_id': star.parent_id,
-                'parent_short': star_macros.short(star.parent) if star.parent else None,
-                'vote_count': star.oneup_count()
+                'msg': chatline_template.render(thought=thought),
+                'thought_id': thought.id,
+                'parent_id': thought.parent_id,
+                'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
+                'vote_count': thought.oneup_count()
             }
             emit('message', data, room=message["room_id"])
 
             reply_data = {
-                'msg': star_macros.comment(star),
-                'parent_id': star.parent.id if star.parent else None
+                'msg': thought_macros.comment(thought),
+                'parent_id': thought.parent.id if thought.parent else None
             }
             emit('comment', reply_data, room=message["room_id"])
 
     if errors != "":
-        app.logger.warning("Errors creating Star: {}".format(errors))
+        app.logger.warning("Errors creating Thought: {}".format(errors))
         emit('error', errors)
 
 
 @socketio_authenticated_only
 @socketio.on('repost', namespace='/movements')
 def repost(message):
-    """Sent by client when the user reposts a Star."""
+    """Sent by client when the user reposts a Thought."""
     errors = ""
     author = current_user.active_persona
 
@@ -210,29 +210,29 @@ def repost(message):
     if not message["parent_id"]:
         errors += "No repost source specified"
     else:
-        parent_star = Star.query.get(message["parent_id"])
-        if parent_star is None:
+        parent_thought = Thought.query.get(message["parent_id"])
+        if parent_thought is None:
             errors += "Could not find the original post. "
 
     if errors == "":
-        star = Star.clone(parent_star, author, map)
-        star.text = message['text']
-        db.session.add(star)
+        thought = Thought.clone(parent_thought, author, map)
+        thought.text = message['text']
+        db.session.add(thought)
 
-        mentions = find_mentions(star.text)
+        mentions = find_mentions(thought.text)
         for mention_text, ident in mentions:
-            if star.planet_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:
+            if thought.planet_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:
                 app.logger.info("Adding new mention of {}".format(ident))
                 mention = Mention(identity=ident, text=mention_text)
                 notification = MentionNotification(
-                    mention, author, url_for('web.star', id=star.id))
+                    mention, author, url_for('web.thought', id=thought.id))
                 send_external_notifications(notification)
                 db.session.add(mention)
                 db.session.add(notification)
 
-        if parent_star:
-            notif = ReplyNotification(parent_star=parent_star, author=author,
-                url=url_for('web.star', id=star.id))
+        if parent_thought:
+            notif = ReplyNotification(parent_thought=parent_thought, author=author,
+                url=url_for('web.thought', id=thought.id))
             send_external_notifications(notif)
             db.session.add(notif)
 
@@ -240,48 +240,48 @@ def repost(message):
             db.session.commit()
         except SQLAlchemyError, e:
             db.session.rollback()
-            app.logger.error("Error completing Star repost: {}".format(e))
+            app.logger.error("Error completing Thought repost: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info(u"Repost {} {}: {}".format(
-                map if map else "[no mindset]", author.username, star.text))
+                map if map else "[no mindset]", author.username, thought.text))
 
             # Render using templates
             chatline_template = current_app.jinja_env.get_template(
                 'chatline.html')
-            star_macros_template = current_app.jinja_env.get_template(
-                'macros/star.html')
-            star_macros = star_macros_template.make_module(
+            thought_macros_template = current_app.jinja_env.get_template(
+                'macros/thought.html')
+            thought_macros = thought_macros_template.make_module(
                 {'request': request})
 
             if map is not None:
                 data = {
                     'username': author.username,
-                    'msg': chatline_template.render(star=star),
-                    'star_id': star.id,
-                    'parent_id': star.parent_id,
-                    'parent_short': star_macros.short(star.parent),
-                    'vote_count': star.oneup_count()
+                    'msg': chatline_template.render(thought=thought),
+                    'thought_id': thought.id,
+                    'parent_id': thought.parent_id,
+                    'parent_short': thought_macros.short(thought.parent),
+                    'vote_count': thought.oneup_count()
                 }
                 emit('message', data, room=map.id)
 
             reply_data = {
-                'msg': star_macros.comment(star),
-                'parent_id': parent_star.id
+                'msg': thought_macros.comment(thought),
+                'parent_id': parent_thought.id
             }
             emit('comment', reply_data, room=message["room_id"])
 
     if errors != "":
-        app.logger.warning("Errors creating Star: {}".format(errors))
+        app.logger.warning("Errors creating Thought: {}".format(errors))
         emit('error', errors)
 
     return {
         "status": "success" if len(errors) == 0 else "error",
         "errors": errors,
-        "message": "Star was reposted to {}".format(map.name),
+        "message": "Thought was reposted to {}".format(map.name),
         "map_id": map.id if map else None,
-        "star_id": star.id if star else None,
-        "url": url_for('web.star', id=star.id)
+        "thought_id": thought.id if thought else None,
+        "url": url_for('web.thought', id=thought.id)
     }
 
 
@@ -298,22 +298,22 @@ def left(message):
 @socketio.on('vote_request', namespace='/movements')
 def vote_request(message):
     """
-    Issue a vote to a Star using the currently activated Persona
+    Issue a vote to a Thought using the currently activated Persona
 
     Args:
-        star_id (string): ID of the Star
+        thought_id (string): ID of the Thought
     """
     error_message = ""
-    star_id = message.get('star_id')
-    star = None
+    thought_id = message.get('thought_id')
+    thought = None
 
-    if star_id is None:
+    if thought_id is None:
         error_message += "Vote event missing parameter. "
 
     if len(error_message) == 0:
-        star = Star.query.get_or_404(star_id)
+        thought = Thought.query.get_or_404(thought_id)
         try:
-            upvote = star.toggle_oneup()
+            upvote = thought.toggle_oneup()
         except PersonaNotFoundError:
             error_message += "Please activate a Persona for voting. "
             upvote = None
@@ -323,18 +323,18 @@ def vote_request(message):
 
     data = dict()
     if len(error_message) > 0:
-        app.logger.error("Error processing vote event from {} on {}: {}".format(current_user.active_persona, (star or "<Star {}>".format(star_id or "with unknown id")), error_message))
+        app.logger.error("Error processing vote event from {} on {}: {}".format(current_user.active_persona, (thought or "<Thought {}>".format(thought_id or "with unknown id")), error_message))
         data = {
             "meta": {
                 "error_message": error_message
             }
         }
     else:
-        app.logger.debug("Processed vote by {} on {}".format(upvote.author, star))
+        app.logger.debug("Processed vote by {} on {}".format(upvote.author, thought))
         data = {
             "votes": [{
-                "star_id": star.id,
-                "vote_count": star.oneup_count(),
+                "thought_id": thought.id,
+                "vote_count": thought.oneup_count(),
                 "author_id": upvote.author_id
             }]
         }
@@ -344,7 +344,7 @@ def vote_request(message):
             "action": "insert" if len(upvote.vesicles) == 0 else "update",
             "object_id": upvote.id,
             "object_type": "Oneup",
-            "recipients": star.author.contacts.all() + [star.author, ]
+            "recipients": thought.author.contacts.all() + [thought.author, ]
         }
 
         local_model_changed.send(upvote, message=message_vote)

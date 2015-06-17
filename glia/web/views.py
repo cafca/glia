@@ -14,7 +14,7 @@ from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteStarForm, CreateStarForm, CreatePersonaForm
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm
 from uuid import uuid4
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -27,7 +27,7 @@ from glia.web.helpers import send_validation_email, process_attachments, \
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
-    Star, Mindset, Planet, MovementMemberAssociation, Tag, TagPlanet, \
+    Thought, Mindset, Planet, MovementMemberAssociation, Tag, TagPlanet, \
     PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification, \
     ReplyNotification
 
@@ -58,7 +58,7 @@ def mark_notifications_read():
 @http_auth.login_required
 def debug():
     """ Display raw data """
-    stars = Star.query.all()
+    thoughts = Thought.query.all()
     planets = Planet.query.all()
     movements = Movement.query.all()
     mindsets = Mindset.query.all()
@@ -66,7 +66,7 @@ def debug():
 
     return render_template(
         'debug.html',
-        stars=stars,
+        thoughts=thoughts,
         users=users,
         planets=planets,
         movements=movements,
@@ -83,18 +83,18 @@ def index():
 
     def movement_sort(movement):
         s = movement.mindspace.index \
-            .filter(Star.state >= 0) \
-            .order_by(Star.created.desc()) \
+            .filter(Thought.state >= 0) \
+            .order_by(Thought.created.desc()) \
             .first()
         return s.created if s is not None else datetime.datetime.fromtimestamp(0)
 
     movements = current_user.active_persona.movements_followed
     movement_data = []
     for g in sorted(movements, key=movement_sort, reverse=True):
-        g_star_selection = g.mindspace.index.filter(Star.state >= 0)
-        g_top_posts = sorted(g_star_selection, key=Star.hot, reverse=True)[:3]
+        g_thought_selection = g.mindspace.index.filter(Thought.state >= 0)
+        g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
 
-        recent_blog_post = g.blog.index.order_by(Star.created.desc()).first()
+        recent_blog_post = g.blog.index.order_by(Thought.created.desc()).first()
         if recent_blog_post and datetime.datetime.utcnow() \
                 - recent_blog_post.created > datetime.timedelta(days=1):
             recent_blog_post = None
@@ -114,8 +114,8 @@ def index():
         .group_by(Movement)
 
     # Collect main page content
-    top_post_selection = Star.query.filter(Star.state >= 0)
-    top_post_selection = sorted(top_post_selection, key=Star.hot, reverse=True)
+    top_post_selection = Thought.query.filter(Thought.state >= 0)
+    top_post_selection = sorted(top_post_selection, key=Thought.hot, reverse=True)
     top_posts = []
     while len(top_posts) < min([9, len(top_post_selection)]):
         candidate = top_post_selection.pop(0)
@@ -160,26 +160,26 @@ def movements(id=None):
     return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
-@app.route('/star/<id>/')
+@app.route('/thought/<id>/')
 @http_auth.login_required
-def star(id=None):
-    star = Star.query.get_or_404(id)
+def thought(id=None):
+    thought = Thought.query.get_or_404(id)
 
     # Load conversation context
     context = []
-    while(len(context) < star.context_length) and star.parent is not None:
-        context.append(star.parent if len(context) == 0 else context[-1].parent)
+    while(len(context) < thought.context_length) and thought.parent is not None:
+        context.append(thought.parent if len(context) == 0 else context[-1].parent)
         if context[-1].parent is None:
             break
     context = context[::-1]  # reverse list
 
-    if star.state < 0 and not star.author.controlled():
-        flash("This Star is currently unavailable.")
+    if thought.state < 0 and not thought.author.controlled():
+        flash("This Thought is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
-    reply_form = CreateReplyForm(parent=star.id)
+    reply_form = CreateReplyForm(parent=thought.id)
 
-    return render_template("star.html", star=star, context=context,
+    return render_template("thought.html", thought=thought, context=context,
         reply_form=reply_form)
 
 
@@ -188,41 +188,41 @@ def star(id=None):
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
-    stars = Star.query.join(PlanetAssociation).join(TagPlanet).filter(TagPlanet.tag_id == tag.id)
+    thoughts = Thought.query.join(PlanetAssociation).join(TagPlanet).filter(TagPlanet.tag_id == tag.id)
 
-    return render_template("tag.html", tag=tag, stars=stars)
+    return render_template("tag.html", tag=tag, thoughts=thoughts)
 
 
-@app.route('/star/<id>/delete', methods=["GET", "POST"])
+@app.route('/thought/<id>/delete', methods=["GET", "POST"])
 @http_auth.login_required
-def delete_star(id=None):
-    star = Star.query.get_or_404(id)
-    form = DeleteStarForm()
+def delete_thought(id=None):
+    thought = Thought.query.get_or_404(id)
+    form = DeleteThoughtForm()
 
-    if not star.author.controlled():
-        flash("You are not allowed to change {}'s Stars".format(star.author.username))
-        app.logger.error("Tried to change visibility of {}'s Stars".format(star.author))
+    if not thought.author.controlled():
+        flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
+        app.logger.error("Tried to change visibility of {}'s Thoughts".format(thought.author))
         return redirect(request.referrer or url_for('.index'))
 
     if form.validate_on_submit():
-        if star.state == -2:
-            star.set_state(0)
+        if thought.state == -2:
+            thought.set_state(0)
         else:
-            star.set_state(-2)
+            thought.set_state(-2)
 
         try:
-            db.session.add(star)
+            db.session.add(thought)
             db.session.commit()
         except:
-            app.logger.error("Error setting publish state of {}\n{}".format(star, traceback.format_exc()))
+            app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))
             db.session.rollback()
         else:
-            flash("Updated visibility of {}".format(star))
+            flash("Updated visibility of {}".format(thought))
 
-            app.logger.info("Star {} set to publish state {}".format(id, star.state))
-            return(redirect(url_for(".star", id=star.id)))
+            app.logger.info("Thought {} set to publish state {}".format(id, thought.state))
+            return(redirect(url_for(".thought", id=thought.id)))
 
-    return render_template("delete_star.html", star=star, form=form)
+    return render_template("delete_thought.html", thought=thought, form=form)
 
 
 @app.route('/persona/create', methods=["GET", "POST"])
@@ -363,23 +363,23 @@ def movement_mindspace(id):
             id, current_user))
         return(redirect(url_for('.movements')))
 
-    star_selection = movement.mindspace.index.filter(Star.state >= 0)
-    star_selection = sorted(star_selection, key=Star.hot, reverse=True)
+    thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
+    thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
     top_posts = []
-    while len(top_posts) < min([15, len(star_selection)]):
-        candidate = star_selection.pop(0)
+    while len(top_posts) < min([15, len(thought_selection)]):
+        candidate = thought_selection.pop(0)
         candidate.promote_target = None if candidate in movement.blog \
             else movement
         if candidate.oneup_count() > 0:
             top_posts.append(candidate)
 
-    recent_blog_post = movement.blog.index.order_by(Star.created.desc()).first()
+    recent_blog_post = movement.blog.index.order_by(Thought.created.desc()).first()
     if recent_blog_post and datetime.datetime.utcnow() \
             - recent_blog_post.created > datetime.timedelta(days=1):
         recent_blog_post = None
 
     return render_template('movement_mindspace.html',
-        movement=movement, stars=top_posts, recent_blog_post=recent_blog_post)
+        movement=movement, thoughts=top_posts, recent_blog_post=recent_blog_post)
 
 
 @app.route('/movement/<id>/blog/', methods=["GET"])
@@ -390,23 +390,23 @@ def movement_blog(id, page=1):
     """Display a movement's profile"""
     movement = Movement.query.get_or_404(id)
 
-    star_selection = movement.blog.index \
+    thought_selection = movement.blog.index \
         .filter_by(author_id=movement.id) \
-        .filter(Star.state >= 0) \
-        .order_by(Star.created.desc()) \
+        .filter(Thought.state >= 0) \
+        .order_by(Thought.created.desc()) \
         .paginate(page, 5)
 
-    return render_template('movement_blog.html', movement=movement, stars=star_selection)
+    return render_template('movement_blog.html', movement=movement, thoughts=thought_selection)
 
 
 @app.route('/create', methods=["GET", "POST"])
 @http_auth.login_required
-def create_star():
-    """Post a new Star"""
+def create_thought():
+    """Post a new Thought"""
 
-    form = CreateStarForm()
-    star_created = datetime.datetime.utcnow()
-    star_id = uuid4().hex
+    form = CreateThoughtForm()
+    thought_created = datetime.datetime.utcnow()
+    thought_id = uuid4().hex
     author = current_user.active_persona
     sm = None
     parent = None
@@ -422,21 +422,21 @@ def create_star():
         form.parent.data = request.args['parent']
 
     sm = Mindset.query.get_or_404(form.mindset.data)
-    parent = Star.query.get_or_404(form.parent.data) if form.parent.data else None
+    parent = Thought.query.get_or_404(form.parent.data) if form.parent.data else None
 
     if form.validate_on_submit():
-        star = Star(
-            id=star_id,
+        thought = Thought(
+            id=thought_id,
             text=form.text.data,
             author=author,
             parent=parent,
-            created=star_created,
-            modified=star_created,
+            created=thought_created,
+            modified=thought_created,
             mindset_id=sm.id)
-        db.session.add(star)
+        db.session.add(thought)
 
-        text, planets = process_attachments(star.text)
-        star.text = text
+        text, planets = process_attachments(thought.text)
+        thought.text = text
 
         if len(form.longform.data) > 0:
             lftext, lfplanets = process_attachments(form.longform.data)
@@ -451,18 +451,18 @@ def create_star():
 
             if isinstance(planet, Mention):
                 notification = MentionNotification(planet,
-                    author, url_for('web.star', id=star_id))
+                    author, url_for('web.thought', id=thought_id))
                 send_external_notifications(notification)
                 db.session.add(notification)
 
-            assoc = PlanetAssociation(star=star, planet=planet, author=author)
-            star.planet_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(planet, star))
+            assoc = PlanetAssociation(thought=thought, planet=planet, author=author)
+            thought.planet_assocs.append(assoc)
+            app.logger.info("Attached {} to new {}".format(planet, thought))
             db.session.add(assoc)
 
         if parent:
-            notif = ReplyNotification(parent_star=parent, author=author,
-                url=url_for('web.star', id=star_id))
+            notif = ReplyNotification(parent_thought=parent, author=author,
+                url=url_for('web.thought', id=thought_id))
             send_external_notifications(notif)
             db.session.add(notif)
 
@@ -470,36 +470,36 @@ def create_star():
             db.session.commit()
         except SQLAlchemyError, e:
             db.session.rollback()
-            app.logger.error("Error creating longform star: {}".format(e))
+            app.logger.error("Error creating longform thought: {}".format(e))
             flash("An error occured saving your message. Please try again.")
         else:
-            app.logger.info(u"{} {}: {}".format(sm, author.username, star.text))
+            app.logger.info(u"{} {}: {}".format(sm, author.username, thought.text))
 
             # Render using templates
-            star_macros_template = current_app.jinja_env.get_template(
-                'macros/star.html')
-            star_macros = star_macros_template.make_module(
+            thought_macros_template = current_app.jinja_env.get_template(
+                'macros/thought.html')
+            thought_macros = thought_macros_template.make_module(
                 {'request': request})
 
             data = {
                 'username': author.username,
-                'msg': render_template("chatline.html", star=star),
-                'star_id': star_id,
-                'parent_id': star.parent_id,
-                'parent_short': star_macros.short(star.parent) if star.parent else None,
-                'vote_count': star.oneup_count()
+                'msg': render_template("chatline.html", thought=thought),
+                'thought_id': thought_id,
+                'parent_id': thought.parent_id,
+                'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
+                'vote_count': thought.oneup_count()
             }
             socketio.emit('message', data, room=form.mindset.data)
 
             reply_data = {
-                'msg': star_macros.comment(star),
+                'msg': thought_macros.comment(thought),
                 'parent_id': form.parent.data
             }
             socketio.emit('comment', reply_data, room=form.parent.data)
             flash("Great success! Your new post is ready.")
-            return redirect(url_for("web.star", id=star_id))
+            return redirect(url_for("web.thought", id=thought_id))
 
-    return render_template("create_star.html",
+    return render_template("create_thought.html",
         form=form, mindset=sm, parent=parent)
 
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% import "macros/star.html" as star_macros %}
+{% import "macros/thought.html" as thought_macros %}
 {% import "macros/identity.html" as id_macros %}
 
 {% block content %}
@@ -8,12 +8,12 @@
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-8">
     {% if top_posts|length > 0 %}
       <div class="panel-body">
-        <h3>Hot Stars</h3>
+        <h3>Hot Thoughts</h3>
       </div>
 
       <ul class="list-group rk-toc-movements">
-        {% for star in top_posts %}
-        <li class="list-group-item"><a href="{{ url_for('web.star', id=star.id) }}">{{ star.text }}</li>
+        {% for thought in top_posts %}
+        <li class="list-group-item"><a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text }}</li>
         {% endfor %}
       </ul> <!-- ./ movement list -->
     {% endif %}
@@ -47,16 +47,16 @@
         <div class="panel-body">
           {% if m.recent_blog_post %}
           <div class="alert alert-info">
-            <h4>{{ star_macros.star_line(m.recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
+            <h4>{{ thought_macros.thought_line(m.recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
           </div>
           {% endif %}
 
           {% if m.top_posts|length > 0 %}
-            {% for star in m.top_posts %}
+            {% for thought in m.top_posts %}
               {% if loop.first %}
-                {{ star_macros.star_lead(m.top_posts[0], controlled_personas) }}
+                {{ thought_macros.thought_lead(m.top_posts[0], controlled_personas) }}
               {% else %}
-                {{ star_macros.star_line(star, controlled_personas, no_planets=True) }}
+                {{ thought_macros.thought_line(thought, controlled_personas, no_planets=True) }}
               {% endif %}
             {% endfor %}
           {% else %}

@@ -17,7 +17,7 @@ from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Star, Mindset, Movement, Persona
+from nucleus.nucleus.models import Thought, Mindset, Movement, Persona
 
 
 class InvalidUsage(Exception):
@@ -58,24 +58,24 @@ def async_chat(mindset_id, index_id=None):
         errors += "Error loading more items. Please refresh page. "
 
     if index_id:
-        index_star = Star.query.get(index_id)
-        if index_star is None:
+        index_thought = Thought.query.get(index_id)
+        if index_thought is None:
             errors += "Error loading more items. Please refresh page. "
 
     if len(errors) == 0:
-        stars = sm.index.filter_by(state=0).order_by(Star.created.desc())
+        thoughts = sm.index.filter_by(state=0).order_by(Thought.created.desc())
 
         if index_id:
-            stars = stars.filter(Star.created < index_star.created)
+            thoughts = thoughts.filter(Thought.created < index_thought.created)
 
-        stars = stars.limit(51)[::-1]
+        thoughts = thoughts.limit(51)[::-1]
 
         last_id = None
-        for star in stars[:50]:
-            html = "\n".join([html, render_template('chatline.html', star=star)])
-            last_id = star.id
+        for thought in thoughts[:50]:
+            html = "\n".join([html, render_template('chatline.html', thought=thought)])
+            last_id = thought.id
 
-        end_reached = True if len(stars) < 51 else False
+        end_reached = True if len(thoughts) < 51 else False
 
     if errors:
         return(jsonify({
@@ -84,7 +84,7 @@ def async_chat(mindset_id, index_id=None):
         }))
     else:
         if not end_reached:
-            next_url = url_for('.async_chat', mindset_id=mindset_id, index_id=stars[0].id)
+            next_url = url_for('.async_chat', mindset_id=mindset_id, index_id=thoughts[0].id)
         return(jsonify({
             'end_reached': end_reached,
             'html': html,
@@ -244,75 +244,75 @@ def async_movement(movement_id):
 @login_required
 @http_auth.login_required
 def async_promote(movement_id):
-    """Promote a Star to a Movement's blog
+    """Promote a Thought to a Movement's blog
 
-    Expects a POST request with fields 'star_id' """
-    star_id = request.form.get('star_id')
-    if not star_id:
-        raise InvalidUsage("Missing request parameter 'star_id'")
+    Expects a POST request with fields 'thought_id' """
+    thought_id = request.form.get('thought_id')
+    if not thought_id:
+        raise InvalidUsage("Missing request parameter 'thought_id'")
 
-    star = Star.query.get_or_404(star_id)
+    thought = Thought.query.get_or_404(thought_id)
     movement = Movement.query.get_or_404(movement_id)
 
     if movement.current_role() != "admin":
-        raise InvalidUsage("Only the admin may promote a Star")
+        raise InvalidUsage("Only the admin may promote a Thought")
 
-    blog_star = Star.clone(star, movement, movement.blog)
-    db.session.add(blog_star)
+    blog_thought = Thought.clone(thought, movement, movement.blog)
+    db.session.add(blog_thought)
 
     try:
         db.session.commit()
     except SQLAlchemyError, e:
         db.session.rollback()
         app.logger.error("Error promoting {} to {}\n{}".format(
-            star, movement.blog, e))
+            thought, movement.blog, e))
         raise InvalidUsage("Error saving to DB", code=500)
     else:
         app.logger.info("{} promoted {} to {}".format(
-            current_user.active_persona, star, movement.blog))
+            current_user.active_persona, thought, movement.blog))
         return jsonify({"message": "The post can now be seen on the movement's blog.", "url": "#"})
 
 
-@app.route("/async/star/<star_id>/", methods=["POST"])
+@app.route("/async/thought/<thought_id>/", methods=["POST"])
 @login_required
 @http_auth.login_required
-def async_star(star_id):
-    """Edit a Star
+def async_thought(thought_id):
+    """Edit a Thought
 
     Expects a POST request with fields 'key' and 'value'
     """
-    star = Star.query.get(star_id)
-    if star is None:
-        raise InvalidUsage(message="Star not found", code=404)
+    thought = Thought.query.get(thought_id)
+    if thought is None:
+        raise InvalidUsage(message="Thought not found", code=404)
 
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
-    if current_user.active_persona.id != star.author_id:
-        raise InvalidUsage(message="Only author may edit Stars")
+    if current_user.active_persona.id != thought.author_id:
+        raise InvalidUsage(message="Only author may edit Thoughts")
 
     if request.form.get("name") == "context_length":
         try:
             context_length = int(request.form.get("value"))
         except ValueError, e:
             app.logger.warning("{} tried to set context length of {} to a non-\
-                integer value\n{}".format(current_user.active_persona, star, e))
+                integer value\n{}".format(current_user.active_persona, thought, e))
             raise InvalidUsage(message="Please enter a number.")
         else:
             if context_length > 10:
                 context_length = 10
 
-            star.context_length = context_length
+            thought.context_length = context_length
             app.logger.info("{} changed context length of {} to {}".format(
-                current_user.active_persona, star, context_length))
+                current_user.active_persona, thought, context_length))
 
     # Store updates
     try:
-        db.session.add(star)
+        db.session.add(thought)
         db.session.commit()
     except Exception:
-        app.logger.exception("Error storing updates for {}".format(star))
-        raise InvalidUsage(message="There was an error saving the Star.\
+        app.logger.exception("Error storing updates for {}".format(thought))
+        raise InvalidUsage(message="There was an error saving the Thought.\
             Please try again")
 
     return jsonify({"context_length": context_length})

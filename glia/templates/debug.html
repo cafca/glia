@@ -2,7 +2,7 @@
 
 {% block content %}
 {{ controlled_personas }}
-<h1>Stars</h1>
+<h1>Thoughts</h1>
 <table class="table">
     <thead>
         <tr>
@@ -18,18 +18,18 @@
         </tr>
     </thead>
     <tbody>
-      {% for star in stars %}
+      {% for thought in thoughts %}
       <tr>
-        <td>{{ star.id }}</td>
-        <td>{{ star.text }}</td>
-        <td>{{ star.author.username}}</td>
-        <td>{{ star.modified | localtime|naturaltime }}</td>
-        <td>{{ star.created | localtime|naturaltime}} </td>
-        <td>{{ star.get_state()}}</td>
-        <td>{{ star.parent_id }}</td>
-        <td>{{ star.vesicles | length }}</td>
-        {% if star.get_state() >= 0 and star.author.controlled() %}
-            <td><form action="{{url_for('.delete_star', id=star.id)}}" method="POST">
+        <td>{{ thought.id }}</td>
+        <td>{{ thought.text }}</td>
+        <td>{{ thought.author.username}}</td>
+        <td>{{ thought.modified | localtime|naturaltime }}</td>
+        <td>{{ thought.created | localtime|naturaltime}} </td>
+        <td>{{ thought.get_state()}}</td>
+        <td>{{ thought.parent_id }}</td>
+        <td>{{ thought.vesicles | length }}</td>
+        {% if thought.get_state() >= 0 and thought.author.controlled() %}
+            <td><form action="{{url_for('.delete_thought', id=thought.id)}}" method="POST">
                 <button class="btn" type="submit">Delete</a>
             </form></td>
         {% else %}
@@ -49,7 +49,7 @@
             <th>Author</th>
             <th>Modified</th>
             <th>State</th>
-            <th>Stars</th>
+            <th>Thoughts</th>
             <th>Vesicles</th>
         </tr>
     </thead>
@@ -61,7 +61,7 @@
         <td>{{ mindset.author.username}}</td>
         <td>{{ mindset.modified | localtime|naturaltime }}</td>
         <td>{{ mindset.get_state()}}</td>
-        <td>{% for star in mindset.index %}{{star}}<br />{% endfor %}</td>
+        <td>{% for thought in mindset.index %}{{thought}}<br />{% endfor %}</td>
         <td>{{ mindset.vesicles | length }}</td>
       </tr>
       {% endfor %}

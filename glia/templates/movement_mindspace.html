@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% import "macros/chat.html" as chat_macros %}
-{% import "macros/star.html" as star_macros %}
+{% import "macros/thought.html" as thought_macros %}
 {% import "macros/movement.html" as movement_macros %}
 
 {% block script %}
@@ -28,7 +28,7 @@ $(document).ready(function() {
       <div class="panel-body rk-movement-info">
         <div class="form-group">
         {% if movement.current_role() not in ["visitor", "anonymous"] %}
-          <a class="btn btn-primary" href="{{ url_for('web.create_star', mindset=movement.mindspace.id) }}">Create Star</a>
+          <a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=movement.mindspace.id) }}">Create Thought</a>
         {% endif %}
 
         {% if movement in current_user.active_persona.movements_followed %}
@@ -68,7 +68,7 @@ $(document).ready(function() {
           <dd class="member-only" id="rk-chat-nicknames"></dd>
         </dl>
 
-        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
+        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to thoughtt chatting and collaborating with other
         members of this movement </p>
       </div>
 
@@ -78,7 +78,7 @@ $(document).ready(function() {
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->
 
-  <div class="star-listing col-sm-8 col-sm-pull-4">
+  <div class="thought-listing col-sm-8 col-sm-pull-4">
     {{ movement_macros.nav(movement, "Mindspace") }}
     <div class="alert alert-info alert-dismissible" role="alert">
       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -87,18 +87,18 @@ $(document).ready(function() {
 
     {% if recent_blog_post %}
       <div class="alert alert-info">
-        <h4>{{ star_macros.star_line(recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
+        <h4>{{ thought_macros.thought_line(recent_blog_post, labels=[{"text": "Blog", }], no_planets=True) }}</h4>
       </div>
     {% endif %}
 
-    {% for star in stars %}
+    {% for thought in thoughts %}
       {% if loop.first %}
-        {{ star_macros.star_lead(star, controlled_personas, promote_to=star.promote_target) }}
+        {{ thought_macros.thought_lead(thought, controlled_personas, promote_to=thought.promote_target) }}
       {% else %}
-        {{ star_macros.star_line(star, controlled_personas, no_planets=True, promote_to=star.promote_target) }}
+        {{ thought_macros.thought_line(thought, controlled_personas, no_planets=True, promote_to=thought.promote_target) }}
       {% endif %}
     {% endfor %}
-  </div> <!-- ./ star listing -->
+  </div> <!-- ./ thought listing -->
 </section>
 
 {% endblock %}

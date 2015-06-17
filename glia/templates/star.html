@@ -1,31 +1,31 @@
 {% extends "base.html" %}
 
 {% import "macros/chat.html" as chat_macros %}
-{% import "macros/star.html" as star_macros with context %}
+{% import "macros/thought.html" as thought_macros with context %}
 {% import "macros/planet.html" as planet_macros %}
 {% import "macros/identity.html" as id_macros %}
 
 {% block script %}
-window.room_id = "{{ star.mindset_id }}";
-window.map_id = "{{ star.mindset_id }}";
+window.room_id = "{{ thought.mindset_id }}";
+window.map_id = "{{ thought.mindset_id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 
 $(document).ready(function() {
   $('[data-toggle="tooltip"]').tooltip();
 
-  $('#rk-star-context-length').editable({
+  $('#rk-thought-context-length').editable({
     autotext: 'always',
     type: 'text',
     name: 'context_length',
-    pk: '{{ star.id }}',
-    url: '{{ url_for('web.async_star', star_id=star.id) }}',
+    pk: '{{ thought.id }}',
+    url: '{{ url_for('web.async_thought', thought_id=thought.id) }}',
     title: 'How many do you want to show?',
     display: function(value, response) {
       if (value > 0) {
-        $(this).html("Displaying " + value + " previous Stars for context.");
+        $(this).html("Displaying " + value + " previous Thoughts for context.");
       } else {
-        $(this).html("Author has chosen not to display context for this Star.");
+        $(this).html("Author has chosen not to display context for this Thought.");
       }
     },
     error: function(response, newValue) {
@@ -38,9 +38,9 @@ $(document).ready(function() {
     success: function(response, newValue) {
       location.reload();
     },
-    value: {{ star.context_length|default("0", True) }},
+    value: {{ thought.context_length|default("0", True) }},
     placement: 'bottom',
-    disabled: {% if star.author == active_persona %}false{% else %}true{% endif %}
+    disabled: {% if thought.author == active_persona %}false{% else %}true{% endif %}
   });
 });
 {% endblock %}
@@ -49,14 +49,14 @@ $(document).ready(function() {
 
 <section class="row">
   <div class="col-sm-7 col-sm-push-1">
-    <div class="rk-star-listing  rk-star-{{ star.id }} row">
+    <div class="rk-thought-listing  rk-thought-{{ thought.id }} row">
       <div class="col-sm-12">
         {% if context|length > 0 %}
         <blockquote style="padding-bottom: -20px">
         {% for s in context %}
         <p>
-          {{ star_macros.short(s) }}
-          {% if s.mindset != star.mindset %}
+          {{ thought_macros.short(s) }}
+          {% if s.mindset != thought.mindset %}
           <span class="label label-default">{{s.mindset.name}}</span>
           {% endif %}
         </p>
@@ -64,19 +64,19 @@ $(document).ready(function() {
         </blockquote>
         {% endif %}
 
-        {{ star_macros.star_lead(star, controlled_personas, truncate=False) }}
+        {{ thought_macros.thought_lead(thought, controlled_personas, truncate=False) }}
       </div>
-    </div> <!-- ./ star listing -->
+    </div> <!-- ./ thought listing -->
 
     <a id="comments"></a>
-    <div class="rk-star-reply row">
+    <div class="rk-thought-reply row">
       <div class="col-sm-6">
         <form class="rk-create">
           <div class="pull-right rk-create-counter"></div>
           <div class="rk-create-extend">
             <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
           </div>
-          <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
+          <input class="rk-create-parent" name="parent" type="hidden" value="{{ thought.id }}">
           <div class="form-group">
             <textarea class="form-control rk-create-text" name="text"></textarea>
           </div>
@@ -85,43 +85,43 @@ $(document).ready(function() {
       </div>
     </div> <!-- ./ top-level reply form -->
 
-    <div class="rk-star-listing rk-comments rk-replies">
+    <div class="rk-thought-listing rk-comments rk-replies">
     &nbsp;
-    {% for s in star.comments %}
-      {{ star_macros.comment_tree(s, controlled_personas, truncate=True) }}
+    {% for s in thought.comments %}
+      {{ thought_macros.comment_tree(s, controlled_personas, truncate=True) }}
     {% endfor %}
     </div> <!-- ./ comments -->
   </div> <!-- ./ content area -->
 
   <div class="col-sm-3 col-sm-push-1">
     <h3>Info</h3>
-    <p>Original post by {{ id_macros.identity(star.author) }} {{star.created|localtime|naturaltime}}.</p>
-    <p><a href="#" id="rk-star-context-length"></a></p>
+    <p>Original post by {{ id_macros.identity(thought.author) }} {{thought.created|localtime|naturaltime}}.</p>
+    <p><a href="#" id="rk-thought-context-length"></a></p>
 
-    <p>Posted on <a href="{{ star.mindset.get_absolute_url() }}">{{ star.mindset.name }}</a></p>
+    <p>Posted on <a href="{{ thought.mindset.get_absolute_url() }}">{{ thought.mindset.name }}</a></p>
 
-    {{ star_macros.repost_button(star) }}
+    {{ thought_macros.repost_button(thought) }}
 
     <h3>Availability</h3>
-    {% if star.author in controlled_personas %}
-      {% if star.state >= 0 %}
+    {% if thought.author in controlled_personas %}
+      {% if thought.state >= 0 %}
       <p>
-        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_star', id=star.id) }}">
+        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
           <i class="fa fa-eye-slash"></i> Remove
         </a>
       </p>
-      {% elif star.state == -2 %}
-      <p>This Star is currently hidden.</p>
+      {% elif thought.state == -2 %}
+      <p>This Thought is currently hidden.</p>
       <p>
-        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_star', id=star.id) }}">
+        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
           <i class="fa fa-eye"></i> Publish again
         </a>
       </p>
       {% endif %}
-    {% elif star.state >= 0 %}
-    <p><i class="fa fa-eye"></i> This Star is available</p>
+    {% elif thought.state >= 0 %}
+    <p><i class="fa fa-eye"></i> This Thought is available</p>
     {% else %}
-    <p><i class="fa fa-exclamation-circle"></i> This Star is currently unavailable.</p>
+    <p><i class="fa fa-exclamation-circle"></i> This Thought is currently unavailable.</p>
     {% endif %}
   </div>
 </section>
