@@ -112,15 +112,18 @@ def text(message):
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
 
-    if "map_id" not in message:
-        errors += "No Mindset context given."
-    else:
-        map = Mindset.query.get(message["map_id"])
-
     if message["parent_id"]:
         parent_thought = Thought.query.get(message["parent_id"])
         if parent_thought is None:
             errors += "Could not find the message before yours. "
+
+    if "map_id" not in message:
+        if parent_thought is None:
+            errors += "New thoughts needs either a parent or a mindset to live in. "
+        else:
+            map = parent_thought.mindset
+    else:
+        map = Mindset.query.get(message["map_id"])
 
     if errors == "":
         thought = Thought(

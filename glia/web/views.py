@@ -436,7 +436,7 @@ def create_thought():
     elif parent is not None:
         ms = parent.mindset
     else:
-        ms = current_user.active_persona.mindspace
+        form.mindset.errors.append("New thoughts needs either a parent or a mindset to live in.")
 
     if form.validate_on_submit():
         thought = Thought(

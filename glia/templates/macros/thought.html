@@ -169,7 +169,7 @@
       <span class="small">
         {{ id_macros.identity(thought.author) }}
         {% if thought.mindset and thought.mindset != thought.parent.mindset %}
-        on <a href="{{ thought.mindset.get_absolute_url() }}"><span class="label label-default">{{ thought.mindset.name }}</span></a>
+        in <a href="{{ thought.mindset.get_absolute_url() }}"><span class="label label-default">{{ thought.mindset.name }}</span></a>
         {% endif %}
         {{ thought.created|localtime|naturaltime }}
         <a href="{{ url_for('web.thought', id=thought.id) }}">link</a>
@@ -203,7 +203,12 @@
         <div class="form-group">
           <textarea class="form-control rk-create-text" name="text"></textarea>
         </div>
-        <button type="submit" class="rk-create-submit btn btn-sm btn-default" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+        <button type="submit" class="rk-create-submit btn btn-sm btn-default" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+          Reply
+          {% if thought.mindset and thought.mindset != thought.parent.mindset %}
+          in {{ thought.mindset.name }}
+          {% endif %}
+        </button>
       </form>
     </div>
   </div>
