@@ -348,7 +348,7 @@ $(document).ready(function(){
         $('.rk-repost-form').submit(function (event) {
             event.preventDefault();
             var $btn = $(this).find(":button");
-            var $map = $btn.data("starmap-id");
+            var $map = $btn.data("mindset-id");
             var $text = $('#rk-repost').find('.rk-create-text').val();
             var $parent = $('#rk-repost').find('.rk-create-parent').val();
 

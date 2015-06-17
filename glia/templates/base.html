@@ -137,13 +137,13 @@
                     <input type="hidden" class="rk-create-parent" value="" />
                   </div>
                 </div>
-                <div class="col-sm-6 rk-repost-starmaps">
+                <div class="col-sm-6 rk-repost-mindsets">
                   <h4>Pick a Place</h4>
                     <ul class="list-unstyled">
-                  {% for map in repost_starmaps %}
+                  {% for map in repost_mindsets %}
                       <form class="rk-repost-form">
                         <li>
-                          <button type="submit" class="btn btn-default btn-block rk-repost-button" data-starmap-id="{{ map.id }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Creating Star' data-success-text='<i class="fa fa-check"></i> {{ map.name }}'>{{ map.name }}</button>
+                          <button type="submit" class="btn btn-default btn-block rk-repost-button" data-mindset-id="{{ map.id }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Creating Star' data-success-text='<i class="fa fa-check"></i> {{ map.name }}'>{{ map.name }}</button>
                         </li>
                       </form>
                   {% endfor %}

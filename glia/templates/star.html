@@ -6,8 +6,8 @@
 {% import "macros/identity.html" as id_macros %}
 
 {% block script %}
-window.room_id = "{{ star.starmap_id }}";
-window.map_id = "{{ star.starmap_id }}";
+window.room_id = "{{ star.mindset_id }}";
+window.map_id = "{{ star.mindset_id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 
@@ -56,8 +56,8 @@ $(document).ready(function() {
         {% for s in context %}
         <p>
           {{ star_macros.short(s) }}
-          {% if s.starmap != star.starmap %}
-          <span class="label label-default">{{s.starmap.name}}</span>
+          {% if s.mindset != star.mindset %}
+          <span class="label label-default">{{s.mindset.name}}</span>
           {% endif %}
         </p>
         {% endfor %}
@@ -98,7 +98,7 @@ $(document).ready(function() {
     <p>Original post by {{ id_macros.identity(star.author) }} {{star.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-star-context-length"></a></p>
 
-    <p>Posted on <a href="{{ star.starmap.get_absolute_url() }}">{{ star.starmap.name }}</a></p>
+    <p>Posted on <a href="{{ star.mindset.get_absolute_url() }}">{{ star.mindset.name }}</a></p>
 
     {{ star_macros.repost_button(star) }}
 

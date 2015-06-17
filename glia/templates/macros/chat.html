@@ -28,13 +28,13 @@
 
 <ul class="list-group" id="rk-chat-lines">
   <li class="list-group-item text-center" id="rk-chat-more">
-    <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', starmap_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
+    <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', mindset_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
   </li>
 </ul>
 
 <div class="panel-footer">
 <form class="rk-create" class="form-inline" action="{{ url_for('web.create_star') }}" method="GET">
-  <input type="hidden" name="starmap" value="{{ map.id }}" />
+  <input type="hidden" name="mindset" value="{{ map.id }}" />
   <input id="rk-chat-parent" class="rk-create-parent" name="parent" type="hidden" value="" />
   <div>
     <span>&nbsp;</span>

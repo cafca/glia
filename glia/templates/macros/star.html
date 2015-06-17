@@ -200,8 +200,8 @@
     <div class="rk-star-meta">
       <span class="small">
         {{ id_macros.identity(star.author) }}
-        {% if star.starmap and star.starmap != star.parent.starmap %}
-        on <a href="{{ star.starmap.get_absolute_url() }}"><span class="label label-default">{{ star.starmap.name }}</span></a>
+        {% if star.mindset and star.mindset != star.parent.mindset %}
+        on <a href="{{ star.mindset.get_absolute_url() }}"><span class="label label-default">{{ star.mindset.name }}</span></a>
         {% endif %}
         {{ star.created|localtime|naturaltime }}
         <a href="{{ url_for('web.star', id=star.id) }}">link</a>
@@ -237,10 +237,10 @@
     {% endif %}
 
     <div class="rk-star-meta">
-      <small><a href="{{ url_for('web.create_star', parent=star.id, starmap=star.starmap.id) }}" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
+      <small><a href="{{ url_for('web.create_star', parent=star.id, mindset=star.mindset.id) }}" class="rk-create-display-toggle" data-id="{{ star.id }}">reply</a></small>
       <form class="rk-create" action="{{ url_for('web.create_star') }}" method="GET">
         <input class="rk-create-parent" name="parent" type="hidden" value="{{ star.id }}">
-        <input type="hidden" name="starmap" value="{{ star.starmap_id }}" />
+        <input type="hidden" name="mindset" value="{{ star.mindset_id }}" />
         <div>
           <span>&nbsp;</span>
           <div class="pull-right rk-create-counter"></div>

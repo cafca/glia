@@ -40,7 +40,7 @@
     </tbody>
 </table>
 
-<h1>Starmaps</h1>
+<h1>Mindsets</h1>
 <table class="table">
     <thead>
         <tr>
@@ -54,15 +54,15 @@
         </tr>
     </thead>
     <tbody>
-      {% for starmap in starmaps %}
+      {% for mindset in mindsets %}
       <tr>
-        <td>{{ starmap.id }}</td>
-        <td>{{ starmap.kind }}</td>
-        <td>{{ starmap.author.username}}</td>
-        <td>{{ starmap.modified | localtime|naturaltime }}</td>
-        <td>{{ starmap.get_state()}}</td>
-        <td>{% for star in starmap.index %}{{star}}<br />{% endfor %}</td>
-        <td>{{ starmap.vesicles | length }}</td>
+        <td>{{ mindset.id }}</td>
+        <td>{{ mindset.kind }}</td>
+        <td>{{ mindset.author.username}}</td>
+        <td>{{ mindset.modified | localtime|naturaltime }}</td>
+        <td>{{ mindset.get_state()}}</td>
+        <td>{% for star in mindset.index %}{{star}}<br />{% endfor %}</td>
+        <td>{{ mindset.vesicles | length }}</td>
       </tr>
       {% endfor %}
     </tbody>

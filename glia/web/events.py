@@ -21,7 +21,7 @@ from . import app
 from .. import socketio, db
 from glia.web.helpers import process_attachments, find_mentions, \
     send_external_notifications
-from nucleus.nucleus.models import Starmap, Star, PlanetAssociation, Movement, \
+from nucleus.nucleus.models import Mindset, Star, PlanetAssociation, Movement, \
     Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
@@ -83,7 +83,7 @@ def joined(message):
 
         rv = {"nicknames": [], "ids": []}
         movement = Movement.query.filter_by(blog_id=message["room_id"]).first()
-        room = Starmap.query.get(message["room_id"])
+        room = Mindset.query.get(message["room_id"])
         if room and isinstance(room.author, Movement):
             movement = room.author
             online_cutoff = datetime.datetime.utcnow() - \
@@ -113,9 +113,9 @@ def text(message):
         errors += "You were about to say something?"
 
     if "map_id" not in message:
-        errors += "No Starmap context given."
+        errors += "No Mindset context given."
     else:
-        map = Starmap.query.get(message["map_id"])
+        map = Mindset.query.get(message["map_id"])
 
     if message["parent_id"]:
         parent_star = Star.query.get(message["parent_id"])
@@ -130,7 +130,7 @@ def text(message):
             parent=parent_star,
             created=star_created,
             modified=star_created,
-            starmap_id=map.id)
+            mindset_id=map.id)
         db.session.add(star)
 
         text, planets = process_attachments(star.text)
@@ -160,7 +160,7 @@ def text(message):
             db.session.commit()
         except SQLAlchemyError, e:
             db.session.rollback()
-            app.logger.error("Error adding to chat starmap: {}".format(e))
+            app.logger.error("Error adding to chat mindset: {}".format(e))
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info(u"{} {}: {}".format(
@@ -205,7 +205,7 @@ def repost(message):
     if len(message['text']) == 0:
         errors += "You were about to say something?"
 
-    map = Starmap.query.get(message["map_id"])
+    map = Mindset.query.get(message["map_id"])
 
     if not message["parent_id"]:
         errors += "No repost source specified"
@@ -244,7 +244,7 @@ def repost(message):
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info(u"Repost {} {}: {}".format(
-                map if map else "[no starmap]", author.username, star.text))
+                map if map else "[no mindset]", author.username, star.text))
 
             # Render using templates
             chatline_template = current_app.jinja_env.get_template(

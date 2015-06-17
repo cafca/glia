@@ -71,9 +71,9 @@ $(document).ready(function() {
   </div>
 
   <div class="pull-right">
-  {% if starmap %}
-  <a class="btn btn-default rk-create-cancel" href="{{ starmap.get_absolute_url() }}">Cancel</a>
-  <input type="submit" class="btn btn-primary rk-create-submit" value="Send to {{ starmap.name }}" \>
+  {% if mindset %}
+  <a class="btn btn-default rk-create-cancel" href="{{ mindset.get_absolute_url() }}">Cancel</a>
+  <input type="submit" class="btn btn-primary rk-create-submit" value="Send to {{ mindset.name }}" \>
   {% else %}
   <input type="submit" class="btn btn-primary rk-create-submit" value="Create" \>
   {% endif %}

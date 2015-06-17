@@ -17,7 +17,7 @@ from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Star, Starmap, Movement, Persona
+from nucleus.nucleus.models import Star, Mindset, Movement, Persona
 
 
 class InvalidUsage(Exception):
@@ -43,17 +43,17 @@ def handle_invalid_usage(error):
     return response
 
 
-@app.route('/async/chat/<starmap_id>', methods=["GET"])
-@app.route('/async/chat/<starmap_id>/before-<index_id>/', methods=["GET"])
+@app.route('/async/chat/<mindset_id>', methods=["GET"])
+@app.route('/async/chat/<mindset_id>/before-<index_id>/', methods=["GET"])
 @login_required
 @http_auth.login_required
-def async_chat(starmap_id, index_id=None):
+def async_chat(mindset_id, index_id=None):
     from flask import jsonify
     errors = ""
     html = ""
     next_url = None
 
-    sm = Starmap.query.get(starmap_id)
+    sm = Mindset.query.get(mindset_id)
     if sm is None:
         errors += "Error loading more items. Please refresh page. "
 
@@ -84,7 +84,7 @@ def async_chat(starmap_id, index_id=None):
         }))
     else:
         if not end_reached:
-            next_url = url_for('.async_chat', starmap_id=starmap_id, index_id=stars[0].id)
+            next_url = url_for('.async_chat', mindset_id=mindset_id, index_id=stars[0].id)
         return(jsonify({
             'end_reached': end_reached,
             'html': html,

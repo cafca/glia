@@ -27,7 +27,7 @@ from glia.web.helpers import send_validation_email, process_attachments, \
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
-    Star, Starmap, Planet, MovementMemberAssociation, Tag, TagPlanet, \
+    Star, Mindset, Planet, MovementMemberAssociation, Tag, TagPlanet, \
     PlanetAssociation, TextPlanet, MentionNotification, Mention, Notification, \
     ReplyNotification
 
@@ -61,7 +61,7 @@ def debug():
     stars = Star.query.all()
     planets = Planet.query.all()
     movements = Movement.query.all()
-    starmaps = Starmap.query.all()
+    mindsets = Mindset.query.all()
     users = User.query.all()
 
     return render_template(
@@ -70,7 +70,7 @@ def debug():
         users=users,
         planets=planets,
         movements=movements,
-        starmaps=starmaps
+        mindsets=mindsets
     )
 
 
@@ -315,7 +315,7 @@ def persona(id=None):
     if persona == current_user.active_persona:
         chat = current_user.active_persona.mindspace
     else:
-        chat = Starmap.query.join(Persona, Starmap.id == persona.mindspace_id)
+        chat = Mindset.query.join(Persona, Mindset.id == persona.mindspace_id)
 
     movements = MovementMemberAssociation.query \
         .filter_by(active=True) \
@@ -415,13 +415,13 @@ def create_star():
     if not form.longform.raw_data and "text" in request.args:
         form.longform.data = request.args.get("text")
 
-    if "starmap" in request.args:
-        form.starmap.data = request.args['starmap']
+    if "mindset" in request.args:
+        form.mindset.data = request.args['mindset']
 
     if "parent" in request.args:
         form.parent.data = request.args['parent']
 
-    sm = Starmap.query.get_or_404(form.starmap.data)
+    sm = Mindset.query.get_or_404(form.mindset.data)
     parent = Star.query.get_or_404(form.parent.data) if form.parent.data else None
 
     if form.validate_on_submit():
@@ -432,7 +432,7 @@ def create_star():
             parent=parent,
             created=star_created,
             modified=star_created,
-            starmap_id=sm.id)
+            mindset_id=sm.id)
         db.session.add(star)
 
         text, planets = process_attachments(star.text)
@@ -489,7 +489,7 @@ def create_star():
                 'parent_short': star_macros.short(star.parent) if star.parent else None,
                 'vote_count': star.oneup_count()
             }
-            socketio.emit('message', data, room=form.starmap.data)
+            socketio.emit('message', data, room=form.mindset.data)
 
             reply_data = {
                 'msg': star_macros.comment(star),
@@ -500,7 +500,7 @@ def create_star():
             return redirect(url_for("web.star", id=star_id))
 
     return render_template("create_star.html",
-        form=form, starmap=sm, parent=parent)
+        form=form, mindset=sm, parent=parent)
 
 
 @app.route('/login', methods=["GET", "POST"])

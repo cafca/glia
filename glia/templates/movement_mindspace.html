@@ -28,7 +28,7 @@ $(document).ready(function() {
       <div class="panel-body rk-movement-info">
         <div class="form-group">
         {% if movement.current_role() not in ["visitor", "anonymous"] %}
-          <a class="btn btn-primary" href="{{ url_for('web.create_star', starmap=movement.mindspace.id) }}">Create Star</a>
+          <a class="btn btn-primary" href="{{ url_for('web.create_star', mindset=movement.mindspace.id) }}">Create Star</a>
         {% endif %}
 
         {% if movement in current_user.active_persona.movements_followed %}
