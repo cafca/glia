@@ -29,7 +29,7 @@ from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, TextPercept, MentionNotification, Mention, Notification, \
-    ReplyNotification
+    ReplyNotification, Mindspace, Blog
 
 
 @app.before_request
@@ -250,15 +250,13 @@ def create_persona(for_movement=None):
         persona.generate_keys(form.password.data)
 
         # Create mindspace and blog
-        persona.mindspace = Mindset(
+        persona.mindspace = Mindspace(
             id=uuid4().hex,
-            author=persona,
-            kind="persona_mspace")
+            author=persona)
 
-        persona.blog = Mindset(
+        persona.blog = Blog(
             id=uuid4().hex,
-            author=persona,
-            kind="persona_blog")
+            author=persona)
 
         db.session.add(persona)
 
@@ -582,15 +580,13 @@ def signup():
         persona.generate_keys(form.password.data)
 
         # Create mindspace and blog
-        persona.mindspace = Mindset(
+        persona.mindspace = Mindspace(
             id=uuid4().hex,
-            author=persona,
-            kind="persona_mspace")
+            author=persona)
 
-        persona.blog = Mindset(
+        persona.blog = Blog(
             id=uuid4().hex,
-            author=persona,
-            kind="persona_blog")
+            author=persona)
 
         db.session.add(persona)
 
