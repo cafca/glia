@@ -44,12 +44,13 @@
           <p><em>{{ m.movement.description }}</em></p>
         </div>
 
+        {% if m.recent_blog_post %}
+        <div class="panel-body rk-new-blog">
+          <h4>{{ thought_macros.thought_line(m.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
+        </div>
+        {% endif %}
+
         <div class="panel-body">
-          {% if m.recent_blog_post %}
-          <div class="alert alert-info">
-            <h4>{{ thought_macros.thought_line(m.recent_blog_post, labels=[{"text": "Blog", }], no_percepts=True) }}</h4>
-          </div>
-          {% endif %}
 
           {% if m.top_posts|length > 0 %}
             {% for thought in m.top_posts %}
