@@ -16,7 +16,7 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
     DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm
 from uuid import uuid4
-from sqlalchemy import func
+from sqlalchemy import func, inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import app
@@ -29,7 +29,7 @@ from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, TextPercept, MentionNotification, Mention, Notification, \
-    ReplyNotification, Mindspace, Blog
+    ReplyNotification, Mindspace, Blog, Dialogue, DialogueNotification
 
 
 @app.before_request
@@ -324,7 +324,22 @@ def persona(id=None):
     if persona == current_user.active_persona:
         chat = current_user.active_persona.mindspace
     else:
-        chat = Mindset.query.join(Persona, Mindset.id == persona.mindspace_id)
+        chat = Dialogue.get_chat(persona, current_user.active_persona)
+        if inspect(chat).persistent is False:
+            app.logger.info('Storing {} in database'.format(chat))
+            # chat object is newly created
+            db.session.add(chat)
+            try:
+                db.session.commit()
+            except SQLAlchemyError, e:
+                db.session.rollback()
+                flash("There was an error starting a dialogue with {}.".format(
+                    persona.username))
+
+                app.logger.error(
+                    "Error creating dialogue between {} and {}\n{}".format(
+                        current_user.active_persona, persona, e))
+                chat = None
 
     movements = MovementMemberAssociation.query \
         .filter_by(active=True) \
@@ -431,6 +446,12 @@ def create_thought():
     if "mindset" in request.args and request.args['mindset'] is not None:
         form.mindset.data = request.args['mindset']
         ms = Mindset.query.get(form.mindset.data)
+
+        if ms is not None and isinstance(ms, Dialogue):
+            recipient = ms.author if ms.author is not author else ms.other
+            db.session.add(DialogueNotification(
+                author=author, recipient=recipient))
+
     elif parent is not None:
         ms = parent.mindset
     else:

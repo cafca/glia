@@ -22,7 +22,8 @@ from .. import socketio, db
 from glia.web.helpers import process_attachments, find_mentions, \
     send_external_notifications
 from nucleus.nucleus.models import Mindset, Thought, PerceptAssociation, Movement, \
-    Persona, Mention, MentionNotification, ReplyNotification
+    Persona, Mention, MentionNotification, ReplyNotification, Dialogue, \
+    DialogueNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
@@ -124,6 +125,11 @@ def text(message):
             map = parent_thought.mindset
     else:
         map = Mindset.query.get(message["map_id"])
+
+        if isinstance(map, Dialogue):
+            recipient = map.author if map.author is not author else map.other
+            db.session.add(DialogueNotification(
+                author=author, recipient=recipient))
 
     if errors == "":
         thought = Thought(
