@@ -6,9 +6,9 @@
 
 {% block script %}
 window.room_id = "{{ chat.id }}";
+window.map_id = "{{ chat.id }}";
 window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
-window.movement_id = "{{  persona.id }}";
 window.admin_id = "{{ persona.id }}";
 
 $(document).ready(function() {
@@ -34,7 +34,12 @@ $(document).ready(function() {
   <div class="col-sm-4 col-sm-push-8">
     <div class="rk-chat panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title">Chat with {{ persona.username }}</h3>
+        {% if current_user.active_persona == persona %}
+        <h3 class="panel-title">{{ persona.username }} Personal Mindspace
+        <small><em>Only you can see messages in here</em></small></h3>
+        {% else %}
+        <h3 class="panel-title">Chat with {{ persona.username }} in private</h3>
+        {% endif %}
       </div>
 
       {{ chat_macros.chat(chat) }}

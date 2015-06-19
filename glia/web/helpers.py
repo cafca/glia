@@ -5,7 +5,6 @@ import re
 import sendgrid
 
 from flask import render_template
-from flask.ext.login import login_user
 from goose import Goose
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
@@ -13,7 +12,7 @@ from sqlalchemy import inspect
 
 from .. import socketio
 from nucleus.nucleus.models import LinkPercept, LinkedPicturePercept, \
-    TextPercept, TagPercept, Identity, Mention
+    TextPercept, TagPercept, Identity, Mention, Persona, Movement
 
 logger = logging.getLogger('web')
 
@@ -87,32 +86,33 @@ def send_external_notifications(notification):
     """Send Email and trigger Desktop notification"""
 
     # Desktop notifications
-    data = {
-        'title': notification.source,
-        'msg': notification.text
-    }
-    socketio.emit('message', data,
-        room=notification.recipient.id, namespace="/personas")
+    if isinstance(notification.recipient, Persona):
+        data = {
+            'title': notification.source,
+            'msg': notification.text
+        }
+        socketio.emit('message', data,
+            room=notification.recipient.id, namespace="/personas")
 
     # Email notification
+    if isinstance(notification.recipient, Persona):
+        message = sendgrid.Mail()
+        message.add_to("{} <{}>".format(
+            notification.recipient.username, notification.recipient.user.email))
+        message.set_subject(notification.text)
+        message.set_html(render_template("email/notification.html",
+            notification=notification))
+        message.set_from('RKTIK Notifications')
 
-    message = sendgrid.Mail()
-    message.add_to("{} <{}>".format(
-        notification.recipient.username, notification.recipient.user.email))
-    message.set_subject(notification.text)
-    message.set_html(render_template("email/notification.html",
-        notification=notification))
-    message.set_from('RKTIK Notifications')
+        logger.info("Sending email notification to {}: {}".format(
+            notification.recipient, notification.recipient.user.email))
 
-    logger.info("Sending email notification to {}: {}".format(
-        notification.recipient, notification.recipient.user.email))
-
-    try:
-        status, msg = send_email(message)
-    except SendGridClientError, e:
-        logger.error("Client error sending notification email: {}".format(e))
-    except SendGridServerError, e:
-        logger.error("Server error sending notification email: {}".format(e))
+        try:
+            status, msg = send_email(message)
+        except SendGridClientError, e:
+            logger.error("Client error sending notification email: {}".format(e))
+        except SendGridServerError, e:
+            logger.error("Server error sending notification email: {}".format(e))
 
 
 def find_links(text):

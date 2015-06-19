@@ -91,7 +91,7 @@ def create_app(log_info=True):
     from web.helpers import localtime
     app.jinja_env.filters['naturaltime'] = naturaltime
     app.jinja_env.filters['naturaldelta'] = naturaldelta
-    app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"])
+    app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"]) if value is not None else None
 
     # Additional template filters and extensions
     app.jinja_env.filters['mentions'] = inject_mentions
