@@ -58,7 +58,7 @@
   </span>
 
   <!-- Attachments -->
-  {{ percept_macros.render_all(thought) }}
+  {{ percept_macros.render_all(thought, truncate=truncate) }}
 
   <!-- Meta -->
   <div class="rk-thought-meta">
@@ -116,7 +116,7 @@
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    {{ percept_macros.render_all(thought) }}
+    {{ percept_macros.render_all(thought, truncate=truncate) }}
     {% endif %}
   </div>
 </div>
@@ -185,7 +185,7 @@
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
     <!-- Attachments -->
-    {{ percept_macros.render_all(thought) }}
+    {{ percept_macros.render_all(thought, truncate=truncate) }}
     {% endif %}
 
     <div class="rk-thought-meta">

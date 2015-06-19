@@ -29,9 +29,12 @@ $(document).ready(function() {
 {% block content %}
 <div class="row">
 <div class="col-sm-6 col-sm-push-3">
-<h1>Create Thought</h1>
+<h1>
+  Create Thought
+  {% if mindset %}in {{mindset.name}}{% endif %}
+</h1>
 
-<form method="POST" action="{{ url_for('web.create_thought') }}" class="rk-longform">
+<form method="POST" action="{{ url_for('web.create_thought', mindset=mindset.id, parent=parent.id) }}" class="rk-longform">
   {{ form.hidden_tag() }}
   {% if parent %}
   <p class="lead">In response to:</p>

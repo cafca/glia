@@ -19,8 +19,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
-from glia.web.helpers import process_attachments, find_mentions, \
-    send_external_notifications
+from glia.web.helpers import send_external_notifications
+from nucleus.nucleus.helpers import process_attachments, find_mentions
 from nucleus.nucleus.models import Mindset, Thought, PerceptAssociation, Movement, \
     Persona, Mention, MentionNotification, ReplyNotification, Dialogue, \
     DialogueNotification

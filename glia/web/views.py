@@ -22,14 +22,14 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
-from glia.web.helpers import send_validation_email, process_attachments, \
+from glia.web.helpers import send_validation_email, \
     send_external_notifications
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
-    PerceptAssociation, TextPercept, MentionNotification, Mention, Notification, \
-    ReplyNotification, Mindspace, Blog, Dialogue, DialogueNotification
+    PerceptAssociation, Notification, \
+    Mindspace, Blog, Dialogue
 
 
 @app.before_request
@@ -91,7 +91,7 @@ def index():
     movements = current_user.active_persona.movements_followed
     movement_data = []
     for g in sorted(movements, key=movement_sort, reverse=True):
-        g_thought_selection = g.mindspace.index.filter(Thought.state >= 0)
+        g_thought_selection = g.mindspace.index.filter(Thought.state >= 0).all()
         g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
 
         recent_blog_post = g.blog.index.order_by(Thought.created.desc()).first()
@@ -429,11 +429,9 @@ def create_thought():
     """Post a new Thought"""
 
     form = CreateThoughtForm()
-    thought_created = datetime.datetime.utcnow()
-    thought_id = uuid4().hex
-    author = current_user.active_persona
     ms = None
     parent = None
+    thought_data = None
 
     # Prepopulate form if redirected here from chat
     if not form.longform.raw_data and "text" in request.args:
@@ -445,59 +443,31 @@ def create_thought():
 
     if "mindset" in request.args and request.args['mindset'] is not None:
         form.mindset.data = request.args['mindset']
-        ms = Mindset.query.get(form.mindset.data)
-
-        if ms is not None and isinstance(ms, Dialogue):
-            recipient = ms.author if ms.author is not author else ms.other
-            db.session.add(DialogueNotification(
-                author=author, recipient=recipient))
-
     elif parent is not None:
         ms = parent.mindset
     else:
-        form.mindset.errors.append("New thoughts needs either a parent or a mindset to live in.")
+        flash("New thoughts needs either a parent or a mindset to live in.")
+        app.logger.error("Neither parent nor mindset given {}")
+
+    ms = Mindset.query.get(form.mindset.data) if form.mindset.data else None
 
     if form.validate_on_submit():
-        thought = Thought(
-            id=thought_id,
-            text=form.text.data,
-            author=author,
-            parent=parent,
-            created=thought_created,
-            modified=thought_created,
-            mindset_id=ms.id)
+        try:
+            thought_data = Thought.create_from_input(
+                text=form.text.data,
+                longform=form.longform.data,
+                longform_source=form.lfsource.data,
+                parent=parent,
+                mindset=ms)
+        except ValueError, e:
+            flash("There was an error creating your thought ({})".format(e))
+            app.logger.error("Error creating new thought ({})".format(e))
+
+    if thought_data is not None:
+        thought = thought_data["instance"]
+
         db.session.add(thought)
-
-        text, percepts = process_attachments(thought.text)
-        thought.text = text
-
-        if len(form.longform.data) > 0:
-            lftext, lfpercepts = process_attachments(form.longform.data)
-            percepts = percepts.union(lfpercepts)
-
-            lftext_percept = TextPercept.get_or_create(lftext,
-                source=form.lfsource.data)
-            percepts.add(lftext_percept)
-
-        for percept in percepts:
-            db.session.add(percept)
-
-            if isinstance(percept, Mention):
-                notification = MentionNotification(percept,
-                    author, url_for('web.thought', id=thought_id))
-                send_external_notifications(notification)
-                db.session.add(notification)
-
-            assoc = PerceptAssociation(thought=thought, percept=percept, author=author)
-            thought.percept_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(percept, thought))
-            db.session.add(assoc)
-
-        if parent:
-            notif = ReplyNotification(parent_thought=parent, author=author,
-                url=url_for('web.thought', id=thought_id))
-            send_external_notifications(notif)
-            db.session.add(notif)
+        map(db.session.add, thought_data["notifications"])
 
         try:
             db.session.commit()
@@ -506,7 +476,7 @@ def create_thought():
             app.logger.error("Error creating longform thought: {}".format(e))
             flash("An error occured saving your message. Please try again.")
         else:
-            app.logger.info(u"{} {}: {}".format(ms, author.username, thought.text))
+            map(send_external_notifications, thought_data["notifications"])
 
             # Render using templates
             thought_macros_template = current_app.jinja_env.get_template(
@@ -515,22 +485,19 @@ def create_thought():
                 {'request': request})
 
             data = {
-                'username': author.username,
+                'username': thought.author.username,
                 'msg': render_template("chatline.html", thought=thought),
-                'thought_id': thought_id,
+                'thought_id': thought.id,
                 'parent_id': thought.parent_id,
                 'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
                 'vote_count': thought.upvote_count()
             }
             socketio.emit('message', data, room=form.mindset.data)
 
-            reply_data = {
-                'msg': thought_macros.comment(thought),
-                'parent_id': form.parent.data
-            }
-            socketio.emit('comment', reply_data, room=form.parent.data)
+            socketio.emit('comment', {'msg': thought_macros.comment(thought),
+                'parent_id': form.parent.data}, room=form.parent.data)
             flash("Great success! Your new post is ready.")
-            return redirect(url_for("web.thought", id=thought_id))
+            return redirect(url_for("web.thought", id=thought.id))
 
     return render_template("create_thought.html",
         form=form, mindset=ms, parent=parent)

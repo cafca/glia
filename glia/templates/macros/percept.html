@@ -33,7 +33,9 @@
   {% else %}
   <p>
     <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
+    {% if percept.source %}
     <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
+    {% endif %}
   </p>
   {{ percept.text|markdown}}
   {% endif %}
@@ -93,7 +95,7 @@
   {% if attachments["text"]|length != 0 %}
   <!-- Text Percepts -->
   <div class="row panel panel-default">
-    {% for pa in percept_assocs %}
+    {% for pa in attachments["text"] %}
     <div class="col-sm-12 panel-body">
       {{ percept(pa.percept, icon=True, truncate=truncate)}}
     </div>
