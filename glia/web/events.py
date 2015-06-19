@@ -104,66 +104,33 @@ def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
 
-    thought_created = datetime.datetime.utcnow()
-    thought_id = uuid4().hex
     errors = ""
-    author = current_user.active_persona
-    parent_thought = None
+    parent = None
 
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
 
     if message["parent_id"]:
-        parent_thought = Thought.query.get(message["parent_id"])
-        if parent_thought is None:
+        parent = Thought.query.get(message["parent_id"])
+        if parent is None:
             errors += "Could not find the message before yours. "
 
     if "map_id" not in message:
-        if parent_thought is None:
+        if parent is None:
             errors += "New thoughts needs either a parent or a mindset to live in. "
         else:
-            map = parent_thought.mindset
+            map = parent.mindset
     else:
         map = Mindset.query.get(message["map_id"])
 
-        if isinstance(map, Dialogue):
-            recipient = map.author if map.author is not author else map.other
-            db.session.add(DialogueNotification(
-                author=author, recipient=recipient))
-
     if errors == "":
-        thought = Thought(
-            id=thought_id,
-            text=message['msg'],
-            author=author,
-            parent=parent_thought,
-            created=thought_created,
-            modified=thought_created,
-            mindset_id=map.id)
+        thought_data = Thought.create_from_input(
+            text=message["msg"],
+            mindset=map,
+            parent=parent)
+        thought = thought_data["instance"]
+
         db.session.add(thought)
-
-        text, percepts = process_attachments(thought.text)
-        thought.text = text
-
-        for percept in percepts:
-            db.session.add(percept)
-
-            if isinstance(percept, Mention):
-                notification = MentionNotification(percept,
-                    author, url_for('web.thought', id=thought_id))
-                send_external_notifications(notification)
-                db.session.add(notification)
-
-            assoc = PerceptAssociation(thought=thought, percept=percept, author=author)
-            thought.percept_assocs.append(assoc)
-            app.logger.info("Attached {} to new {}".format(percept, thought))
-            db.session.add(assoc)
-
-        if parent_thought:
-            notif = ReplyNotification(parent_thought=parent_thought, author=author,
-                url=url_for('web.thought', id=thought_id))
-            send_external_notifications(notif)
-            db.session.add(notif)
 
         try:
             db.session.commit()
@@ -173,7 +140,10 @@ def text(message):
             errors += "An error occured saving your message. Please try again. "
         else:
             app.logger.info(u"{} {}: {}".format(
-                map, author.username, thought.text))
+                map, thought.author.username, thought.text))
+
+            for notification in thought_data["notifications"]:
+                send_external_notifications(notification)
 
             # Render using templates
             chatline_template = current_app.jinja_env.get_template(
@@ -184,7 +154,7 @@ def text(message):
                 {'request': request})
 
             data = {
-                'username': author.username,
+                'username': thought.author.username,
                 'msg': chatline_template.render(thought=thought),
                 'thought_id': thought.id,
                 'parent_id': thought.parent_id,

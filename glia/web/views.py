@@ -467,7 +467,7 @@ def create_thought():
         thought = thought_data["instance"]
 
         db.session.add(thought)
-        map(db.session.add, thought_data["notifications"])
+        db.session.add_all(thought_data["notifications"])
 
         try:
             db.session.commit()
