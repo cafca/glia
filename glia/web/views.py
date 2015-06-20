@@ -31,6 +31,10 @@ from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, 
     PerceptAssociation, Notification, \
     Mindspace, Blog, Dialogue
 
+#
+# UTILITIES
+#
+
 
 @app.before_request
 def account_notifications():
@@ -73,156 +77,29 @@ def debug():
         mindsets=mindsets
     )
 
+#
+# ROUTES
+#
 
-@app.route('/', methods=["GET"])
-@login_required
+
+@app.route('/persona/<id>/activate')
 @http_auth.login_required
-def index():
-    """Front page"""
-    movementform = CreateMovementForm()
-
-    def movement_sort(movement):
-        s = movement.mindspace.index \
-            .filter(Thought.state >= 0) \
-            .order_by(Thought.created.desc()) \
-            .first()
-        return s.created if s is not None else datetime.datetime.fromtimestamp(0)
-
-    movements = current_user.active_persona.movements_followed
-    movement_data = []
-    for g in sorted(movements, key=movement_sort, reverse=True):
-        g_thought_selection = g.mindspace.index.filter(Thought.state >= 0).all()
-        g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
-
-        recent_blog_post = g.blog.index.order_by(Thought.created.desc()).first()
-        if recent_blog_post and datetime.datetime.utcnow() \
-                - recent_blog_post.created > datetime.timedelta(days=1):
-            recent_blog_post = None
-
-        movement_data.append({
-            'movement': g,
-            'top_posts': g_top_posts,
-            'recent_blog_post': recent_blog_post
-        })
-
-    more_movements = Movement.query \
-        .join(MovementMemberAssociation) \
-        .filter(MovementMemberAssociation.persona_id !=
-            current_user.active_persona.id) \
-        .order_by(func.count(MovementMemberAssociation.persona_id)) \
-        .group_by(MovementMemberAssociation.persona_id) \
-        .group_by(Movement)
-
-    # Collect main page content
-    top_post_selection = Thought.query.filter(Thought.state >= 0)
-    top_post_selection = sorted(top_post_selection, key=Thought.hot, reverse=True)
-    top_posts = []
-    while len(top_posts) < min([9, len(top_post_selection)]):
-        candidate = top_post_selection.pop(0)
-        if candidate.upvote_count() > 0:
-            top_posts.append(candidate)
-
-    return render_template('index.html', movementform=movementform,
-        movement_data=movement_data, top_posts=top_posts, more_movements=more_movements)
-
-
-@app.route('/movement/', methods=["GET", "POST"])
-@login_required
-@http_auth.login_required
-def movements(id=None):
-    """Create movements"""
-    form = CreateMovementForm(id=id)
-
-    # Create a movement
-    if form.validate_on_submit():
-        movement_id = uuid4().hex
-        movement_created = datetime.datetime.utcnow()
-        movement = Movement(
-            id=movement_id,
-            username=form.name.data,
-            description=form.mission.data,
-            admin=current_user.active_persona,
-            created=movement_created,
-            modified=movement_created,
-            color=form.color.data)
-        current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
-        try:
-            db.session.add(movement)
-            db.session.commit()
-        except Exception, e:
-            app.logger.exception("Error creating movement: {}".format(e))
-            flash("There was a problem creating your movement. Please try again.")
-        else:
-            flash("Your new movement is ready!")
-            app.logger.debug("{} created new movement {}".format(current_user.active_persona, movement))
-            return redirect(url_for('.movement', id=movement_id))
-
-    return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
-
-
-@app.route('/thought/<id>/')
-@http_auth.login_required
-def thought(id=None):
-    thought = Thought.query.get_or_404(id)
-
-    # Load conversation context
-    context = []
-    while(len(context) < thought.context_length) and thought.parent is not None:
-        context.append(thought.parent if len(context) == 0 else context[-1].parent)
-        if context[-1].parent is None:
-            break
-    context = context[::-1]  # reverse list
-
-    if thought.state < 0 and not thought.authorize("delete", current_user.active_persona.id):
-        flash("This Thought is currently unavailable.")
-        return(redirect(request.referrer or url_for('.index')))
-
-    reply_form = CreateReplyForm(parent=thought.id)
-
-    return render_template("thought.html", thought=thought, context=context,
-        reply_form=reply_form)
-
-
-@app.route('/tag/<name>/')
-@http_auth.login_required
-def tag(name):
-    tag = Tag.query.filter_by(name=name).first()
-
-    thoughts = Thought.query.join(PerceptAssociation).join(TagPercept).filter(TagPercept.tag_id == tag.id)
-
-    return render_template("tag.html", tag=tag, thoughts=thoughts)
-
-
-@app.route('/thought/<id>/delete', methods=["GET", "POST"])
-@http_auth.login_required
-def delete_thought(id=None):
-    thought = Thought.query.get_or_404(id)
-    form = DeleteThoughtForm()
-
-    if not thought.authorize("delete", current_user.active_persona.id):
-        flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
-        app.logger.error("Tried to change visibility of {}'s Thoughts".format(thought.author))
-        return redirect(request.referrer or url_for('.index'))
-
-    if form.validate_on_submit():
-        if thought.state == -2:
-            thought.set_state(0)
-        else:
-            thought.set_state(-2)
-
-        try:
-            db.session.add(thought)
-            db.session.commit()
-        except:
-            app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))
-            db.session.rollback()
-        else:
-            flash("Updated visibility of {}".format(thought))
-
-            app.logger.info("Thought {} set to publish state {}".format(id, thought.state))
-            return(redirect(url_for(".thought", id=thought.id)))
-
-    return render_template("delete_thought.html", thought=thought, form=form)
+def activate_persona(id):
+    """Activate a Persona and redirect to origin"""
+    p = Persona.query.get_or_404(id)
+    current_user.active_persona = p
+    try:
+        db.session.add(current_user)
+        db.session.commit()
+    except SQLAlchemyError, e:
+        db.session.rollback()
+        flash("There was an error activating your Persona. Please try again.")
+        app.logger.error(
+            "Error switching active persona on user {}\n{}".format(
+                current_user, e))
+    else:
+        app.logger.info("{} activated {}".format(current_user, p))
+    return redirect(request.referrer or url_for("web.index"))
 
 
 @app.route('/persona/create', methods=["GET", "POST"])
@@ -294,133 +171,6 @@ def create_persona(for_movement=None):
                 return redirect(url_for("web.persona", id=persona.id))
     return render_template('create_persona.html',
         form=form, movement=movement, movement_id=for_movement, allowed_colors=ALLOWED_COLORS.keys())
-
-
-@app.route('/persona/<id>/activate')
-@http_auth.login_required
-def activate_persona(id):
-    """Activate a Persona and redirect to origin"""
-    p = Persona.query.get_or_404(id)
-    current_user.active_persona = p
-    try:
-        db.session.add(current_user)
-        db.session.commit()
-    except SQLAlchemyError, e:
-        db.session.rollback()
-        flash("There was an error activating your Persona. Please try again.")
-        app.logger.error(
-            "Error switching active persona on user {}\n{}".format(
-                current_user, e))
-    else:
-        app.logger.info("{} activated {}".format(current_user, p))
-    return redirect(request.referrer or url_for("web.index"))
-
-
-@app.route('/persona/<id>/')
-@http_auth.login_required
-def persona(id=None):
-    persona = Persona.query.get_or_404(id)
-
-    if persona == current_user.active_persona:
-        chat = current_user.active_persona.mindspace
-    else:
-        chat = Dialogue.get_chat(persona, current_user.active_persona)
-        if inspect(chat).persistent is False:
-            app.logger.info('Storing {} in database'.format(chat))
-            # chat object is newly created
-            db.session.add(chat)
-            try:
-                db.session.commit()
-            except SQLAlchemyError, e:
-                db.session.rollback()
-                flash("There was an error starting a dialogue with {}.".format(
-                    persona.username))
-
-                app.logger.error(
-                    "Error creating dialogue between {} and {}\n{}".format(
-                        current_user.active_persona, persona, e))
-                chat = None
-
-    movements = MovementMemberAssociation.query \
-        .filter_by(active=True) \
-        .filter_by(persona_id=persona.id)
-
-    return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
-
-
-@app.route('/notifications')
-@app.route('/notifications/page-<page>')
-@login_required
-@http_auth.login_required
-def notifications(page=1):
-    notifications = current_user.active_persona \
-        .notifications \
-        .order_by(Notification.modified.desc()) \
-        .paginate(page, 25)
-
-    return(render_template('notifications.html',
-        notifications=notifications))
-
-
-@app.route('/movement/<id>/')
-@login_required
-@http_auth.login_required
-def movement(id):
-    """Redirect user depending on whether he is a member or not"""
-    movement = Movement.query.get_or_404(id)
-    if movement.current_role() in ["member", "admin"]:
-        rv = redirect(url_for("web.movement_mindspace", id=id))
-    else:
-        rv = redirect(url_for("web.movement_blog", id=id))
-    return rv
-
-
-@app.route('/movement/<id>/mindspace', methods=["GET"])
-@login_required
-@http_auth.login_required
-def movement_mindspace(id):
-    """Display a movement's profile"""
-    movement = Movement.query.get(id)
-    if not movement:
-        flash("Movement not found")
-        app.logger.warning("Movement '{}' not found. User: {}".format(
-            id, current_user))
-        return(redirect(url_for('.movements')))
-
-    thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
-    thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
-    top_posts = []
-    while len(top_posts) < min([15, len(thought_selection)]):
-        candidate = thought_selection.pop(0)
-        candidate.promote_target = None if candidate in movement.blog \
-            else movement
-        if candidate.upvote_count() > 0:
-            top_posts.append(candidate)
-
-    recent_blog_post = movement.blog.index.order_by(Thought.created.desc()).first()
-    if recent_blog_post and datetime.datetime.utcnow() \
-            - recent_blog_post.created > datetime.timedelta(days=1):
-        recent_blog_post = None
-
-    return render_template('movement_mindspace.html',
-        movement=movement, thoughts=top_posts, recent_blog_post=recent_blog_post)
-
-
-@app.route('/movement/<id>/blog/', methods=["GET"])
-@app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
-@login_required
-@http_auth.login_required
-def movement_blog(id, page=1):
-    """Display a movement's profile"""
-    movement = Movement.query.get_or_404(id)
-
-    thought_selection = movement.blog.index \
-        .filter_by(author_id=movement.id) \
-        .filter(Thought.state >= 0) \
-        .order_by(Thought.created.desc()) \
-        .paginate(page, 5)
-
-    return render_template('movement_blog.html', movement=movement, thoughts=thought_selection)
 
 
 @app.route('/create', methods=["GET", "POST"])
@@ -503,6 +253,90 @@ def create_thought():
         form=form, mindset=ms, parent=parent)
 
 
+@app.route('/thought/<id>/delete', methods=["GET", "POST"])
+@http_auth.login_required
+def delete_thought(id=None):
+    thought = Thought.query.get_or_404(id)
+    form = DeleteThoughtForm()
+
+    if not thought.authorize("delete", current_user.active_persona.id):
+        flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
+        app.logger.error("Tried to change visibility of {}'s Thoughts".format(thought.author))
+        return redirect(request.referrer or url_for('.index'))
+
+    if form.validate_on_submit():
+        if thought.state == -2:
+            thought.set_state(0)
+        else:
+            thought.set_state(-2)
+
+        try:
+            db.session.add(thought)
+            db.session.commit()
+        except:
+            app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))
+            db.session.rollback()
+        else:
+            flash("Updated visibility of {}".format(thought))
+
+            app.logger.info("Thought {} set to publish state {}".format(id, thought.state))
+            return(redirect(url_for(".thought", id=thought.id)))
+
+    return render_template("delete_thought.html", thought=thought, form=form)
+
+
+@app.route('/', methods=["GET"])
+@login_required
+@http_auth.login_required
+def index():
+    """Front page"""
+    movementform = CreateMovementForm()
+
+    def movement_sort(movement):
+        s = movement.mindspace.index \
+            .filter(Thought.state >= 0) \
+            .order_by(Thought.created.desc()) \
+            .first()
+        return s.created if s is not None else datetime.datetime.fromtimestamp(0)
+
+    movements = current_user.active_persona.movements_followed
+    movement_data = []
+    for g in sorted(movements, key=movement_sort, reverse=True):
+        g_thought_selection = g.mindspace.index.filter(Thought.state >= 0).all()
+        g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
+
+        recent_blog_post = g.blog.index.order_by(Thought.created.desc()).first()
+        if recent_blog_post and datetime.datetime.utcnow() \
+                - recent_blog_post.created > datetime.timedelta(days=1):
+            recent_blog_post = None
+
+        movement_data.append({
+            'movement': g,
+            'top_posts': g_top_posts,
+            'recent_blog_post': recent_blog_post
+        })
+
+    more_movements = Movement.query \
+        .join(MovementMemberAssociation) \
+        .filter(MovementMemberAssociation.persona_id !=
+            current_user.active_persona.id) \
+        .order_by(func.count(MovementMemberAssociation.persona_id)) \
+        .group_by(MovementMemberAssociation.persona_id) \
+        .group_by(Movement)
+
+    # Collect main page content
+    top_post_selection = Thought.query.filter(Thought.state >= 0)
+    top_post_selection = sorted(top_post_selection, key=Thought.hot, reverse=True)
+    top_posts = []
+    while len(top_posts) < min([9, len(top_post_selection)]):
+        candidate = top_post_selection.pop(0)
+        if candidate.upvote_count() > 0:
+            top_posts.append(candidate)
+
+    return render_template('index.html', movementform=movementform,
+        movement_data=movement_data, top_posts=top_posts, more_movements=more_movements)
+
+
 @app.route('/login', methods=["GET", "POST"])
 @http_auth.login_required
 def login():
@@ -542,6 +376,147 @@ def logout():
     session["active_persona"] = None
     app.logger.debug("{} logged out.".format(user))
     return redirect(url_for('.login'))
+
+
+@app.route('/movement/<id>/')
+@login_required
+@http_auth.login_required
+def movement(id):
+    """Redirect user depending on whether he is a member or not"""
+    movement = Movement.query.get_or_404(id)
+    if movement.current_role() in ["member", "admin"]:
+        rv = redirect(url_for("web.movement_mindspace", id=id))
+    else:
+        rv = redirect(url_for("web.movement_blog", id=id))
+    return rv
+
+
+@app.route('/movement/<id>/blog/', methods=["GET"])
+@app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
+@login_required
+@http_auth.login_required
+def movement_blog(id, page=1):
+    """Display a movement's profile"""
+    movement = Movement.query.get_or_404(id)
+
+    thought_selection = movement.blog.index \
+        .filter_by(author_id=movement.id) \
+        .filter(Thought.state >= 0) \
+        .order_by(Thought.created.desc()) \
+        .paginate(page, 5)
+
+    return render_template('movement_blog.html', movement=movement, thoughts=thought_selection)
+
+
+@app.route('/movement/<id>/mindspace', methods=["GET"])
+@login_required
+@http_auth.login_required
+def movement_mindspace(id):
+    """Display a movement's profile"""
+    movement = Movement.query.get(id)
+    if not movement:
+        flash("Movement not found")
+        app.logger.warning("Movement '{}' not found. User: {}".format(
+            id, current_user))
+        return(redirect(url_for('.movements')))
+
+    thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
+    thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
+    top_posts = []
+    while len(top_posts) < min([15, len(thought_selection)]):
+        candidate = thought_selection.pop(0)
+        candidate.promote_target = None if candidate in movement.blog \
+            else movement
+        if candidate.upvote_count() > 0:
+            top_posts.append(candidate)
+
+    recent_blog_post = movement.blog.index.order_by(Thought.created.desc()).first()
+    if recent_blog_post and datetime.datetime.utcnow() \
+            - recent_blog_post.created > datetime.timedelta(days=1):
+        recent_blog_post = None
+
+    return render_template('movement_mindspace.html',
+        movement=movement, thoughts=top_posts, recent_blog_post=recent_blog_post)
+
+
+@app.route('/movement/', methods=["GET", "POST"])
+@login_required
+@http_auth.login_required
+def movements(id=None):
+    """Create movements"""
+    form = CreateMovementForm(id=id)
+
+    # Create a movement
+    if form.validate_on_submit():
+        movement_id = uuid4().hex
+        movement_created = datetime.datetime.utcnow()
+        movement = Movement(
+            id=movement_id,
+            username=form.name.data,
+            description=form.mission.data,
+            admin=current_user.active_persona,
+            created=movement_created,
+            modified=movement_created,
+            color=form.color.data)
+        current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
+        try:
+            db.session.add(movement)
+            db.session.commit()
+        except Exception, e:
+            app.logger.exception("Error creating movement: {}".format(e))
+            flash("There was a problem creating your movement. Please try again.")
+        else:
+            flash("Your new movement is ready!")
+            app.logger.debug("{} created new movement {}".format(current_user.active_persona, movement))
+            return redirect(url_for('.movement', id=movement_id))
+
+    return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
+
+
+@app.route('/notifications')
+@app.route('/notifications/page-<page>')
+@login_required
+@http_auth.login_required
+def notifications(page=1):
+    notifications = current_user.active_persona \
+        .notifications \
+        .order_by(Notification.modified.desc()) \
+        .paginate(page, 25)
+
+    return(render_template('notifications.html',
+        notifications=notifications))
+
+
+@app.route('/persona/<id>/')
+@http_auth.login_required
+def persona(id=None):
+    persona = Persona.query.get_or_404(id)
+
+    if persona == current_user.active_persona:
+        chat = current_user.active_persona.mindspace
+    else:
+        chat = Dialogue.get_chat(persona, current_user.active_persona)
+        if inspect(chat).persistent is False:
+            app.logger.info('Storing {} in database'.format(chat))
+            # chat object is newly created
+            db.session.add(chat)
+            try:
+                db.session.commit()
+            except SQLAlchemyError, e:
+                db.session.rollback()
+                flash("There was an error starting a dialogue with {}.".format(
+                    persona.username))
+
+                app.logger.error(
+                    "Error creating dialogue between {} and {}\n{}".format(
+                        current_user.active_persona, persona, e))
+                chat = None
+
+    movements = MovementMemberAssociation.query \
+        .filter_by(active=True) \
+        .filter_by(persona_id=persona.id)
+
+    return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -642,3 +617,36 @@ def signup_validation(id, signup_code):
         app.logger.info("{} validated their email address.".format(user))
         flash("Your email address is now verified.")
     return redirect(url_for('.index'))
+
+
+@app.route('/tag/<name>/')
+@http_auth.login_required
+def tag(name):
+    tag = Tag.query.filter_by(name=name).first()
+
+    thoughts = Thought.query.join(PerceptAssociation).join(TagPercept).filter(TagPercept.tag_id == tag.id)
+
+    return render_template("tag.html", tag=tag, thoughts=thoughts)
+
+
+@app.route('/thought/<id>/')
+@http_auth.login_required
+def thought(id=None):
+    thought = Thought.query.get_or_404(id)
+
+    # Load conversation context
+    context = []
+    while(len(context) < thought.context_length) and thought.parent is not None:
+        context.append(thought.parent if len(context) == 0 else context[-1].parent)
+        if context[-1].parent is None:
+            break
+    context = context[::-1]  # reverse list
+
+    if thought.state < 0 and not thought.authorize("delete", current_user.active_persona.id):
+        flash("This Thought is currently unavailable.")
+        return(redirect(request.referrer or url_for('.index')))
+
+    reply_form = CreateReplyForm(parent=thought.id)
+
+    return render_template("thought.html", thought=thought, context=context,
+        reply_form=reply_form)

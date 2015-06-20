@@ -61,6 +61,11 @@ def connectp():
 #
 
 
+@socketio.on_error(namespace='/movements')
+def chat_error_handler(e):
+    app.logger.error('An error has occurred: ' + str(e))
+
+
 @socketio_authenticated_only
 @socketio.on('joined', namespace='/movements')
 def joined(message):
@@ -97,79 +102,12 @@ def joined(message):
 
 
 @socketio_authenticated_only
-@socketio.on('text', namespace='/movements')
-def text(message):
-    """Sent by a client when the user entered a new message.
-    The message is sent to all people in the room."""
-
-    errors = ""
-    parent = None
-
-    if len(message['msg']) == 0:
-        errors += "You were about to say something?"
-
-    if message["parent_id"]:
-        parent = Thought.query.get(message["parent_id"])
-        if parent is None:
-            errors += "Could not find the message before yours. "
-
-    if "map_id" not in message:
-        if parent is None:
-            errors += "New thoughts needs either a parent or a mindset to live in. "
-        else:
-            map = parent.mindset
-    else:
-        map = Mindset.query.get(message["map_id"])
-
-    if errors == "":
-        thought_data = Thought.create_from_input(
-            text=message["msg"],
-            mindset=map,
-            parent=parent)
-        thought = thought_data["instance"]
-
-        db.session.add(thought)
-
-        try:
-            db.session.commit()
-        except SQLAlchemyError, e:
-            db.session.rollback()
-            app.logger.error("Error adding to chat mindset: {}".format(e))
-            errors += "An error occured saving your message. Please try again. "
-        else:
-            app.logger.info(u"{} {}: {}".format(
-                map, thought.author.username, thought.text))
-
-            for notification in thought_data["notifications"]:
-                send_external_notifications(notification)
-
-            # Render using templates
-            chatline_template = current_app.jinja_env.get_template(
-                'chatline.html')
-            thought_macros_template = current_app.jinja_env.get_template(
-                'macros/thought.html')
-            thought_macros = thought_macros_template.make_module(
-                {'request': request})
-
-            data = {
-                'username': thought.author.username,
-                'msg': chatline_template.render(thought=thought),
-                'thought_id': thought.id,
-                'parent_id': thought.parent_id,
-                'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
-                'vote_count': thought.upvote_count()
-            }
-            emit('message', data, room=message["room_id"])
-
-            reply_data = {
-                'msg': thought_macros.comment(thought),
-                'parent_id': thought.parent.id if thought.parent else None
-            }
-            emit('comment', reply_data, room=message["room_id"])
-
-    if errors != "":
-        app.logger.warning("Errors creating Thought: {}".format(errors))
-        emit('error', errors)
+@socketio.on('left', namespace='/movements')
+def left(message):
+    """Sent by clients when they leave a room.
+    A status message is broadcast to all people in the room."""
+    leave_room(message['room_id'])
+    emit('status', {'msg': current_user.active_persona.username + ' has left the room.'}, room=message["room_id"])
 
 
 @socketio_authenticated_only
@@ -264,12 +202,79 @@ def repost(message):
 
 
 @socketio_authenticated_only
-@socketio.on('left', namespace='/movements')
-def left(message):
-    """Sent by clients when they leave a room.
-    A status message is broadcast to all people in the room."""
-    leave_room(message['room_id'])
-    emit('status', {'msg': current_user.active_persona.username + ' has left the room.'}, room=message["room_id"])
+@socketio.on('text', namespace='/movements')
+def text(message):
+    """Sent by a client when the user entered a new message.
+    The message is sent to all people in the room."""
+
+    errors = ""
+    parent = None
+
+    if len(message['msg']) == 0:
+        errors += "You were about to say something?"
+
+    if message["parent_id"]:
+        parent = Thought.query.get(message["parent_id"])
+        if parent is None:
+            errors += "Could not find the message before yours. "
+
+    if "map_id" not in message:
+        if parent is None:
+            errors += "New thoughts needs either a parent or a mindset to live in. "
+        else:
+            map = parent.mindset
+    else:
+        map = Mindset.query.get(message["map_id"])
+
+    if errors == "":
+        thought_data = Thought.create_from_input(
+            text=message["msg"],
+            mindset=map,
+            parent=parent)
+        thought = thought_data["instance"]
+
+        db.session.add(thought)
+
+        try:
+            db.session.commit()
+        except SQLAlchemyError, e:
+            db.session.rollback()
+            app.logger.error("Error adding to chat mindset: {}".format(e))
+            errors += "An error occured saving your message. Please try again. "
+        else:
+            app.logger.info(u"{} {}: {}".format(
+                map, thought.author.username, thought.text))
+
+            for notification in thought_data["notifications"]:
+                send_external_notifications(notification)
+
+            # Render using templates
+            chatline_template = current_app.jinja_env.get_template(
+                'chatline.html')
+            thought_macros_template = current_app.jinja_env.get_template(
+                'macros/thought.html')
+            thought_macros = thought_macros_template.make_module(
+                {'request': request})
+
+            data = {
+                'username': thought.author.username,
+                'msg': chatline_template.render(thought=thought),
+                'thought_id': thought.id,
+                'parent_id': thought.parent_id,
+                'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
+                'vote_count': thought.upvote_count()
+            }
+            emit('message', data, room=message["room_id"])
+
+            reply_data = {
+                'msg': thought_macros.comment(thought),
+                'parent_id': thought.parent.id if thought.parent else None
+            }
+            emit('comment', reply_data, room=message["room_id"])
+
+    if errors != "":
+        app.logger.warning("Errors creating Thought: {}".format(errors))
+        emit('error', errors)
 
 
 @socketio_authenticated_only
@@ -327,8 +332,3 @@ def vote_request(message):
 
         local_model_changed.send(upvote, message=message_vote)
         emit('vote', data, broadcast=True)
-
-
-@socketio.on_error(namespace='/movements')
-def chat_error_handler(e):
-    app.logger.error('An error has occurred: ' + str(e))

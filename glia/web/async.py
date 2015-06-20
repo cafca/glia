@@ -19,6 +19,10 @@ from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Thought, Mindset, Movement, Persona
 
+#
+# UTILITIES
+#
+
 
 class InvalidUsage(Exception):
     status_code = 400
@@ -41,6 +45,11 @@ def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
+
+
+#
+# ROUTES
+#
 
 
 @app.route('/async/chat/<mindset_id>', methods=["GET"])
@@ -93,109 +102,6 @@ def async_chat(mindset_id, index_id=None):
         }))
 
 
-@app.route("/async/movement/<movement_id>/toggle_following", methods=["POST", "GET"])
-@login_required
-@http_auth.login_required
-def async_toggle_movement_following(movement_id):
-    movement = Movement.query.get(movement_id)
-    if movement is None:
-        raise InvalidUsage(message="Movement not found", code=404)
-
-    if not current_user or not current_user.active_persona:
-        raise InvalidUsage(message="Activate a Persona to do this.")
-
-    following = current_user.active_persona.toggle_following_movement(movement=movement)
-
-    db.session.add(current_user.active_persona)
-    db.session.commit()
-
-    rv = {
-        "movement_id": movement.id,
-        "persona_id": current_user.active_persona.id,
-        "following": following
-    }
-
-    return jsonify(rv)
-
-
-@app.route("/async/movement/<movement_id>/toggle_membership", methods=["POST", "GET"])
-@login_required
-@http_auth.login_required
-def async_toggle_movement_membership(movement_id):
-    movement = Movement.query.get(movement_id)
-    if movement is None:
-        raise InvalidUsage(message="Movement not found", code=404)
-
-    if not current_user or not current_user.active_persona:
-        raise InvalidUsage(message="Activate a Persona to do this.")
-
-    try:
-        mma = current_user.active_persona.toggle_movement_membership(movement=movement)
-    except NotImplementedError, e:
-        raise InvalidUsage(str(e))
-
-    if mma:
-        rv = {
-            "role": mma.role,
-            "created": mma.created,
-            "description": mma.description,
-            "active": mma.active,
-            "last_seen": mma.last_seen
-        }
-        db.session.add(mma)
-    else:
-        rv = None
-
-    db.session.commit()
-
-    return jsonify({
-        "movement_id": movement.id,
-        "persona_id": current_user.active_persona.id,
-        "association": rv
-    }, )
-
-
-@app.route("/async/persona/<id>/", methods=["POST"])
-@login_required
-@http_auth.login_required
-def async_persona(id):
-    """Edit a Persona
-
-    Expects a POST request with fields 'key' and 'value'
-    """
-    persona = Persona.query.get(id)
-    if persona is None:
-        raise InvalidUsage(message="Persona not found", code=404)
-
-    if current_user.active_persona != persona:
-        raise InvalidUsage(message="Activate this Persona to edit it")
-
-    if request.form.get("name") == "username":
-        form = CreatePersonaForm()
-        form.username.data = request.form.get("value")
-        form.validate()
-
-        if form.username.errors:
-            raise InvalidUsage(message=". ".join(form.username.errors))
-
-        app.logger.info("Changing username of {} to {}".format(
-            persona, form.username.data))
-
-        persona.username = form.username.data
-
-        try:
-            db.session.add(persona)
-            db.session.commit()
-        except SQLAlchemyError, e:
-            db.sesion.rollback()
-            app.logger.error("Error changing username\n{}".format(e))
-            raise InvalidUsage(
-                message="Error changing username. Please try again")
-
-        return jsonify({"message": "Username was changed to {}".format(
-            form.username.data)})
-
-
 @app.route("/async/movement/<movement_id>/", methods=["POST"])
 @login_required
 @http_auth.login_required
@@ -238,6 +144,47 @@ def async_movement(movement_id):
             room=movement.mindspace.id, namespace="/movements")
 
     return jsonify({"mission": new_mission})
+
+
+@app.route("/async/persona/<id>/", methods=["POST"])
+@login_required
+@http_auth.login_required
+def async_persona(id):
+    """Edit a Persona
+
+    Expects a POST request with fields 'key' and 'value'
+    """
+    persona = Persona.query.get(id)
+    if persona is None:
+        raise InvalidUsage(message="Persona not found", code=404)
+
+    if current_user.active_persona != persona:
+        raise InvalidUsage(message="Activate this Persona to edit it")
+
+    if request.form.get("name") == "username":
+        form = CreatePersonaForm()
+        form.username.data = request.form.get("value")
+        form.validate()
+
+        if form.username.errors:
+            raise InvalidUsage(message=". ".join(form.username.errors))
+
+        app.logger.info("Changing username of {} to {}".format(
+            persona, form.username.data))
+
+        persona.username = form.username.data
+
+        try:
+            db.session.add(persona)
+            db.session.commit()
+        except SQLAlchemyError, e:
+            db.sesion.rollback()
+            app.logger.error("Error changing username\n{}".format(e))
+            raise InvalidUsage(
+                message="Error changing username. Please try again")
+
+        return jsonify({"message": "Username was changed to {}".format(
+            form.username.data)})
 
 
 @app.route("/async/movement/<movement_id>/promote", methods=["POST"])
@@ -316,3 +263,65 @@ def async_thought(thought_id):
             Please try again")
 
     return jsonify({"context_length": context_length})
+
+
+@app.route("/async/movement/<movement_id>/toggle_following", methods=["POST", "GET"])
+@login_required
+@http_auth.login_required
+def async_toggle_movement_following(movement_id):
+    movement = Movement.query.get(movement_id)
+    if movement is None:
+        raise InvalidUsage(message="Movement not found", code=404)
+
+    if not current_user or not current_user.active_persona:
+        raise InvalidUsage(message="Activate a Persona to do this.")
+
+    following = current_user.active_persona.toggle_following_movement(movement=movement)
+
+    db.session.add(current_user.active_persona)
+    db.session.commit()
+
+    rv = {
+        "movement_id": movement.id,
+        "persona_id": current_user.active_persona.id,
+        "following": following
+    }
+
+    return jsonify(rv)
+
+
+@app.route("/async/movement/<movement_id>/toggle_membership", methods=["POST", "GET"])
+@login_required
+@http_auth.login_required
+def async_toggle_movement_membership(movement_id):
+    movement = Movement.query.get(movement_id)
+    if movement is None:
+        raise InvalidUsage(message="Movement not found", code=404)
+
+    if not current_user or not current_user.active_persona:
+        raise InvalidUsage(message="Activate a Persona to do this.")
+
+    try:
+        mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+    except NotImplementedError, e:
+        raise InvalidUsage(str(e))
+
+    if mma:
+        rv = {
+            "role": mma.role,
+            "created": mma.created,
+            "description": mma.description,
+            "active": mma.active,
+            "last_seen": mma.last_seen
+        }
+        db.session.add(mma)
+    else:
+        rv = None
+
+    db.session.commit()
+
+    return jsonify({
+        "movement_id": movement.id,
+        "persona_id": current_user.active_persona.id,
+        "association": rv
+    }, )

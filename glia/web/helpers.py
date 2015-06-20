@@ -20,6 +20,19 @@ class UnauthorizedError(Exception):
     pass
 
 
+def localtime(value, tzval="UTC"):
+    """Convert tz-naive UTC datetime into tz-naive local datetime
+
+    Args:
+        value (datetime): timezone naive UTC datetime
+        tz (sting): timezone e.g. 'Europe/Berlin' (see pytz references)
+    """
+    value = value.replace(tzinfo=pytz.utc)  # assuming value is utc time
+    value = value.astimezone(pytz.timezone(tzval))  # convert to local time (tz-aware)
+    value = value.replace(tzinfo=None)  # make tz-naive again
+    return value
+
+
 def send_email(message):
     """Send Email using Sendgrid service
 
@@ -36,6 +49,39 @@ def send_email(message):
     sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
     sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
     return sg.send(message)
+
+
+def send_external_notifications(notification):
+    """Send Email and trigger Desktop notification"""
+
+    # Desktop notifications
+    if isinstance(notification.recipient, Persona):
+        data = {
+            'title': notification.source,
+            'msg': notification.text
+        }
+        socketio.emit('message', data,
+            room=notification.recipient.id, namespace="/personas")
+
+    # Email notification
+    if isinstance(notification.recipient, Persona):
+        message = sendgrid.Mail()
+        message.add_to("{} <{}>".format(
+            notification.recipient.username, notification.recipient.user.email))
+        message.set_subject(notification.text)
+        message.set_html(render_template("email/notification.html",
+            notification=notification))
+        message.set_from('RKTIK Notifications')
+
+        logger.info("Sending email notification to {}: {}".format(
+            notification.recipient, notification.recipient.user.email))
+
+        try:
+            status, msg = send_email(message)
+        except SendGridClientError, e:
+            logger.error("Client error sending notification email: {}".format(e))
+        except SendGridServerError, e:
+            logger.error("Server error sending notification email: {}".format(e))
 
 
 def send_validation_email(user, db):
@@ -78,49 +124,3 @@ def send_validation_email(user, db):
         logger.error("Server error sending confirmation email: {}".format(e))
         logger.warning("User is being auto validated in debug environment")
         user.validate()
-
-
-def send_external_notifications(notification):
-    """Send Email and trigger Desktop notification"""
-
-    # Desktop notifications
-    if isinstance(notification.recipient, Persona):
-        data = {
-            'title': notification.source,
-            'msg': notification.text
-        }
-        socketio.emit('message', data,
-            room=notification.recipient.id, namespace="/personas")
-
-    # Email notification
-    if isinstance(notification.recipient, Persona):
-        message = sendgrid.Mail()
-        message.add_to("{} <{}>".format(
-            notification.recipient.username, notification.recipient.user.email))
-        message.set_subject(notification.text)
-        message.set_html(render_template("email/notification.html",
-            notification=notification))
-        message.set_from('RKTIK Notifications')
-
-        logger.info("Sending email notification to {}: {}".format(
-            notification.recipient, notification.recipient.user.email))
-
-        try:
-            status, msg = send_email(message)
-        except SendGridClientError, e:
-            logger.error("Client error sending notification email: {}".format(e))
-        except SendGridServerError, e:
-            logger.error("Server error sending notification email: {}".format(e))
-
-
-def localtime(value, tzval="UTC"):
-    """Convert tz-naive UTC datetime into tz-naive local datetime
-
-    Args:
-        value (datetime): timezone naive UTC datetime
-        tz (sting): timezone e.g. 'Europe/Berlin' (see pytz references)
-    """
-    value = value.replace(tzinfo=pytz.utc)  # assuming value is utc time
-    value = value.astimezone(pytz.timezone(tzval))  # convert to local time (tz-aware)
-    value = value.replace(tzinfo=None)  # make tz-naive again
-    return value
