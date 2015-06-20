@@ -103,7 +103,7 @@ $(document).ready(function() {
     {{ thought_macros.repost_button(thought) }}
 
     <h3>Availability</h3>
-    {% if thought.author in controlled_personas %}
+    {% if thought.authorize("delete", active_persona.id) %}
       {% if thought.state >= 0 %}
       <p>
         <a class="btn btn-default btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
@@ -113,7 +113,7 @@ $(document).ready(function() {
       {% elif thought.state == -2 %}
       <p>This Thought is currently hidden.</p>
       <p>
-        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
+        <a class="btn btn-success btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
           <i class="fa fa-eye"></i> Publish again
         </a>
       </p>

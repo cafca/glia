@@ -14,16 +14,14 @@ import functools
 from flask import request, current_app, url_for
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
-from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
 
 from . import app
 from .. import socketio, db
 from glia.web.helpers import send_external_notifications
-from nucleus.nucleus.helpers import process_attachments, find_mentions
-from nucleus.nucleus.models import Mindset, Thought, PerceptAssociation, Movement, \
-    Persona, Mention, MentionNotification, ReplyNotification, Dialogue, \
-    DialogueNotification
+from nucleus.nucleus.helpers import find_mentions
+from nucleus.nucleus.models import Mindset, Thought, Movement, \
+    Persona, Mention, MentionNotification, ReplyNotification
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
@@ -198,6 +196,7 @@ def repost(message):
         thought.text = message['text']
         db.session.add(thought)
 
+        # Check if there were new mentions added to the Thought
         mentions = find_mentions(thought.text)
         for mention_text, ident in mentions:
             if thought.percept_assocs.join(Mention).filter(Mention.text == mention_text).first() is None:

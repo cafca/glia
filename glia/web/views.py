@@ -173,7 +173,7 @@ def thought(id=None):
             break
     context = context[::-1]  # reverse list
 
-    if thought.state < 0 and not thought.author.controlled():
+    if thought.state < 0 and not thought.authorize("delete", current_user.active_persona.id):
         flash("This Thought is currently unavailable.")
         return(redirect(request.referrer or url_for('.index')))
 
@@ -199,7 +199,7 @@ def delete_thought(id=None):
     thought = Thought.query.get_or_404(id)
     form = DeleteThoughtForm()
 
-    if not thought.author.controlled():
+    if not thought.authorize("delete", current_user.active_persona.id):
         flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
         app.logger.error("Tried to change visibility of {}'s Thoughts".format(thought.author))
         return redirect(request.referrer or url_for('.index'))

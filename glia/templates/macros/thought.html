@@ -27,7 +27,17 @@
 {% macro promote_button(thought, movement) %}
 {% if movement.current_role() == "admin" %}
 <span>
-    <button class="btn btn-xs btn-default rk-promote" href="#" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote' data-thought-id="{{ thought.id }}" data-promote-url="{{ url_for('web.async_promote', movement_id=movement.id) }}">Promote</button>
+    <button
+      class="btn btn-xs btn-default rk-promote"
+      href="#"
+      {% if movement.has_blogged(thought) %}
+      disabled=disabled
+      {% endif %}
+      data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote'
+      data-thought-id="{{ thought.id }}"
+      data-promote-url="{{ url_for('web.async_promote', movement_id=movement.id) }}">
+      Promote
+    </button>
 </span>
 {% endif %}
 {% endmacro %}

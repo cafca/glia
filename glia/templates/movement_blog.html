@@ -36,11 +36,7 @@ window.admin_id = "{{ movement.admin_id }}";
 
 
     {% for thought in thoughts.items %}
-      {% if loop.first %}
         {{ thought_macros.thought_lead(thought, controlled_personas) }}
-      {% else %}
-        {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True) }}
-      {% endif %}
     {% else %}
       <div class="rk-thought rk-thought-lead">
         <h1>No blog posts found</h1>
