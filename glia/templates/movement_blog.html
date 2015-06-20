@@ -16,7 +16,7 @@ window.admin_id = "{{ movement.admin_id }}";
 {% block content %}
 <section class="row">
   <div class="thought-listing col-sm-8 col-sm-push-2">
-    <div class="jumbotron">
+    <div class="jumbotron rk-blog-header" style="background-color: #{{ movement.color }};">
       <h1>{{ movement.username }}</h1>
       <p>{{ movement.description }}</p>
       {% if movement not in current_user.active_persona.movements_followed %}
