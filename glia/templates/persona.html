@@ -3,6 +3,7 @@
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/thought.html" as thought_macros %}
 {% import "macros/identity.html" as id_macros %}
+{% import "macros/movement.html" as movement_macros %}
 
 {% block script %}
 window.room_id = "{{ chat.id }}";
@@ -68,6 +69,13 @@ $(document).ready(function() {
     </div>
 
     <div class="rk-persona-movements">
+      <div class="row">
+      {% for mma in movements %}
+      <div class="col-sm-3">
+        {{ movement_macros.box(mma.movement)}}
+      </div>
+      {% endfor %}
+      </div>
       <div class="row">
         <div class="col-sm-12">
           <h2>Member of {{ persona.movement_assocs|length }} movement</h2>

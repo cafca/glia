@@ -35,3 +35,25 @@
   </div>
 </nav>
 {% endmacro %}
+
+
+{% macro box(movement) %}
+
+<!-- MOVEMENT BOX {{movement.id}} -->
+
+  <div class="rk-movement-box panel" style="background-color: #{{ movement.color }}">
+    <div class="panel-heading">
+      <a href="{{ url_for('web.movement', id=movement.id) }}">
+          <h4>{{ movement.username }}</h4>
+      </a>
+    </div>
+    <div class="panel-body">
+          <p>{{ movement.description}}</p>
+    <span class="caption">
+        <a href="{{ url_for('web.movement', id=movement.id) }}" title="{{movement.created}}">
+        <i class="fa fa-star"></i> {{movement.created|localtime|naturaltime}}</a>
+    </span>
+    </div>
+  </div>
+
+{% endmacro %}

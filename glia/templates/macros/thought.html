@@ -133,33 +133,6 @@
 {% endmacro %}
 
 
-
-{% macro thought_box(thought, controlled_personas) %}
-
-<!-- THOUGHT {{thought.id}} -->
-<div class="rk-thought rk-thought-box col-md-3 rk-thought-{{ thought.id }}">
-  <div class="panel">
-    <a href="{{ url_for('web.thought', id=thought.id) }}">
-      <div class="rk-thought-box-content">
-        <p>{{ thought.text|mentions(thought, nolink=True) }}</p>
-        <div class="rk-thought-box-percepts">{% for percept_assoc in thought.percept_assocs %}
-        {{ percept_macros.percept_icon(percept_assoc.percept)}}
-        {% endfor %}</div>
-      </div>
-    </a>
-  </div>
-  <p>
-    {{ upvote(thought) }}
-
-    <span class="caption">
-        <a href="{{ url_for('web.thought', id=thought.id) }}" title="{{thought.created}}">
-        <i class="fa fa-thought"></i> {{thought.created|localtime|naturaltime}}</a>
-    </span>
-  </p>
-</div>
-{% endmacro %}
-
-
 {% macro short(thought) %}
   <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.author.username}}: {{thought.text|mentions(thought, nolink=True)}}</a>
 {% endmacro %}
