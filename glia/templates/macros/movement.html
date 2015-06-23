@@ -37,22 +37,26 @@
 {% endmacro %}
 
 
-{% macro box(movement) %}
+{% macro box(movement, extra_text=None) %}
 
 <!-- MOVEMENT BOX {{movement.id}} -->
 
   <div class="rk-movement-box panel" style="background-color: #{{ movement.color }}">
-    <div class="panel-heading">
-      <a href="{{ url_for('web.movement', id=movement.id) }}">
+    <a href="{{ url_for('web.movement', id=movement.id) }}">
+      <div class="panel-heading">
+
           <h4>{{ movement.username }}</h4>
-      </a>
-    </div>
+      </div>
+    </a>
+
     <div class="panel-body">
-          <p>{{ movement.description}}</p>
-    <span class="caption">
-        <a href="{{ url_for('web.movement', id=movement.id) }}" title="{{movement.created}}">
-        <i class="fa fa-star"></i> {{movement.created|localtime|naturaltime}}</a>
-    </span>
+      {% if movement.description|length > 0 %}
+        <p>{{ movement.description}}</p>
+      {% endif %}
+      {% if extra_text %}
+        <p>{{ extra_text }}</p>
+      {% endif %}
+      <p><em>{{ movement.member_count }} member{% if movement.member_count > 1 %}s{% endif %}</em></p>
     </div>
   </div>
 

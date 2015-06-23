@@ -72,7 +72,8 @@ $(document).ready(function() {
       <div class="row">
       {% for mma in movements %}
       <div class="col-sm-3">
-        {{ movement_macros.box(mma.movement)}}
+        {% set et= mma.role|capitalize + ", joined " + mma.created|localtime|naturaltime %}
+        {{ movement_macros.box(mma.movement, extra_text=et)}}
       </div>
       {% endfor %}
       </div>
