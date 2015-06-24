@@ -4,7 +4,7 @@ from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
 from flask.ext.login import current_user
 from flask_wtf import Form
-from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
+from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators, BooleanField
 
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.models import User, Thought, Persona
@@ -65,6 +65,7 @@ class CreateMovementForm(Form):
     name = TextField('Choose a name for your Movement *', [validators.Required(), validators.Length(min=3, max=20)])
     mission = TextField('Describe your mission', [validators.Length(max=140)])
     color = SignupForm.color
+    private = BooleanField("Everything except for the blog is hidden", [validators.Required(), ])
 
     def validate(self):
         print self.color.data

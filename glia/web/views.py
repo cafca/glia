@@ -427,6 +427,10 @@ def movement_mindspace(id):
             id, current_user))
         return(redirect(url_for('.movements')))
 
+    if movement.private and not movement.authorize("read", current_user.active_persona.id):
+        flash("Only members can access the mindspace of '{}'".format(movement.username))
+        return redirect(url_for("web.movement_blog", id=movement.id))
+
     thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
     thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
     top_posts = []
@@ -464,7 +468,8 @@ def movements(id=None):
             admin=current_user.active_persona,
             created=movement_created,
             modified=movement_created,
-            color=form.color.data)
+            color=form.color.data,
+            private=form.private.data)
         current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
         try:
             db.session.add(movement)
