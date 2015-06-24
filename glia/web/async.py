@@ -17,7 +17,8 @@ from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, Identity
+from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, \
+    Identity, FollowerNotification
 
 #
 # UTILITIES
@@ -278,6 +279,8 @@ def async_toggle_following(id):
 
     following = current_user.active_persona.toggle_following(ident=ident)
 
+    notif = FollowerNotification(current_user.active_persona, ident)
+    db.session.add(notif)
     db.session.add(current_user.active_persona)
     db.session.commit()
 
