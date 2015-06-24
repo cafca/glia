@@ -17,7 +17,7 @@ from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus.database import db
-from nucleus.nucleus.models import Thought, Mindset, Movement, Persona
+from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, Identity
 
 #
 # UTILITIES
@@ -265,24 +265,24 @@ def async_thought(thought_id):
     return jsonify({"context_length": context_length})
 
 
-@app.route("/async/movement/<movement_id>/toggle_following", methods=["POST", "GET"])
+@app.route("/async/id/<id>/toggle_following", methods=["POST", "GET"])
 @login_required
 @http_auth.login_required
-def async_toggle_movement_following(movement_id):
-    movement = Movement.query.get(movement_id)
-    if movement is None:
-        raise InvalidUsage(message="Movement not found", code=404)
+def async_toggle_following(id):
+    ident = Identity.query.get(id)
+    if ident is None:
+        raise InvalidUsage(message="Identity not found", code=404)
 
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
-    following = current_user.active_persona.toggle_following_movement(movement=movement)
+    following = current_user.active_persona.toggle_following(ident=ident)
 
     db.session.add(current_user.active_persona)
     db.session.commit()
 
     rv = {
-        "movement_id": movement.id,
+        "id": ident.id,
         "persona_id": current_user.active_persona.id,
         "following": following
     }

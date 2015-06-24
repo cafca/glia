@@ -2,7 +2,7 @@
 
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/thought.html" as thought_macros %}
-{% import "macros/identity.html" as id_macros %}
+{% import "macros/identity.html" as id_macros with context %}
 {% import "macros/movement.html" as movement_macros %}
 
 {% block script %}
@@ -56,6 +56,7 @@ $(document).ready(function() {
       <div class="col-sm-6 rk-persona-identity">
         <h1>{{ id_macros.persona(persona, nolink=True) }}</h1>
         <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
+        {{ id_macros.follow_toggle(persona, current_user.active_persona) }}
       </div>
 
       <div class="col-sm-3 rk-persona-meta">
@@ -65,7 +66,7 @@ $(document).ready(function() {
           <dt>Blog posts</dt>
           <dd>{{ persona.blog.index.count() }}</dd>
           <dt>Movements</dt>
-          <dd>{{ persona.movements_followed|length }}</dd>
+          <dd>{{ persona.blogs_followed|length }}</dd>
         </dl>
       </div>
     </div>

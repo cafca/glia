@@ -307,15 +307,15 @@ $(document).ready(function(){
         // GROUP META
         //
 
-        $("#rk-movement-follower").click(function() {
+        $("#rk-follower").click(function() {
             $(this).button('loading');
-            $.post($("#rk-movement-follower").data("href"))
+            $.post($(this).data("href"))
                 .done(function (data) {
                     location.reload();
                 })
                 .error(function(data) {
                     notification("Error", data.responseJSON["message"]);
-                    $("#rk-movement-follower").button('reset');
+                    $("#rk-follower").button('reset');
                 })
         });
 

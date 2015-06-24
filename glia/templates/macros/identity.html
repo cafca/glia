@@ -19,3 +19,18 @@
 {{ movement(i, flair, nolink) }}
 {% endif %}
 {% endmacro %}
+
+
+{% macro follow_toggle(ident, follower, size=None) %}
+  {% if ident != follower %}
+    {% if ident in follower.blogs_followed %}
+      <button class="btn btn-default{% if size %} btn-{{size}}{% endif %}" type="submit" id="rk-follower" data-href="{{ url_for('.async_toggle_following', id=ident.id) }}">
+        <i class="fa fa-fw fa-eye"></i> Unfollow
+      </button>
+    {% else %}
+      <button class="btn btn-primary{% if size %} btn-{{size}}{% endif %}" type="submit" id="rk-follower" data-href="{{ url_for('.async_toggle_following', id=ident.id) }}">
+        <i class="fa fa-fw fa-eye"></i> Follow
+      </button>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
