@@ -39,10 +39,10 @@
     <div class="rk-frontpage col-sm-7 col-sm-pull-2">
     {% for blog in blog_data %}
       <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4>{{ id_macros.identity(blog.ident) }}</h4>
+        <a href="{{ blog.ident.get_absolute_url() }}"><div class="panel-heading">
+          <h4>{{ id_macros.identity(blog.ident, nolink=True) }}</h4>
           <p><em>{{ blog.ident.description }}</em></p>
-        </div>
+        </div></a>
 
         {% if blog.recent_blog_post %}
         <div class="panel-body rk-new-blog">

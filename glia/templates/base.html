@@ -58,15 +58,13 @@
                   <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu rk-notifications" role="menu">
-                  <li><a href="{{ url_for('web.persona', id=asc.persona.id) }}">Personal Mindspace</a></li>
-                  <li class="divider"></li>
                   {% for notification in asc.persona.notification_list() %}
                     <li class="rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
                   {% else %}
                     <li><a href="#">No unread notifications</a></li>
                   {% endfor %}
                   <li class="divider"></li>
-                  <li><a href="{{ url_for('web.notifications') }}">All notifications</a></li>
+                  <li><a href="{{ url_for('web.notifications') }}">See all notifications</a></li>
                 </ul>
               </li>
             {% else %}
