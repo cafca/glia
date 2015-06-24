@@ -292,26 +292,32 @@ def index():
     """Front page"""
     movementform = CreateMovementForm()
 
-    def movement_sort(movement):
-        s = movement.mindspace.index \
+    def thought_source(ident):
+        return ident.blog if isinstance(ident, Persona) else ident.mindspace
+
+    def blog_sort(ident):
+        s = thought_source(ident).index \
             .filter(Thought.state >= 0) \
             .order_by(Thought.created.desc()) \
             .first()
         return s.created if s is not None else datetime.datetime.fromtimestamp(0)
 
-    movements = current_user.active_persona.movements_followed
-    movement_data = []
-    for g in sorted(movements, key=movement_sort, reverse=True):
-        g_thought_selection = g.mindspace.index.filter(Thought.state >= 0).all()
+    blogs = current_user.active_persona.blogs_followed
+    blog_data = []
+    for ident in sorted(blogs, key=blog_sort, reverse=True):
+        g_thought_selection = thought_source(ident).index.filter(Thought.state >= 0).all()
         g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
 
-        recent_blog_post = g.blog.index.order_by(Thought.created.desc()).first()
-        if recent_blog_post and datetime.datetime.utcnow() \
-                - recent_blog_post.created > datetime.timedelta(days=1):
+        if isinstance(ident, Movement):
+            recent_blog_post = ident.blog.index.order_by(Thought.created.desc()).first()
+            if recent_blog_post and datetime.datetime.utcnow() \
+                    - recent_blog_post.created > datetime.timedelta(days=1):
+                recent_blog_post = None
+        else:
             recent_blog_post = None
 
-        movement_data.append({
-            'movement': g,
+        blog_data.append({
+            'ident': ident,
             'top_posts': g_top_posts,
             'recent_blog_post': recent_blog_post
         })
@@ -334,7 +340,7 @@ def index():
             top_posts.append(candidate)
 
     return render_template('index.html', movementform=movementform,
-        movement_data=movement_data, top_posts=top_posts, more_movements=more_movements)
+        blog_data=blog_data, top_posts=top_posts, more_movements=more_movements)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -516,6 +522,23 @@ def persona(id=None):
         .filter_by(persona_id=persona.id)
 
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
+
+
+@app.route('/persona/<id>/blog/', methods=["GET"])
+@app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
+@login_required
+@http_auth.login_required
+def persona_blog(id, page=1):
+    """Display a persona's blog"""
+    p = Persona.query.get_or_404(id)
+
+    thought_selection = p.blog.index \
+        .filter_by(author_id=p.id) \
+        .filter(Thought.state >= 0) \
+        .order_by(Thought.created.desc()) \
+        .paginate(page, 5)
+
+    return render_template('persona_blog.html', persona=p, thoughts=thought_selection)
 
 
 @app.route('/signup', methods=["GET", "POST"])

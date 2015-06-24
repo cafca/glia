@@ -35,27 +35,27 @@
 
   </div> <!-- ./rktik-toc -->
 
-  {% if movement_data|length > 0 %}
+  {% if blog_data|length > 0 %}
     <div class="rk-frontpage col-sm-7 col-sm-pull-2">
-    {% for m in movement_data %}
+    {% for blog in blog_data %}
       <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4>{{ id_macros.movement(m.movement) }}</h4>
-          <p><em>{{ m.movement.description }}</em></p>
-        </div>
+        <a href="{{ blog.ident.get_absolute_url() }}"><div class="panel-heading">
+          <h4>{{ id_macros.identity(blog.ident, nolink=True) }}</h4>
+          <p><em>{{ blog.ident.description }}</em></p>
+        </div></a>
 
-        {% if m.recent_blog_post %}
+        {% if blog.recent_blog_post %}
         <div class="panel-body rk-new-blog">
-          <h4>{{ thought_macros.thought_line(m.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
+          <h4>{{ thought_macros.thought_line(blog.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
         </div>
         {% endif %}
 
         <div class="panel-body">
 
-          {% if m.top_posts|length > 0 %}
-            {% for thought in m.top_posts %}
+          {% if blog.top_posts|length > 0 %}
+            {% for thought in blog.top_posts %}
               {% if loop.first %}
-                {{ thought_macros.thought_lead(m.top_posts[0], controlled_personas) }}
+                {{ thought_macros.thought_lead(blog.top_posts[0], controlled_personas) }}
               {% else %}
                 {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True) }}
               {% endif %}

@@ -3,6 +3,8 @@
 {% import "macros/chat.html" as chat_macros %}
 {% import "macros/thought.html" as thought_macros %}
 {% import "macros/movement.html" as movement_macros %}
+{% import "macros/identity.html" as id_macros %}
+"
 
 {% block script %}
 window.room_id = "{{ movement.mindspace.id }}";
@@ -31,16 +33,7 @@ $(document).ready(function() {
           <a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=movement.mindspace.id) }}">Create Thought</a>
         {% endif %}
 
-        {% if movement in current_user.active_persona.movements_followed %}
-          <button class="btn btn-default" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
-            <i class="fa fa-fw fa-eye"></i> Unfollow
-          </button>
-        {% else %}
-          <button class="btn btn-primary" type="submit" id="rk-movement-follower" data-href="{{ url_for('.async_toggle_movement_following', movement_id=movement.id) }}">
-            <i class="fa fa-fw fa-eye"></i> Follow
-          </button>
-        {% endif %}
-
+        {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
 
         {% if movement.current_role() not in ["visitor", "anonymous"] %}
           <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
