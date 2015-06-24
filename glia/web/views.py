@@ -215,6 +215,7 @@ def create_thought():
 
     if thought_data is not None:
         thought = thought_data["instance"]
+        thought.posted_from = "web-form"
 
         db.session.add(thought)
         db.session.add_all(thought_data["notifications"])

@@ -232,6 +232,7 @@ def text(message):
             mindset=map,
             parent=parent)
         thought = thought_data["instance"]
+        thought.posted_from = "web-websocket"
 
         db.session.add(thought)
 
