@@ -106,8 +106,6 @@ $(document).ready(function(){
             data = {};
         }
         var thought_id = data.thought_id;
-        var parent_id = data.parent_id;
-        var parent_short = data.parent_short;
         var vote_count = data.vote_count;
 
         if (thought_id === undefined) {
@@ -115,12 +113,6 @@ $(document).ready(function(){
             $('#rk-chat-lines').append($('<li class="list-group-item rk-system">').append($('<em>').text(msg)));
         } else {
             // Thought post
-            if (parent_id != $("#rk-chat-parent").val()) {
-                $('#rk-chat-lines')
-                    .append($('<li class="list-group-item rk-system">')
-                        .append("Comment on "+parent_short)
-                    );
-            }
             $('#rk-chat-lines').append(msg);
             $('#rk-chat-lines .upvote').click(function () {request_upvote(this.dataset.id); return false;});
 
@@ -184,10 +176,6 @@ $(document).ready(function(){
         $.ajax($('#rk-chat-more-button').attr('href'))
             .done(function(data) {
                 $('#rk-chat-more').after(data['html']);
-
-                if (update_last == true) {
-                    $("#rk-chat-parent").val(data["last_id"]);
-                }
 
                 if (data['end_reached'] == true) {
                     $('#rk-chat-more-button').remove();

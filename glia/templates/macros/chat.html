@@ -4,6 +4,11 @@
 
 
 {% macro chatline(thought) %}
+{% if thought.parent %}
+<li class="list-group-item rk-chatline-meta">
+<em>Comment on</em> {{ thought_macros.short(thought.parent) }}
+</li>
+{% endif %}
 <li class="list-group-item">
   {{ thought_macros.upvote(thought) }}
   <span class="rk-chatline">
