@@ -60,10 +60,12 @@ $(document).ready(function() {
 
       <div class="col-sm-3 rk-persona-meta">
         <dl class="dl-horizontal dl-sm">
-          <dt>Connections</dt>
+          <dt>Attention</dt>
           <dd>150</dd>
-          <dt>Shared</dt>
-          <dd>Alex, Julia, Tim, Lea</dd>
+          <dt>Blog posts</dt>
+          <dd>{{ persona.blog.index.count() }}</dd>
+          <dt>Movements</dt>
+          <dd>{{ persona.movements_followed|length }}</dd>
         </dl>
       </div>
     </div>
