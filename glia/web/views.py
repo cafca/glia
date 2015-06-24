@@ -466,7 +466,6 @@ def movements(id=None):
             app.logger.exception("Error creating movement: {}".format(e))
             flash("There was a problem creating your movement. Please try again.")
         else:
-            flash("Your new movement is ready!")
             app.logger.debug("{} created new movement {}".format(current_user.active_persona, movement))
             return redirect(url_for('.movement', id=movement_id))
 

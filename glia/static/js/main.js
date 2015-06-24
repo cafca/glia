@@ -207,10 +207,12 @@ $(document).ready(function(){
 
     $(function () {
         //
-        // UPVOTE BUTTON
+        // MISC UI
         //
 
         $(".upvote").click(function () {request_upvote(this.dataset.id); return false;});
+
+        $(".rk-singleclick").click(function() {$(this).button("loading");});
 
         //
         // PROMOTE BUTTON

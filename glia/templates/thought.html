@@ -98,7 +98,9 @@ $(document).ready(function() {
     <p>Original post by {{ id_macros.identity(thought.author) }} {{thought.created|localtime|naturaltime}}.</p>
     <p><a href="#" id="rk-thought-context-length"></a></p>
 
+    {% if thought.mindset %}
     <p>Posted on <a href="{{ thought.mindset.get_absolute_url() }}">{{ thought.mindset.name }}</a></p>
+    {% endif %}
 
     {{ thought_macros.repost_button(thought) }}
 

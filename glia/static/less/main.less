@@ -192,8 +192,15 @@ a > .fa:hover {
     btn-default { margin-bottom: 1em; }
 }
 
-.rk-frontpage .rk-new-blog {
-    background-color: @medium;
+.rk-frontpage {
+    .rk-new-blog {
+        background-color: @medium;
+    }
+
+    .panel .panel {
+        // Reset margin for text panels inside movement panels
+        margin: 0
+    }
 }
 
 .rk-movement-box {
