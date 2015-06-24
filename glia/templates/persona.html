@@ -72,33 +72,18 @@ $(document).ready(function() {
       <div class="row">
       {% for mma in movements %}
       <div class="col-sm-3">
-        {% set et= mma.role|capitalize + ", joined " + mma.created|localtime|naturaltime %}
+        {% set et=mma.role|capitalize + ", joined " + mma.created|localtime|naturaltime %}
         {{ movement_macros.box(mma.movement, extra_text=et)}}
       </div>
-      {% endfor %}
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <h2>Member of {{ persona.movement_assocs|length }} movement</h2>
-        </div>
-      </div>
-      {% for mma in movements %}
-      <div class="rk-persona-movements-box row">
-        <div class="col-sm-3 rk-persona-movements-info">
-          <a href="{{ url_for('.movement', id=mma.movement.id) }}">
-            <h3>{{ mma.movement.username }}</h3>
-          </a>
-          <p><em>{{ mma.movement.description|default("No description", true) }}</em></p>
-          <p>Currently a {{ mma.role }}, joined {{ mma.created|localtime|naturaltime }}.</p>
-        </div>
-
-        <div class="col-sm-9 rk-persona-movements-posts thought-listing">
-          {% for thought in mma.movement.blog.index.limit(3) %}
-            {{ thought_macros.thought_line(thought, controlled_personas) }}
-          {% endfor %}
-        </div>
+      {% else %}
+      <div class="col-sm-6">
+      <h4>{{ persona.username}} has not joined any movements yet</h4>
+      {% if active_persona != persona %}
+      <p>Go ahead and recommend joining one of yours in the chat on the right!</p>
+      {% endif %}
       </div>
       {% endfor %}
+      </div>
     </div>
   </div>
 </section>
