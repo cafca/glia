@@ -89,7 +89,7 @@
               <a href="{{ url_for('web.persona', id=active_persona.id) }}">Your Mindspace</a>
             </li>
             <li>
-              <a href="#">Your Blog</a>
+              <a href="{{ url_for('web.persona_blog', id=active_persona.id) }}">Your Blog</a>
             </li>
             <li><a href="{{ url_for('.debug') }}"><i class="fa fa-cogs fa-2xd"></i> <span class="caption">Debug</span></a></li>
             <li><a href="{{ url_for('.logout') }}">Logout</a></li>

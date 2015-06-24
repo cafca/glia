@@ -518,6 +518,23 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
+@app.route('/persona/<id>/blog/', methods=["GET"])
+@app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
+@login_required
+@http_auth.login_required
+def persona_blog(id, page=1):
+    """Display a persona's blog"""
+    p = Persona.query.get_or_404(id)
+
+    thought_selection = p.blog.index \
+        .filter_by(author_id=p.id) \
+        .filter(Thought.state >= 0) \
+        .order_by(Thought.created.desc()) \
+        .paginate(page, 5)
+
+    return render_template('persona_blog.html', persona=p, thoughts=thought_selection)
+
+
 @app.route('/signup', methods=["GET", "POST"])
 @http_auth.login_required
 def signup():

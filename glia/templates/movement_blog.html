@@ -28,13 +28,6 @@ window.admin_id = "{{ movement.admin_id }}";
 
     {{ movement_macros.nav(movement, "Blog") }}
 
-    <div class="alert alert-info alert-dismissible" role="alert">
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <p>This is the movement's <strong>blog</strong>. Members of the movement collect content and decide collectively what they want to post here.
-    </div>
-
-
-
     {% for thought in thoughts.items %}
         {{ thought_macros.thought_lead(thought, controlled_personas) }}
     {% else %}
@@ -99,22 +92,6 @@ window.admin_id = "{{ movement.admin_id }}";
             <p>Only members get full access to the group mind. Come join us!</p>
           </div>
         </div>
-
-
-
-
-
-
-
-<!--         <dl class="dl-horizontal dl-sm">
-          <dt>Mission</dt>
-          <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
-            {{ movement.description|default("No mission set", True) }}
-          </a></dd>
-        </dl>
-
-        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to thoughtt chatting and collaborating with other
-        members of this movement </p> -->
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->
 </section>
