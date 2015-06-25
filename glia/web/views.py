@@ -434,7 +434,8 @@ def movement_mindspace(id):
     thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
     thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
     top_posts = []
-    while len(top_posts) < min([15, len(thought_selection)]):
+
+    for i in range(min([15, len(thought_selection)])):
         candidate = thought_selection.pop(0)
         candidate.promote_target = None if candidate in movement.blog \
             else movement

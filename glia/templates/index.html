@@ -38,20 +38,19 @@
   {% if blog_data|length > 0 %}
     <div class="rk-frontpage col-sm-7 col-sm-pull-2">
     {% for blog in blog_data %}
-      <div class="panel panel-default">
-        <a href="{{ blog.ident.get_absolute_url() }}"><div class="panel-heading">
-          <h4>{{ id_macros.identity(blog.ident, nolink=True) }}</h4>
+      <div class="rk-frontpage-item">
+        <a href="{{ blog.ident.get_absolute_url() }}"><div class="rk-frontpage-ident">
+          <h4>{{ blog.ident.username }}</h4>
           <p><em>{{ blog.ident.description }}</em></p>
         </div></a>
 
         {% if blog.recent_blog_post %}
-        <div class="panel-body rk-new-blog">
+        <div class="rk-new-blog">
           <h4>{{ thought_macros.thought_line(blog.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
         </div>
         {% endif %}
 
-        <div class="panel-body">
-
+        <div class="rk-frontpage-item-listing">
           {% if blog.top_posts|length > 0 %}
             {% for thought in blog.top_posts %}
               {% if loop.first %}

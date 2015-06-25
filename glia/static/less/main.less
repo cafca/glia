@@ -233,7 +233,7 @@ a > .fa:hover {
 }
 
 //
-// TABLE OF CONTENTS
+// FRONTPAGE-SPECIFIC
 //
 
 .rk-toc {
@@ -243,6 +243,23 @@ a > .fa:hover {
 .rk-toc-movements > ul > li {
     overflow: scroll;
     margin-bottom: 0.5em;
+}
+
+.rk-frontpage-item {
+    margin-top: 3em;
+
+    h4 {
+        margin: 10px 0 5px 10px;
+    }
+
+    .rk-frontpage-ident {
+        font-variant: small-caps;
+        border-bottom: 1px solid @medium;
+    }
+}
+
+.rk-frontpage-item:first-child {
+    margin-top: 0;
 }
 
 //
