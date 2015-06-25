@@ -1,20 +1,9 @@
 {% import "macros/percept.html" as percept_macros %}
 {% import "macros/identity.html" as id_macros %}
 
-{% macro upvote(thought) %}
-<button class="upvote btn btn-xs {% if thought.upvoted() %}btn-inverse{% else %}btn-default{% endif %} upvote-{{thought.id}}" data-id="{{thought.id}}" type="button">
-  <span class="upvote-count upvote-count-{{thought.id}}">{{thought.upvote_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
-</button>
-{% endmacro %}
 
+{# --- UTILITIES --- #}
 
-{% macro repost_button(thought, btn="btn-primary") %}
-  <span data-toggle="modal" data-thought-text="Repost: {{thought.text}}" data-thought-id="{{thought.id}}" data-target="#rk-repost">
-    <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom" title="Share this Thought with People, Movements or anywhere else!">
-      <i class="fa fa-retweet"></i> Repost
-    </button>
-  </span>
-{% endmacro %}
 
 {% macro comments_button(thought) %}
 <span>
@@ -22,6 +11,25 @@
         <span class="upvote-count" id="comment-count-{{thought.id}}">{{thought.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
     </a>
 </span>
+{% endmacro %}
+
+{% macro label_badges(labels) %}
+    {% if labels %}
+      {% for label in labels %}
+          {% if not label.kind %}
+              {% set kind = "default" %}
+          {% else %}
+              {% set kind = label.kind %}
+          {% endif %}
+          <span class="label label-{{kind}}">{{ label.text }}</span>
+      {% endfor %}
+    {% endif %}
+{% endmacro %}
+
+{% macro not_authorized(thought) %}
+<div class="rk-thought rk-hidden">
+  <p>Private thought hidden</p>
+</div>
 {% endmacro %}
 
 {% macro promote_button(thought, movement) %}
@@ -42,22 +50,26 @@
 {% endif %}
 {% endmacro %}
 
-{% macro label_badges(labels) %}
-    {% if labels %}
-      {% for label in labels %}
-          {% if not label.kind %}
-              {% set kind = "default" %}
-          {% else %}
-              {% set kind = label.kind %}
-          {% endif %}
-          <span class="label label-{{kind}}">{{ label.text }}</span>
-      {% endfor %}
-    {% endif %}
+{% macro repost_button(thought, btn="btn-primary") %}
+  <span data-toggle="modal" data-thought-text="Repost: {{thought.text}}" data-thought-id="{{thought.id}}" data-target="#rk-repost">
+    <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom" title="Share this Thought with People, Movements or anywhere else!">
+      <i class="fa fa-retweet"></i> Repost
+    </button>
+  </span>
+{% endmacro %}
+
+{% macro upvote(thought) %}
+<button class="upvote btn btn-xs {% if thought.upvoted() %}btn-inverse{% else %}btn-default{% endif %} upvote-{{thought.id}}" data-id="{{thought.id}}" type="button">
+  <span class="upvote-count upvote-count-{{thought.id}}">{{thought.upvote_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+</button>
 {% endmacro %}
 
 
-{% macro thought_lead(thought, controlled_personas, truncate=True, promote_to=None, labels=None) %}
+{# --- THOUGHT MACROS --- #}
 
+
+{% macro thought_lead(thought, controlled_personas, truncate=True, promote_to=None, labels=None) %}
+{% if thought|authorize("read") %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
   <span class="rk-thought-title">
@@ -95,12 +107,13 @@
     </span>
   </div>
 </div>
+{% else %}{{ not_authorized(thought) }}{% endif %}
 {% endmacro %}
 
 
 
 {% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote_to=None, labels=None) %}
-
+{% if thought|authorize("read") %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
@@ -130,16 +143,22 @@
     {% endif %}
   </div>
 </div>
+{% else %}{{ not_authorized(thought) }}{% endif %}
 {% endmacro %}
 
 
 {% macro short(thought) %}
+{% if thought|authorize("read") %}
   <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.author.username}}: {{thought.text|mentions(thought, nolink=True)}}</a>
+{% else %}{{ not_authorized(thought) }}{% endif %}
 {% endmacro %}
 
 
+{# --- COMMENT MACROS --- #}
+
 
 {% macro comment(thought, controlled_personas, no_percepts=False, truncate=True) %}
+{% if thought|authorize("read") %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
@@ -197,6 +216,7 @@
   </div>
 
 </div>
+{% else %}{{ not_authorized(thought) }}{% endif %}
 {% endmacro %}
 
 

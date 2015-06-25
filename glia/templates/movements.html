@@ -69,7 +69,7 @@ $(".rk-movement-form").submit(function() {
           {{ form.private() }} {% for error in form.private.errors %}{{ error }} {% endfor %}
         {% else %}
           <label for="private">
-          {{ form.private() }} <strong>Private</strong> Only let non-members see the blog
+          {{ form.private() }} <strong>Private</strong> Non-members can't read your mindspace
         {% endif %}
         </label>
       </div>

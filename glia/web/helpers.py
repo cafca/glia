@@ -4,6 +4,7 @@ import pytz
 import sendgrid
 
 from flask import render_template
+from flask.ext.login import current_user
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 
@@ -18,6 +19,24 @@ logger = logging.getLogger('web')
 class UnauthorizedError(Exception):
     """Current user is not authorized for this action"""
     pass
+
+
+def authorize_filter(obj, action, actor=None):
+    """Return True if action on obj is authorized for active Persona or
+    given Persona
+
+    Args:
+        obj (nucleus.models.Serializable): Implements the authorize method
+        action (String): One of the actions defined in Nucleus
+        actor (Identity): Optional identity to check for
+
+    Returns:
+        Boolean: True if action is currently authorized
+    """
+    if actor is None:
+        actor = current_user.active_persona
+
+    return obj.authorize(action, actor.id)
 
 
 def localtime(value, tzval="UTC"):
