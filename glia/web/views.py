@@ -310,7 +310,11 @@ def index():
         g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
 
         if isinstance(ident, Movement):
-            recent_blog_post = ident.blog.index.order_by(Thought.created.desc()).first()
+            recent_blog_post = ident.blog.index \
+                .filter(Thought.state >= 0) \
+                .order_by(Thought.created.desc()) \
+                .first()
+
             if recent_blog_post and datetime.datetime.utcnow() \
                     - recent_blog_post.created > datetime.timedelta(days=1):
                 recent_blog_post = None
@@ -437,7 +441,11 @@ def movement_mindspace(id):
         if candidate.upvote_count() > 0:
             top_posts.append(candidate)
 
-    recent_blog_post = movement.blog.index.order_by(Thought.created.desc()).first()
+    recent_blog_post = movement.blog.index \
+        .filter(Thought.state >= 0) \
+        .order_by(Thought.created.desc()) \
+        .first()
+
     if recent_blog_post and datetime.datetime.utcnow() \
             - recent_blog_post.created > datetime.timedelta(days=1):
         recent_blog_post = None
