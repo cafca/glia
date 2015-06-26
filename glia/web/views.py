@@ -44,6 +44,8 @@ def account_notifications():
 
 @app.before_request
 def mark_notifications_read():
+    """Mark notifications for the current request path as read"""
+
     if not current_user.is_anonymous():
         notifications = Notification.query \
             .filter_by(url=request.path) \
@@ -56,6 +58,10 @@ def mark_notifications_read():
             app.logger.info("Marked {} read".format(n))
 
         db.session.commit()
+
+#
+# ROUTES
+#
 
 
 @app.route('/debug/')
@@ -76,10 +82,6 @@ def debug():
         movements=movements,
         mindsets=mindsets
     )
-
-#
-# ROUTES
-#
 
 
 @app.route('/persona/<id>/activate')
@@ -147,7 +149,8 @@ def create_persona(for_movement=None):
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
-            source="system"
+            source="system",
+            url=url_for("persona", id=persona.id)
         )
         db.session.add(notification)
 
@@ -213,42 +216,42 @@ def create_thought():
             flash("There was an error creating your thought ({})".format(e))
             app.logger.error("Error creating new thought ({})".format(e))
 
-    if thought_data is not None:
-        thought = thought_data["instance"]
-        thought.posted_from = "web-form"
+        if thought_data is not None:
+            thought = thought_data["instance"]
+            thought.posted_from = "web-form"
 
-        db.session.add(thought)
-        db.session.add_all(thought_data["notifications"])
+            db.session.add(thought)
+            db.session.add_all(thought_data["notifications"])
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError, e:
-            db.session.rollback()
-            app.logger.error("Error creating longform thought: {}".format(e))
-            flash("An error occured saving your message. Please try again.")
-        else:
-            map(send_external_notifications, thought_data["notifications"])
+            try:
+                db.session.commit()
+            except SQLAlchemyError, e:
+                db.session.rollback()
+                app.logger.error("Error creating longform thought: {}".format(e))
+                flash("An error occured saving your message. Please try again.")
+            else:
+                map(send_external_notifications, thought_data["notifications"])
 
-            # Render using templates
-            thought_macros_template = current_app.jinja_env.get_template(
-                'macros/thought.html')
-            thought_macros = thought_macros_template.make_module(
-                {'request': request})
+                # Render using templates
+                thought_macros_template = current_app.jinja_env.get_template(
+                    'macros/thought.html')
+                thought_macros = thought_macros_template.make_module(
+                    {'request': request})
 
-            data = {
-                'username': thought.author.username,
-                'msg': render_template("chatline.html", thought=thought),
-                'thought_id': thought.id,
-                'parent_id': thought.parent_id,
-                'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
-                'vote_count': thought.upvote_count()
-            }
-            socketio.emit('message', data, room=form.mindset.data)
+                data = {
+                    'username': thought.author.username,
+                    'msg': render_template("chatline.html", thought=thought),
+                    'thought_id': thought.id,
+                    'parent_id': thought.parent_id,
+                    'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
+                    'vote_count': thought.upvote_count()
+                }
+                socketio.emit('message', data, room=form.mindset.data)
 
-            socketio.emit('comment', {'msg': thought_macros.comment(thought),
-                'parent_id': form.parent.data}, room=form.parent.data)
-            flash("Great success! Your new post is ready.")
-            return redirect(url_for("web.thought", id=thought.id))
+                socketio.emit('comment', {'msg': thought_macros.comment(thought),
+                    'parent_id': form.parent.data}, room=form.parent.data)
+                flash("Great success! Your new post is ready.")
+                return redirect(url_for("web.thought", id=thought.id))
 
     return render_template("create_thought.html",
         form=form, mindset=ms, parent=parent)
