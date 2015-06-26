@@ -348,7 +348,7 @@ def index():
 @http_auth.login_required
 def login():
     """Login a user"""
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous() and current_user.is_authenticated():
         return redirect(url_for("web.index"))
 
     form = LoginForm()

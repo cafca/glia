@@ -53,7 +53,6 @@ def chat_error_handlerp(e):
 @socketio.on('connect', namespace="/personas")
 def connectp():
     request.namespace.join_room(current_user.active_persona.id)
-    app.logger.info("{} logged in".format(current_user.active_persona))
 
 
 #
