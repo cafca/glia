@@ -449,8 +449,15 @@ def movement_mindspace(id):
             - recent_blog_post.created > datetime.timedelta(days=1):
         recent_blog_post = None
 
+    member_selection = MovementMemberAssociation.query \
+        .filter_by(movement=movement) \
+        .filter_by(active=True) \
+        .order_by(MovementMemberAssociation.last_seen.desc()) \
+        .limit(10)
+
     return render_template('movement_mindspace.html',
-        movement=movement, thoughts=top_posts, recent_blog_post=recent_blog_post)
+        movement=movement, thoughts=top_posts,
+        member_selection=member_selection, recent_blog_post=recent_blog_post)
 
 
 @app.route('/movement/', methods=["GET", "POST"])
