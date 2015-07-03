@@ -585,8 +585,18 @@ def signup():
     from uuid import uuid4
     form = SignupForm()
 
+    form.invitation_code = request.args.get('invitation_code', default=None)
+    if form.invitation_code:
+        mma = MovementMemberAssociation.query.filter_by(invitation_code=form.invitation_code).first()
+        if mma is None:
+            flash("Can not find the movement you were invited to", "error")
+
     if not current_user.is_anonymous():
-        return redirect(url_for("web.index"))
+        if mma:
+            flash("You were invited to join this movement. Click the Join movement button below to do so.")
+            return url_for('web.movement', id=mma.movement.id)
+        else:
+            return redirect(url_for("web.index"))
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
@@ -611,6 +621,12 @@ def signup():
             author=persona)
 
         db.session.add(persona)
+
+        if mma:
+            mma.persona = persona
+            mma.active = True
+            mma.role = "member"
+            db.session.add(mma)
 
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
@@ -646,7 +662,8 @@ def signup():
             flash("Welcome to RKTIK! Click the link in the activation email we just sent you to be able to reset your account when you loose your password.".format(form.username.data))
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
-        return form.redirect(url_for('web.index'))
+        rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
+        return form.redirect(rv)
     return render_template('signup.html', form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
