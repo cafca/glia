@@ -68,13 +68,14 @@ $(document).ready(function() {
       {% if movement.current_role() not in ["visitor", "anonymous"] %}
         {{ chat_macros.chat(movement.mindspace) }}
       {% endif %}
-    </div> <!-- ./ panel -->
+    </div> <!-- ./ chat panel -->
 
-    <div class="panel panel-default hidden-xs">
+    <div class="panel panel-default">
       <div class="panel-heading">
         <h4>{{ movement.member_count }} Members</h4>
+        <a class="btn btn-small" href="{{ url_for('web.invite_members', movement_id=movement.id) }}">Send Invitations</a>
       </div>
-      <div class="panel-body">
+      <div class="panel-body hidden-xs">
       {% for mma in member_selection %}
         <p>
         {% if mma.role != "member" %}
@@ -89,8 +90,8 @@ $(document).ready(function() {
         </p>
       {% endfor %}
       </div>
-    </div>
-  </div> <!-- ./ chat column -->
+    </div> <!-- ./ member panel -->
+  </div> <!-- ./ sidebar -->
 
   <div class="thought-listing col-sm-8 col-sm-pull-4">
     {{ movement_macros.nav(movement, "Mindspace") }}

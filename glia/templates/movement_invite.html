@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/movement.html" as movement_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+
+{% block content %}
+
+<div class="col-sm-6 col-sm-push-3">
+  {{ movement_macros.nav(movement) }}
+  <div class="panel panel-default">
+    <form action="{{ url_for('web.invite_members', movement_id=movement.id) }}" method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="panel-heading">
+        <h2>Invite New Members</h2>
+      </div>
+
+      {% if invited|length > 0 %}
+      <div class="panel-body">
+        <div class="alert alert-success">
+          <h3>Sent email invitations to {{ invited|length }} addresses</h3>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="panel-body">
+        <div class="form-group">
+          {% if form.invites.errors %}
+          <label for="invites" />{% for error in form.invites.errors %}{{error}}{% endfor %}</label>
+          {% else %}
+          <label for="invites" />Put one email-adress per line *</label>
+          {% endif %}
+          <textarea class="form-control" id="invites" name="invites" default="default" placeholder="test@gmail.com">{{ form.invites.data|default("", True) }}</textarea>
+        </div>
+
+        <div class="form-group">
+          {% if form.message.errors %}
+          <label for="message" />{% for error in form.message.errors %}{{error}}{% endfor %}</label>
+          {% else %}
+          <label for="message" />Write a few words to your friends to let them know what's up</label>
+          {% endif %}
+
+          <input type="text" name="message" id="message" class="form-control" placeholder="Hey guys, just inviting you to our new group page." value="{{ form.message.data|default("", True) }}"/>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <a class="btn btn-default" href="{{ url_for('web.movement', id=movement.id) }}">Go to movement</a>
+        <input class="btn btn-primary rk-singleclick" data-loading-text='Please wait' type="submit" value="Send invites" />
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -14,7 +14,7 @@ from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
 from uuid import uuid4
 from sqlalchemy import func, inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -23,7 +23,7 @@ from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
-    send_external_notifications
+    send_external_notifications, send_movement_invitation
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
@@ -345,6 +345,27 @@ def index():
 
     return render_template('index.html', movementform=movementform,
         blog_data=blog_data, top_posts=top_posts, more_movements=more_movements)
+
+
+@app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
+@http_auth.login_required
+def invite_members(movement_id):
+    """Let movments invite members by username or email adress"""
+    movement = Movement.query.get_or_404(movement_id)
+    invited = list()
+
+    form = InviteMembersForm()
+    if form.validate_on_submit():
+        for handle in form.handles:
+            if send_movement_invitation(handle, movement, message=form.message):
+                app.logger.info("Invited {} to {}".format(handle, movement))
+                invited.append(handle)
+            else:
+                flash("There was an error sending an invitation to {}. Please try again.".format(
+                    handle), 'error')
+
+    return render_template("movement_invite.html",
+        form=form, movement=movement, invited=invited)
 
 
 @app.route('/login', methods=["GET", "POST"])
