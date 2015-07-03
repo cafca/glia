@@ -150,7 +150,7 @@ def create_persona(for_movement=None):
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
             source="system",
-            url=url_for("persona", id=persona.id)
+            url=url_for("web.persona", id=persona.id)
         )
         db.session.add(notification)
 
@@ -584,19 +584,13 @@ def signup():
     """Signup a new user"""
     from uuid import uuid4
     form = SignupForm()
+    mma = None
 
-    form.invitation_code = request.args.get('invitation_code', default=None)
-    if form.invitation_code:
-        mma = MovementMemberAssociation.query.filter_by(invitation_code=form.invitation_code).first()
+    invitation_code = request.args.get('invitation_code', default=None)
+    if invitation_code:
+        mma = MovementMemberAssociation.query.filter_by(invitation_code=invitation_code).first()
         if mma is None:
             flash("Can not find the movement you were invited to", "error")
-
-    if not current_user.is_anonymous():
-        if mma:
-            flash("You were invited to join this movement. Click the Join movement button below to do so.")
-            return url_for('web.movement', id=mma.movement.id)
-        else:
-            return redirect(url_for("web.index"))
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
@@ -622,7 +616,7 @@ def signup():
 
         db.session.add(persona)
 
-        if mma:
+        if mma and not mma.active:
             mma.persona = persona
             mma.active = True
             mma.role = "member"
@@ -663,8 +657,27 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
-        return form.redirect(rv)
-    return render_template('signup.html', form=form, allowed_colors=ALLOWED_COLORS.keys())
+        return redirect(rv)
+
+    if request.method == "GET":
+        if not current_user.is_anonymous():
+            if mma:
+                if mma.active:
+                    flash("This activation code has been used before. You can try joining the movement by clicking the join button below.")
+                else:
+                    flash("You were invited to join this movement. Click the Join movement button below to do so.")
+                return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=mma.invitation_code))
+            else:
+                return redirect(url_for("web.index"))
+
+    if mma:
+        form_url = url_for('web.signup', invitation_code=mma.invitation_code)
+    else:
+        form_url = url_for('web.signup')
+
+    return render_template('signup.html',
+        form=form, form_url=form_url, allowed_colors=ALLOWED_COLORS.keys(),
+        mma=mma)
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])

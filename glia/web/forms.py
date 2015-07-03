@@ -139,7 +139,7 @@ class InviteMembersForm(Form):
             for handle in handles:
                 if "@" in handle and "." in handle:
                     self.handles.add(handle)
-                else:
+                elif len(handle) > 0:
                     self.invites.errors.append("{} does not seem to be a valid email address.".format(handle))
                     rv = False
             return rv
