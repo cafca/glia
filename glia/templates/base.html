@@ -83,6 +83,9 @@
 
           <!-- Toolbox -->
           <ul class="nav navbar-nav navbar-right">
+            {% if current_user.is_anonymous() %}
+            <li><a  href="{{ url_for('web.login') }}">Login &amp; Signup  </a></li>
+            {% else %}
             <li>
               <a href="{{ url_for('web.persona', id=active_persona.id) }}">Your Mindspace</a>
             </li>
@@ -90,9 +93,6 @@
               <a href="{{ url_for('web.persona_blog', id=active_persona.id) }}">Your Blog</a>
             </li>
             <li><a href="{{ url_for('.debug') }}"><i class="fa fa-cogs fa-2xd"></i> <span class="caption">Debug</span></a></li>
-            {% if current_user.is_anonymous() %}
-            <li><a  href="{{ url_for('web.login') }}">Login &amp; Signup  </a></li>
-            {% else %}
             <li><a href="{{ url_for('.logout') }}">Logout</a></li>
             {% endif %}
           </ul>

@@ -547,15 +547,13 @@ def notifications(page=1):
 
 
 @app.route('/persona/<id>/')
-@app.route('/anonymous', defaults={'id': None})
 @http_auth.login_required
 def persona(id):
-    if id is None:
-        return redirect(url_for('web.signup'))
-
     persona = Persona.query.get_or_404(id)
 
-    if persona == current_user.active_persona:
+    if current_user.is_anonymous():
+        chat = None
+    elif persona == current_user.active_persona:
         chat = current_user.active_persona.mindspace
     else:
         chat = Dialogue.get_chat(persona, current_user.active_persona)
