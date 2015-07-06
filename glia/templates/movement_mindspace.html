@@ -72,8 +72,8 @@ $(document).ready(function() {
 
     <div class="panel panel-default">
       <div class="panel-heading">
+        <a class="btn btn-small btn-default pull-right" href="{{ url_for('web.invite_members', movement_id=movement.id) }}"><i class="fa fa-envelope-o"></i> Invite</a>
         <h4>{{ movement.member_count }} Members</h4>
-        <a class="btn btn-small" href="{{ url_for('web.invite_members', movement_id=movement.id) }}">Send Invitations</a>
       </div>
       <div class="panel-body hidden-xs">
       {% for mma in member_selection %}

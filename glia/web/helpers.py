@@ -141,12 +141,14 @@ def send_movement_invitation(recipient, movement, message=None):
         db.session.commit()
         status, msg = send_email(message)
     except (SendGridClientError, SendGridServerError), e:
-        logger.error("Error sending email invitation to '{}': {}".format(
-            recipient, e))
+        logger.error("Error sending email invitation to '{}' code '{}': {}".format(
+            recipient, mma.invitation_code, e))
     except SQLAlchemyError, e:
-        logger.error("Error sending email invitation to '{}': {}".format(
-            recipient, e))
+        logger.error("Error sending email invitation to '{}' code '{}': {}".format(
+            recipient, mma.invitation_code, e))
     else:
+        logger.info("Sent invitation email for {} to '{}'".format(
+            movement, recipient))
         return mma
 
 
