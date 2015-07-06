@@ -14,7 +14,7 @@ from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
 from uuid import uuid4
 from sqlalchemy import func, inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -23,7 +23,7 @@ from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
-    send_external_notifications
+    send_external_notifications, send_movement_invitation
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
@@ -44,6 +44,8 @@ def account_notifications():
 
 @app.before_request
 def mark_notifications_read():
+    """Mark notifications for the current request path as read"""
+
     if not current_user.is_anonymous():
         notifications = Notification.query \
             .filter_by(url=request.path) \
@@ -56,6 +58,10 @@ def mark_notifications_read():
             app.logger.info("Marked {} read".format(n))
 
         db.session.commit()
+
+#
+# ROUTES
+#
 
 
 @app.route('/debug/')
@@ -76,10 +82,6 @@ def debug():
         movements=movements,
         mindsets=mindsets
     )
-
-#
-# ROUTES
-#
 
 
 @app.route('/persona/<id>/activate')
@@ -111,6 +113,7 @@ def create_persona(for_movement=None):
 
     movement = None
     if for_movement:
+        code = request.args.get("invitation_code", default=None)
         movement = Movement.query.get_or_404(for_movement)
 
     if form.validate_on_submit():
@@ -147,12 +150,13 @@ def create_persona(for_movement=None):
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
-            source="system"
+            source="system",
+            url=url_for("web.persona", id=persona.id)
         )
         db.session.add(notification)
 
         if movement:
-            persona.toggle_movement_membership(movement=movement)
+            persona.toggle_movement_membership(movement=movement, code=code)
 
         try:
             db.session.commit()
@@ -213,42 +217,42 @@ def create_thought():
             flash("There was an error creating your thought ({})".format(e))
             app.logger.error("Error creating new thought ({})".format(e))
 
-    if thought_data is not None:
-        thought = thought_data["instance"]
-        thought.posted_from = "web-form"
+        if thought_data is not None:
+            thought = thought_data["instance"]
+            thought.posted_from = "web-form"
 
-        db.session.add(thought)
-        db.session.add_all(thought_data["notifications"])
+            db.session.add(thought)
+            db.session.add_all(thought_data["notifications"])
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError, e:
-            db.session.rollback()
-            app.logger.error("Error creating longform thought: {}".format(e))
-            flash("An error occured saving your message. Please try again.")
-        else:
-            map(send_external_notifications, thought_data["notifications"])
+            try:
+                db.session.commit()
+            except SQLAlchemyError, e:
+                db.session.rollback()
+                app.logger.error("Error creating longform thought: {}".format(e))
+                flash("An error occured saving your message. Please try again.")
+            else:
+                map(send_external_notifications, thought_data["notifications"])
 
-            # Render using templates
-            thought_macros_template = current_app.jinja_env.get_template(
-                'macros/thought.html')
-            thought_macros = thought_macros_template.make_module(
-                {'request': request})
+                # Render using templates
+                thought_macros_template = current_app.jinja_env.get_template(
+                    'macros/thought.html')
+                thought_macros = thought_macros_template.make_module(
+                    {'request': request})
 
-            data = {
-                'username': thought.author.username,
-                'msg': render_template("chatline.html", thought=thought),
-                'thought_id': thought.id,
-                'parent_id': thought.parent_id,
-                'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
-                'vote_count': thought.upvote_count()
-            }
-            socketio.emit('message', data, room=form.mindset.data)
+                data = {
+                    'username': thought.author.username,
+                    'msg': render_template("chatline.html", thought=thought),
+                    'thought_id': thought.id,
+                    'parent_id': thought.parent_id,
+                    'parent_short': thought_macros.short(thought.parent) if thought.parent else None,
+                    'vote_count': thought.upvote_count()
+                }
+                socketio.emit('message', data, room=form.mindset.data)
 
-            socketio.emit('comment', {'msg': thought_macros.comment(thought),
-                'parent_id': form.parent.data}, room=form.parent.data)
-            flash("Great success! Your new post is ready.")
-            return redirect(url_for("web.thought", id=thought.id))
+                socketio.emit('comment', {'msg': thought_macros.comment(thought),
+                    'parent_id': form.parent.data}, room=form.parent.data)
+                flash("Great success! Your new post is ready.")
+                return redirect(url_for("web.thought", id=thought.id))
 
     return render_template("create_thought.html",
         form=form, mindset=ms, parent=parent)
@@ -348,11 +352,32 @@ def index():
         blog_data=blog_data, top_posts=top_posts, more_movements=more_movements)
 
 
+@app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
+@http_auth.login_required
+def invite_members(movement_id):
+    """Let movments invite members by username or email adress"""
+    movement = Movement.query.get_or_404(movement_id)
+    invited = list()
+
+    form = InviteMembersForm()
+    if form.validate_on_submit():
+        for handle in form.handles:
+            if send_movement_invitation(handle, movement, message=form.message):
+                app.logger.info("Invited {} to {}".format(handle, movement))
+                invited.append(handle)
+            else:
+                flash("There was an error sending an invitation to {}. Please try again.".format(
+                    handle), 'error')
+
+    return render_template("movement_invite.html",
+        form=form, movement=movement, invited=invited)
+
+
 @app.route('/login', methods=["GET", "POST"])
 @http_auth.login_required
 def login():
     """Login a user"""
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous() and current_user.is_authenticated():
         return redirect(url_for("web.index"))
 
     form = LoginForm()
@@ -398,7 +423,8 @@ def movement(id):
     if movement.current_role() in ["member", "admin"]:
         rv = redirect(url_for("web.movement_mindspace", id=id))
     else:
-        rv = redirect(url_for("web.movement_blog", id=id))
+        code = request.args.get('invitation_code', default=None)
+        rv = redirect(url_for("web.movement_blog", id=id, invitation_code=code))
     return rv
 
 
@@ -416,7 +442,9 @@ def movement_blog(id, page=1):
         .order_by(Thought.created.desc()) \
         .paginate(page, 5)
 
-    return render_template('movement_blog.html', movement=movement, thoughts=thought_selection)
+    code = request.args.get("invitation_code", default=None)
+    return render_template('movement_blog.html', movement=movement,
+        thoughts=thought_selection, code=code)
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
@@ -430,6 +458,10 @@ def movement_mindspace(id):
         app.logger.warning("Movement '{}' not found. User: {}".format(
             id, current_user))
         return(redirect(url_for('.movements')))
+
+    if movement.private and not movement.authorize("read", current_user.active_persona.id):
+        flash("Only members can access the mindspace of '{}'".format(movement.username))
+        return redirect(url_for("web.movement_blog", id=movement.id))
 
     thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
     thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
@@ -451,8 +483,15 @@ def movement_mindspace(id):
             - recent_blog_post.created > datetime.timedelta(days=1):
         recent_blog_post = None
 
+    member_selection = MovementMemberAssociation.query \
+        .filter_by(movement=movement) \
+        .filter_by(active=True) \
+        .order_by(MovementMemberAssociation.last_seen.desc()) \
+        .limit(10)
+
     return render_template('movement_mindspace.html',
-        movement=movement, thoughts=top_posts, recent_blog_post=recent_blog_post)
+        movement=movement, thoughts=top_posts,
+        member_selection=member_selection, recent_blog_post=recent_blog_post)
 
 
 @app.route('/movement/', methods=["GET", "POST"])
@@ -473,7 +512,8 @@ def movements(id=None):
             admin=current_user.active_persona,
             created=movement_created,
             modified=movement_created,
-            color=form.color.data)
+            color=form.color.data,
+            private=form.private.data)
         current_user.active_persona.toggle_movement_membership(movement=movement, role="admin")
         try:
             db.session.add(movement)
@@ -557,9 +597,13 @@ def signup():
     """Signup a new user"""
     from uuid import uuid4
     form = SignupForm()
+    mma = None
 
-    if not current_user.is_anonymous():
-        return redirect(url_for("web.index"))
+    invitation_code = request.args.get('invitation_code', default=None)
+    if invitation_code:
+        mma = MovementMemberAssociation.query.filter_by(invitation_code=invitation_code).first()
+        if mma is None:
+            flash("Can not find the movement you were invited to", "error")
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
@@ -584,6 +628,12 @@ def signup():
             author=persona)
 
         db.session.add(persona)
+
+        if mma and not mma.active:
+            mma.persona = persona
+            mma.active = True
+            mma.role = "member"
+            db.session.add(mma)
 
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
@@ -619,8 +669,28 @@ def signup():
             flash("Welcome to RKTIK! Click the link in the activation email we just sent you to be able to reset your account when you loose your password.".format(form.username.data))
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
-        return form.redirect(url_for('web.index'))
-    return render_template('signup.html', form=form, allowed_colors=ALLOWED_COLORS.keys())
+        rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
+        return redirect(rv)
+
+    if request.method == "GET":
+        if not current_user.is_anonymous():
+            if mma:
+                if mma.active:
+                    flash("This activation code has been used before. You can try joining the movement by clicking the join button below.")
+                else:
+                    flash("You were invited to join this movement. Click the \"Join movement\" button on the bottom of this page to do so.")
+                return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=mma.invitation_code))
+            else:
+                return redirect(url_for("web.index"))
+
+    if mma:
+        form_url = url_for('web.signup', invitation_code=mma.invitation_code)
+    else:
+        form_url = url_for('web.signup')
+
+    return render_template('signup.html',
+        form=form, form_url=form_url, allowed_colors=ALLOWED_COLORS.keys(),
+        mma=mma)
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])

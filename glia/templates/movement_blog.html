@@ -30,7 +30,7 @@ window.admin_id = "{{ movement.admin_id }}";
     {% else %}
       <div class="rk-thought rk-thought-lead">
         <h1>No blog posts found</h1>
-        <p class="lead">This movement is just getting thoughtted. You can become a member now to help them out or follow this movement, then wait and see.</p>
+        <p class="lead">This movement is just getting started. You can become a member now to help them out or follow this movement, then wait and see.</p>
       </div>
     {% endfor %}
 
@@ -58,27 +58,29 @@ window.admin_id = "{{ movement.admin_id }}";
           <div class="col-sm-4">
             <div class="form-group">
 
-            {% if movement.current_role() not in ["visitor", "anonymous"] %}
+            {% if movement.active_member() %}
               <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
                 <i class="fa fa-fw fa-users"></i> Leave Movement
               </button>
-            {% else %}
+            {% elif not movement.private %}
             <div class="btn-group">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
-                <li><a href="#" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">Join as <em>{{ current_user.active_persona.username }}</em></a></li>
-                <li><a href="{{ url_for('web.create_persona', for_movement=movement.id) }}">Join with a new username</a></li>
+                <li><a href="#" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id, invitation_code=code) }}">Join as <em>{{ current_user.active_persona.username }}</em></a></li>
+                <li><a href="{{ url_for('web.create_persona', for_movement=movement.id, invitation_code=code) }}">Join with a new username</a></li>
               </ul>
             </div>
             {% endif %}
             </div>
           </div>
 
+          {% if not movement.private %}
           <div class="col-sm-8">
             <p>Only members get full access to the group mind. Come join us!</p>
           </div>
+          {% endif %}
         </div>
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->

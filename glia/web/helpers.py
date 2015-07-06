@@ -4,10 +4,12 @@ import pytz
 import sendgrid
 
 from flask import render_template
+from flask.ext.login import current_user
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
+from sqlalchemy.exc import SQLAlchemyError
 
-from nucleus.nucleus.models import Persona
+from nucleus.nucleus.models import Persona, Movement, MovementMemberAssociation
 
 from .. import socketio
 
@@ -18,6 +20,24 @@ logger = logging.getLogger('web')
 class UnauthorizedError(Exception):
     """Current user is not authorized for this action"""
     pass
+
+
+def authorize_filter(obj, action, actor=None):
+    """Return True if action on obj is authorized for active Persona or
+    given Persona
+
+    Args:
+        obj (nucleus.models.Serializable): Implements the authorize method
+        action (String): One of the actions defined in Nucleus
+        actor (Identity): Optional identity to check for
+
+    Returns:
+        Boolean: True if action is currently authorized
+    """
+    if actor is None:
+        actor = current_user.active_persona
+
+    return obj.authorize(action, actor.id)
 
 
 def localtime(value, tzval="UTC"):
@@ -82,6 +102,54 @@ def send_external_notifications(notification):
             logger.error("Client error sending notification email: {}".format(e))
         except SendGridServerError, e:
             logger.error("Server error sending notification email: {}".format(e))
+
+
+def send_movement_invitation(recipient, movement, message=None):
+    """Send an email invitation to a user, asking them to join a movement
+
+    Args:
+        recipient (String): Recipient email address
+        movement (Movement): Movement to which the recipient will be invited
+        message (String): Optional personal message from the inviter
+    """
+    from nucleus.nucleus.database import db
+
+    mma = MovementMemberAssociation(
+        movement=movement,
+        role="invited",
+        active=False,
+        invitation_code=uuid4().hex)
+
+    db.session.add(mma)
+
+    if not isinstance(movement, Movement):
+        raise ValueError("{} is not a valid movement instance".format(
+            movement))
+
+    message = sendgrid.Mail()
+    message.add_to(recipient)
+    message.set_subject("You were invited to join the {} movement".format(
+        movement.username))
+    message.set_html(render_template("email/movement_invitation.html",
+        movement=movement,
+        sender=current_user.active_persona,
+        message=message,
+        invitation_code=mma.invitation_code))
+    message.set_from('RKTIK {} movement'.format(movement.username))
+
+    try:
+        db.session.commit()
+        status, msg = send_email(message)
+    except (SendGridClientError, SendGridServerError), e:
+        logger.error("Error sending email invitation to '{}' code '{}': {}".format(
+            recipient, mma.invitation_code, e))
+    except SQLAlchemyError, e:
+        logger.error("Error sending email invitation to '{}' code '{}': {}".format(
+            recipient, mma.invitation_code, e))
+    else:
+        logger.info("Sent invitation email for {} to '{}'".format(
+            movement, recipient))
+        return mma
 
 
 def send_validation_email(user, db):

@@ -16,6 +16,7 @@ from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.forms import CreatePersonaForm
+from nucleus.nucleus import UnauthorizedError
 from nucleus.nucleus.database import db
 from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, \
     Identity, FollowerNotification
@@ -304,10 +305,15 @@ def async_toggle_movement_membership(movement_id):
     if not current_user or not current_user.active_persona:
         raise InvalidUsage(message="Activate a Persona to do this.")
 
+    code = request.args.get("invitation_code", default=None)
+
     try:
-        mma = current_user.active_persona.toggle_movement_membership(movement=movement)
+        mma = current_user.active_persona.toggle_movement_membership(
+            movement=movement, invitation_code=code)
     except NotImplementedError, e:
         raise InvalidUsage(str(e))
+    except UnauthorizedError, e:
+        raise InvalidUsage("You are not allowed to join this movement without an invitation.")
 
     if mma:
         rv = {

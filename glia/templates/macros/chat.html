@@ -5,28 +5,39 @@
 
 {% macro chatline(thought) %}
 {% if thought.parent %}
-<li class="list-group-item rk-chatline-meta">
-<em>Comment on</em> {{ thought_macros.short(thought.parent) }}
-</li>
+    <li class="list-group-item rk-chatline-meta">
+      {% if thought.parent|authorize("read") %}
+        <em>Comment on</em> {{ thought_macros.short(thought.parent) }}
+      {% else %}
+        <em>Comment on private thought</em>
+      {% endif %}
+    </li>
+
 {% endif %}
 <li class="list-group-item">
-  {{ thought_macros.upvote(thought) }}
-  <span class="rk-chatline">
-    {{ id_macros.identity(thought.author) }}
-    <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.created|localtime|naturaltime}} </a>
-    {{ thought.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(thought) }}
-  </span>
-  <div>
-  {% for tagp in thought.tags %}<a href="{{ url_for('web.tag', name=tagp.percept.tag.name) }}">#{{ tagp.percept.title }}</a>&nbsp;{% endfor %}
-</li>
+  {% if thought|authorize("read") %}
+      {{ thought_macros.upvote(thought) }}
+      <span class="rk-chatline">
+        {{ id_macros.identity(thought.author) }}
+        <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.created|localtime|naturaltime}} </a>
+        {{ thought.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(thought) }}
+      </span>
+      <div>
+      {% for tagp in thought.tags %}<a href="{{ url_for('web.tag', name=tagp.percept.tag.name) }}">#{{ tagp.percept.title }}</a>&nbsp;{% endfor %}
+    </li>
 
-{% for category, percepts in thought.attachments.items() %}
-{% for percept_assoc in percepts %}
-<li class="list-group-item rk-chat-percept">
-  {{ percept_macros.percept(percept_assoc.percept, size='small') }}
-</li>
-{% endfor %}
-{% endfor %}
+    {% for category, percepts in thought.attachments.items() %}
+    {% for percept_assoc in percepts %}
+    <li class="list-group-item rk-chat-percept">
+      {{ percept_macros.percept(percept_assoc.percept, size='small') }}
+    </li>
+    {% endfor %}
+    {% endfor %}
+  {% else %}
+    <span class="rk-chatline">
+      Private thought hidden
+    </span>
+  {% endif %}
 
 {% endmacro %}
 

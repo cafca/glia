@@ -4,7 +4,7 @@ from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
 from flask.ext.login import current_user
 from flask_wtf import Form
-from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators
+from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators, BooleanField
 
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.models import User, Thought, Persona
@@ -65,6 +65,7 @@ class CreateMovementForm(Form):
     name = TextField('Choose a name for your Movement *', [validators.Required(), validators.Length(min=3, max=20)])
     mission = TextField('Describe your mission', [validators.Length(max=140)])
     color = SignupForm.color
+    private = BooleanField("Everything except for the blog is hidden")
 
     def validate(self):
         print self.color.data
@@ -123,6 +124,25 @@ class CreateReplyForm(CreateThoughtForm):
 
 class DeleteThoughtForm(Form):
     thought_id = HiddenField()
+
+
+class InviteMembersForm(Form):
+    invites = TextAreaField(validators=[])
+    message = TextField(validators=[])
+
+    def validate(self):
+        rv = Form.validate(self)
+        if rv:
+            self.handles = set()
+
+            handles = self.invites.data.split("\n")
+            for handle in handles:
+                if "@" in handle and "." in handle:
+                    self.handles.add(handle)
+                elif len(handle) > 0:
+                    self.invites.errors.append("{} does not seem to be a valid email address.".format(handle))
+                    rv = False
+            return rv
 
 
 class LoginForm(RedirectForm):

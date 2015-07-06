@@ -1,15 +1,15 @@
 {% macro persona(p, flair=None, nolink=False) %}
 {% if nolink == False %}<a href="{{ url_for('web.persona', id=p.id) }}">{% endif %}
   <i class="fa fa-circle" style="color: #{{p.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ p.username }}</span>
-  {% if flair %}<span class="rk-flair">{{ flair }}</span>{% endif %}
 {% if nolink == False %}</a>{% endif %}
+{% if flair %}<span class="label label-default">{{ flair }}</span>{% endif %}
 {% endmacro %}
 
 {% macro movement(m, flair=None, nolink=False) %}
 {% if nolink == False %}<a href="{{ url_for('web.movement', id=m.id) }}">{% endif %}
   <i class="fa fa-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ m.username }}</span>
-  {% if flair %}<span class="rk-flair">{{ flair }}</span>{% endif %}
 {% if nolink == False %}</a>{% endif %}
+{% if flair %}<span class="label label-default">{{ flair }}</span>{% endif %}
 {% endmacro %}
 
 {% macro identity(i, flair=None, nolink=False) %}

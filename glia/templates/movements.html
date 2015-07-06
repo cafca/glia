@@ -43,6 +43,7 @@ $(".rk-movement-form").submit(function() {
 
         {{ form.name(class_="form-control") }}
       </div>
+
       <div class="form-group {% if form.mission.errors %}has-error{% endif %}">
         {% if form.mission.errors %}
           <label for="mission">{% for error in form.mission.errors %}{{ error }} {% endfor %}</label>
@@ -61,6 +62,18 @@ $(".rk-movement-form").submit(function() {
         {% endif %}
         <p><input type='text' name="color" class="form-control" id="rk-colorpicker" /></p>
       </div>
+
+      <div class="checkbox {% if form.private.errors %}has-error{% endif %}">
+        {% if form.private.errors %}
+          <label for="private">
+          {{ form.private() }} {% for error in form.private.errors %}{{ error }} {% endfor %}
+        {% else %}
+          <label for="private">
+          {{ form.private() }} <strong>Private</strong> Non-members can't read your mindspace
+        {% endif %}
+        </label>
+      </div>
+
       <button type="submit" class="btn btn-primary rk-singleclick">Go to new movement</button>
     </form>
   </div>

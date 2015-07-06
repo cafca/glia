@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <p>Hello,</p>
+
+    <p>&nbsp;</p>
+
+    <p>{{sender.username}} invites you to join their movement <em>{{movement.username}}</em> in the RKTIK network, a virtual mind for groups.</p>
+
+    {% if message %}
+    <p>{{sender.username}}: <em>{{ message }}</em></p>
+    {% endif %}
+
+    <p><strong><a href="{{ url_for('web.signup', invitation=invitation_code, _external=True) }}">Click here and sign up for the {{movement.username}} movement</a></strong></p>
+
+    <p>Have a nice day,<br />
+    - The RKTIK Team</p>
+  </body>
+</html>

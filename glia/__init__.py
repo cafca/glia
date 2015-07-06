@@ -88,7 +88,7 @@ def create_app(log_info=True):
 
     # Setup time filter
     # - Import here to avoid circular import
-    from web.helpers import localtime
+    from web.helpers import localtime, authorize_filter
     app.jinja_env.filters['naturaltime'] = naturaltime
     app.jinja_env.filters['naturaldelta'] = naturaldelta
     app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"]) if value is not None else None
@@ -97,6 +97,7 @@ def create_app(log_info=True):
     app.jinja_env.filters['mentions'] = inject_mentions
     app.jinja_env.filters['gallery_col_width'] = gallery_col_width
     app.jinja_env.filters['sort_hot'] = sort_hot
+    app.jinja_env.filters['authorize'] = authorize_filter
     app.jinja_env.add_extension('jinja2.ext.do')
 
     # Setup debug toolbar
