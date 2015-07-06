@@ -45,7 +45,7 @@ $(".rk-signup-form").submit(function() {
     {% if form.username.errors %}
       <label for="username">{% for error in form.username.errors %}{{ error }} {% endfor %}</label>
     {% else %}
-      <label for="username">Your new username</label>
+      <label for="username">What would you like your name to be?</label>
     {% endif %}
     <input type="text" class="form-control" id="username" name="username" placeholder="Enter username">
   </div>

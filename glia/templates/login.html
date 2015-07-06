@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1><a href="{{ url_for('web.index') }}">Home</a> > Login</h1>
-
 
 <div class="row">
-<div class="col-xs-4">
+<div class="col-sm-4 col-sm-push-2">
+
+<h1>Login</h1>
+</div>
+</div>
+
+<div class="row">
+<div class="col-sm-4 col-sm-push-2">
 
 <p class="lead">Go ahead. I am waiting for you.</p>
 
@@ -31,9 +36,8 @@
   <button type="submit" class="btn btn-default">Login now</button>
 </form>
 </div>
-<div class="col-xs-4">
-
-<p class="lead">No account? <a href="{{ url_for('web.signup') }}">Get one</a>, now!</p>
+<div class="col-sm-4 col-sm-push-2">
+<p class="lead"><a href="{{ url_for('web.signup') }}">No account? Click here get one, now!</a></p>
 
 </div>
 </div>
