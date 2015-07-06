@@ -58,7 +58,7 @@ window.admin_id = "{{ movement.admin_id }}";
           <div class="col-sm-4">
             <div class="form-group">
 
-            {% if movement.current_role() not in ["visitor", "anonymous"] %}
+            {% if movement.active_member() %}
               <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
                 <i class="fa fa-fw fa-users"></i> Leave Movement
               </button>

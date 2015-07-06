@@ -29,13 +29,13 @@ $(document).ready(function() {
 
       <div class="panel-body rk-movement-info">
         <div class="form-group">
-        {% if movement.current_role() not in ["visitor", "anonymous"] %}
+        {% if movement.active_member() %}
           <a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=movement.mindspace.id) }}">Create Thought</a>
         {% endif %}
 
         {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
 
-        {% if movement.current_role() not in ["visitor", "anonymous"] %}
+        {% if movement.active_member() %}
           <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
             <i class="fa fa-fw fa-users"></i> Leave Movement
           </button>
@@ -65,7 +65,7 @@ $(document).ready(function() {
         members of this movement </p>
       </div>
 
-      {% if movement.current_role() not in ["visitor", "anonymous"] %}
+      {% if movement.active_member() %}
         {{ chat_macros.chat(movement.mindspace) }}
       {% endif %}
     </div> <!-- ./ chat panel -->
