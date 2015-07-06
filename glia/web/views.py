@@ -359,6 +359,7 @@ def index():
 
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
+@login_required
 @http_auth.login_required
 def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
@@ -584,7 +585,6 @@ def persona(id):
 @app.route('/anonymous/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
-@login_required
 @http_auth.login_required
 def persona_blog(id, page=1):
     """Display a persona's blog"""
