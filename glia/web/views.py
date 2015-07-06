@@ -178,6 +178,7 @@ def create_persona(for_movement=None):
 
 
 @app.route('/create', methods=["GET", "POST"])
+@login_required
 @http_auth.login_required
 def create_thought():
     """Post a new Thought"""
@@ -259,6 +260,7 @@ def create_thought():
 
 
 @app.route('/thought/<id>/delete', methods=["GET", "POST"])
+@login_required
 @http_auth.login_required
 def delete_thought(id=None):
     thought = Thought.query.get_or_404(id)
@@ -291,7 +293,6 @@ def delete_thought(id=None):
 
 
 @app.route('/', methods=["GET"])
-@login_required
 @http_auth.login_required
 def index():
     """Front page"""
@@ -307,7 +308,20 @@ def index():
             .first()
         return s.created if s is not None else datetime.datetime.fromtimestamp(0)
 
-    blogs = current_user.active_persona.blogs_followed
+    more_movements = Movement.query \
+        .join(MovementMemberAssociation) \
+        .order_by(func.count(MovementMemberAssociation.persona_id)) \
+        .group_by(MovementMemberAssociation.persona_id) \
+        .group_by(Movement)
+
+    if current_user.is_anonymous():
+        blogs = more_movements
+    else:
+        blogs = current_user.active_persona.blogs_followed
+        more_movements \
+            .filter(MovementMemberAssociation.persona_id !=
+                current_user.active_persona.id)
+
     blog_data = []
     for ident in sorted(blogs, key=blog_sort, reverse=True):
         g_thought_selection = thought_source(ident).index.filter(Thought.state >= 0).all()
@@ -330,14 +344,6 @@ def index():
             'top_posts': g_top_posts,
             'recent_blog_post': recent_blog_post
         })
-
-    more_movements = Movement.query \
-        .join(MovementMemberAssociation) \
-        .filter(MovementMemberAssociation.persona_id !=
-            current_user.active_persona.id) \
-        .order_by(func.count(MovementMemberAssociation.persona_id)) \
-        .group_by(MovementMemberAssociation.persona_id) \
-        .group_by(Movement)
 
     # Collect main page content
     top_post_selection = Thought.query.filter(Thought.state >= 0)
@@ -543,8 +549,12 @@ def notifications(page=1):
 
 
 @app.route('/persona/<id>/')
+@app.route('/anonymous', defaults={'id': None})
 @http_auth.login_required
-def persona(id=None):
+def persona(id):
+    if id is None:
+        return redirect(url_for('web.signup'))
+
     persona = Persona.query.get_or_404(id)
 
     if persona == current_user.active_persona:
@@ -574,12 +584,16 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
+@app.route('/anonymous/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
 @login_required
 @http_auth.login_required
 def persona_blog(id, page=1):
     """Display a persona's blog"""
+    if id is None:
+        return redirect(url_for('web.signup'))
+
     p = Persona.query.get_or_404(id)
 
     thought_selection = p.blog.index \

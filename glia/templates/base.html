@@ -90,7 +90,11 @@
               <a href="{{ url_for('web.persona_blog', id=active_persona.id) }}">Your Blog</a>
             </li>
             <li><a href="{{ url_for('.debug') }}"><i class="fa fa-cogs fa-2xd"></i> <span class="caption">Debug</span></a></li>
+            {% if current_user.is_anonymous() %}
+            <li><a  href="{{ url_for('web.login') }}">Login &amp; Signup  </a></li>
+            {% else %}
             <li><a href="{{ url_for('.logout') }}">Logout</a></li>
+            {% endif %}
           </ul>
 
           <!-- Right-aligned search form -->
@@ -121,6 +125,14 @@
     <div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
+        {% if current_user.is_anonymous() %}
+          <div class="modal-header">
+            <h4>Signup required</h4>
+          </div>
+          <div class="modal-body">
+          <p class="lead">You need to <a style="text-decoration: underline;" href="{{ url_for('web.signup') }}">sign up</a> to do this.</p>
+          </div>
+        {% else %}
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title"><i class="fa fa-retweet"></i> Repost as <span id="rk-repost-username"></span></h4>
@@ -149,6 +161,7 @@
               </div>
             </div>
           </div>
+        {% endif %}
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
@@ -174,6 +187,7 @@
     <script type="text/javascript" charset="utf-8">{% block script %}
     window.user_id = "{{ current_user.active_persona.id }}";
     window.user_name = "{{  current_user.active_persona.username }}";
-    {% endblock %}</script>
+    {% endblock %}
+    window.signup_url = "{{ url_for('web.signup') }}";</script>
   </body>
 </html>
