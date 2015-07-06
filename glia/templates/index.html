@@ -13,7 +13,7 @@
 
       <ul class="list-group rk-toc-movements">
         {% for thought in top_posts %}
-        <li class="list-group-item"><a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text }}</li>
+        <li class="list-group-item"><a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text }}</a></li>
         {% endfor %}
       </ul> <!-- ./ movement list -->
     {% endif %}
@@ -40,8 +40,7 @@
     {% for blog in blog_data %}
       <div class="rk-frontpage-item">
         <a href="{{ blog.ident.get_absolute_url() }}"><div class="rk-frontpage-ident">
-          <h4>{{ blog.ident.username }}</h4>
-          <p><em>{{ blog.ident.description }}</em></p>
+          <h4>{{ blog.ident.username }} <span class="small">{{ blog.ident.description }}</span></h4>
         </div></a>
 
         {% if blog.recent_blog_post %}
