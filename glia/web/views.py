@@ -113,6 +113,7 @@ def create_persona(for_movement=None):
 
     movement = None
     if for_movement:
+        code = request.args.get("invitation_code", default=None)
         movement = Movement.query.get_or_404(for_movement)
 
     if form.validate_on_submit():
@@ -155,7 +156,7 @@ def create_persona(for_movement=None):
         db.session.add(notification)
 
         if movement:
-            persona.toggle_movement_membership(movement=movement)
+            persona.toggle_movement_membership(movement=movement, code=code)
 
         try:
             db.session.commit()
@@ -418,7 +419,8 @@ def movement(id):
     if movement.current_role() in ["member", "admin"]:
         rv = redirect(url_for("web.movement_mindspace", id=id))
     else:
-        rv = redirect(url_for("web.movement_blog", id=id))
+        code = request.args.get('invitation_code', default=None)
+        rv = redirect(url_for("web.movement_blog", id=id, invitation_code=code))
     return rv
 
 
@@ -436,7 +438,9 @@ def movement_blog(id, page=1):
         .order_by(Thought.created.desc()) \
         .paginate(page, 5)
 
-    return render_template('movement_blog.html', movement=movement, thoughts=thought_selection)
+    code = request.args.get("invitation_code", default=None)
+    return render_template('movement_blog.html', movement=movement,
+        thoughts=thought_selection, code=code)
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
@@ -665,7 +669,7 @@ def signup():
                 if mma.active:
                     flash("This activation code has been used before. You can try joining the movement by clicking the join button below.")
                 else:
-                    flash("You were invited to join this movement. Click the Join movement button below to do so.")
+                    flash("You were invited to join this movement. Click the \"Join movement\" button on the bottom of this page to do so.")
                 return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=mma.invitation_code))
             else:
                 return redirect(url_for("web.index"))
