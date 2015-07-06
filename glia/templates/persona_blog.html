@@ -41,6 +41,11 @@ window.admin_id = "{{ persona.id }}";
     <div class="panel panel-default">
 
       <div class="panel-body">
+        {% if current_user.is_anonymous() %}
+          <p class="lead">Get an RKTIK account to follow this blog and many others.
+          <a href="{{ url_for('web.signup', next=request.path) }}" class="btn btn-primary btn-lg pull-right">Sign up now</a></p>
+
+        {% else %}
         <div class="row">
           <div class="col-sm-4">
             <div class="form-group">
@@ -52,6 +57,7 @@ window.admin_id = "{{ persona.id }}";
             <h4>Followers receive updates from this persona on their frontpage.</h4>
           </div>
         </div>
+        {% endif %}
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->
 </section>

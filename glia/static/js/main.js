@@ -120,6 +120,14 @@ $(document).ready(function(){
         scroll();
     }
 
+    function logged_in() {
+        if (window.user_id == "None") {
+            location.href = window.signup_url + "?next=" + window.location;
+            return false;
+        }
+        return true;
+    }
+
     function insert_reply(parent_id, rendered_content) {
         var reply_box = $(".rk-thought-"+parent_id).siblings(".rk-replies").first();
         if (reply_box.length == 0) {
@@ -157,6 +165,7 @@ $(document).ready(function(){
     }
 
     function request_upvote(thought_id) {
+        logged_in();
         console.log("Voting Thought "+thought_id);
         socket.emit('vote_request', {'thought_id': thought_id});
     }
@@ -198,7 +207,12 @@ $(document).ready(function(){
         // MISC UI
         //
 
-        $(".upvote").click(function () {request_upvote(this.dataset.id); return false;});
+        $(".upvote").click(function () {
+            if (logged_in()) {
+                request_upvote(this.dataset.id);
+                return false;
+            }
+        });
 
         $(".rk-singleclick").click(function() {$(this).button("loading");});
 
@@ -228,6 +242,8 @@ $(document).ready(function(){
         //
 
         $('.rk-create').submit(function(event) {
+            logged_in()
+
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
             var $parent = $(this).find('.rk-create-parent').val();
@@ -276,6 +292,7 @@ $(document).ready(function(){
         //
 
         $(".rk-create-display-toggle").click(function() {
+            logged_in();
             show_reply_box($(this).data("id"));
             return false;
         });
@@ -296,6 +313,7 @@ $(document).ready(function(){
         //
 
         $("#rk-follower").click(function() {
+            logged_in();
             $(this).button('loading');
             $.post($(this).data("href"))
                 .done(function (data) {
@@ -308,6 +326,7 @@ $(document).ready(function(){
         });
 
         $("#rk-movement-member").click(function() {
+            logged_in();
             $(this).button('loading');
             $.post($("#rk-movement-member").data("href"))
                 .done(function (data) {

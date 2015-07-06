@@ -178,6 +178,7 @@ def create_persona(for_movement=None):
 
 
 @app.route('/create', methods=["GET", "POST"])
+@login_required
 @http_auth.login_required
 def create_thought():
     """Post a new Thought"""
@@ -259,6 +260,7 @@ def create_thought():
 
 
 @app.route('/thought/<id>/delete', methods=["GET", "POST"])
+@login_required
 @http_auth.login_required
 def delete_thought(id=None):
     thought = Thought.query.get_or_404(id)
@@ -291,7 +293,6 @@ def delete_thought(id=None):
 
 
 @app.route('/', methods=["GET"])
-@login_required
 @http_auth.login_required
 def index():
     """Front page"""
@@ -307,7 +308,20 @@ def index():
             .first()
         return s.created if s is not None else datetime.datetime.fromtimestamp(0)
 
-    blogs = current_user.active_persona.blogs_followed
+    more_movements = Movement.query \
+        .join(MovementMemberAssociation) \
+        .order_by(func.count(MovementMemberAssociation.persona_id)) \
+        .group_by(MovementMemberAssociation.persona_id) \
+        .group_by(Movement)
+
+    if current_user.is_anonymous():
+        blogs = more_movements
+    else:
+        blogs = current_user.active_persona.blogs_followed
+        more_movements \
+            .filter(MovementMemberAssociation.persona_id !=
+                current_user.active_persona.id)
+
     blog_data = []
     for ident in sorted(blogs, key=blog_sort, reverse=True):
         g_thought_selection = thought_source(ident).index.filter(Thought.state >= 0).all()
@@ -331,14 +345,6 @@ def index():
             'recent_blog_post': recent_blog_post
         })
 
-    more_movements = Movement.query \
-        .join(MovementMemberAssociation) \
-        .filter(MovementMemberAssociation.persona_id !=
-            current_user.active_persona.id) \
-        .order_by(func.count(MovementMemberAssociation.persona_id)) \
-        .group_by(MovementMemberAssociation.persona_id) \
-        .group_by(Movement)
-
     # Collect main page content
     top_post_selection = Thought.query.filter(Thought.state >= 0)
     top_post_selection = sorted(top_post_selection, key=Thought.hot, reverse=True)
@@ -353,6 +359,7 @@ def index():
 
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
+@login_required
 @http_auth.login_required
 def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
@@ -415,7 +422,6 @@ def logout():
 
 
 @app.route('/movement/<id>/')
-@login_required
 @http_auth.login_required
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
@@ -430,7 +436,6 @@ def movement(id):
 
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
-@login_required
 @http_auth.login_required
 def movement_blog(id, page=1):
     """Display a movement's profile"""
@@ -448,7 +453,6 @@ def movement_blog(id, page=1):
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
-@login_required
 @http_auth.login_required
 def movement_mindspace(id):
     """Display a movement's profile"""
@@ -544,10 +548,12 @@ def notifications(page=1):
 
 @app.route('/persona/<id>/')
 @http_auth.login_required
-def persona(id=None):
+def persona(id):
     persona = Persona.query.get_or_404(id)
 
-    if persona == current_user.active_persona:
+    if current_user.is_anonymous():
+        chat = None
+    elif persona == current_user.active_persona:
         chat = current_user.active_persona.mindspace
     else:
         chat = Dialogue.get_chat(persona, current_user.active_persona)
@@ -574,12 +580,15 @@ def persona(id=None):
     return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
 
 
+@app.route('/anonymous/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
-@login_required
 @http_auth.login_required
 def persona_blog(id, page=1):
     """Display a persona's blog"""
+    if id is None:
+        return redirect(url_for('web.signup'))
+
     p = Persona.query.get_or_404(id)
 
     thought_selection = p.blog.index \
@@ -670,6 +679,8 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
+        if request.args.get('next', default=None):
+            rv = request.args.get('next')
         return redirect(rv)
 
     if request.method == "GET":
@@ -683,10 +694,14 @@ def signup():
             else:
                 return redirect(url_for("web.index"))
 
+    kwargs = dict()
     if mma:
-        form_url = url_for('web.signup', invitation_code=mma.invitation_code)
-    else:
-        form_url = url_for('web.signup')
+        kwargs["invitation_code"] = mma.invitation_code
+
+    if request.args.get('next', default=None):
+        kwargs['next'] = request.args.get('next')
+
+    form_url = url_for('web.signup', **kwargs)
 
     return render_template('signup.html',
         form=form, form_url=form_url, allowed_colors=ALLOWED_COLORS.keys(),

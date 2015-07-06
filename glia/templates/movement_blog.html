@@ -42,6 +42,11 @@ window.admin_id = "{{ movement.admin_id }}";
     <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
 
       <div class="panel-body">
+        {% if current_user.is_anonymous() %}
+          <p class="lead">Get an RKTIK account to follow this movement and many others.
+          <a href="{{ url_for('web.signup', next=request.path) }}" class="btn btn-primary btn-lg pull-right">Sign up now</a></p>
+
+        {% else %}
         <div class="row">
           <div class="col-sm-4">
             <div class="form-group">
@@ -82,6 +87,7 @@ window.admin_id = "{{ movement.admin_id }}";
           </div>
           {% endif %}
         </div>
+      {% endif %}
     </div> <!-- ./ panel -->
   </div> <!-- ./ chat column -->
 </section>

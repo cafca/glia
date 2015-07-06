@@ -41,6 +41,7 @@ class AnonymousPersona(object):
     """Used by Flask-Login"""
 
     class active_persona():
+        id = None
         username = "Anonymous"
 
     def get_id(self):

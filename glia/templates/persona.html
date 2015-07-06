@@ -33,6 +33,14 @@ $(document).ready(function() {
 {% block content %}
 <section class="row">
   <div class="col-sm-4 col-sm-push-8">
+    {% if current_user.is_anonymous() %}
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <p class="lead">Get on board and chat with {{ persona.username }}</p>
+        <a class="btn btn-lg btn-primary">Sign up now</a>
+      </div>
+    </div>
+    {% else %}
     <div class="rk-chat panel panel-default">
       <div class="panel-heading">
         {% if current_user.active_persona == persona %}
@@ -45,6 +53,7 @@ $(document).ready(function() {
 
       {{ chat_macros.chat(chat) }}
     </div> <!-- ./ panel -->
+  {% endif %}
   </div> <!-- ./ chat column -->
 
   <div class="rk-persona col-sm-8 col-sm-pull-4">
