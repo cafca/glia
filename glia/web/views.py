@@ -421,7 +421,6 @@ def logout():
 
 
 @app.route('/movement/<id>/')
-@login_required
 @http_auth.login_required
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
@@ -436,7 +435,6 @@ def movement(id):
 
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
-@login_required
 @http_auth.login_required
 def movement_blog(id, page=1):
     """Display a movement's profile"""
@@ -454,7 +452,6 @@ def movement_blog(id, page=1):
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
-@login_required
 @http_auth.login_required
 def movement_mindspace(id):
     """Display a movement's profile"""
@@ -684,6 +681,8 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
+        if request.args.get('next', default=None):
+            rv = request.args.get('next')
         return redirect(rv)
 
     if request.method == "GET":
@@ -697,10 +696,14 @@ def signup():
             else:
                 return redirect(url_for("web.index"))
 
+    kwargs = dict()
     if mma:
-        form_url = url_for('web.signup', invitation_code=mma.invitation_code)
-    else:
-        form_url = url_for('web.signup')
+        kwargs["invitation_code"] = mma.invitation_code
+
+    if request.args.get('next', default=None):
+        kwargs['next'] = request.args.get('next')
+
+    form_url = url_for('web.signup', **kwargs)
 
     return render_template('signup.html',
         form=form, form_url=form_url, allowed_colors=ALLOWED_COLORS.keys(),

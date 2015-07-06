@@ -120,10 +120,12 @@ $(document).ready(function(){
         scroll();
     }
 
-    function login_required() {
-        if window.user_id === undfined {
-            location.href = window.signup_url;
+    function logged_in() {
+        if (window.user_id == "None") {
+            location.href = window.signup_url + "?next=" + window.location;
+            return false;
         }
+        return true;
     }
 
     function insert_reply(parent_id, rendered_content) {
@@ -163,7 +165,7 @@ $(document).ready(function(){
     }
 
     function request_upvote(thought_id) {
-        login_required();
+        logged_in();
         console.log("Voting Thought "+thought_id);
         socket.emit('vote_request', {'thought_id': thought_id});
     }
@@ -205,7 +207,12 @@ $(document).ready(function(){
         // MISC UI
         //
 
-        $(".upvote").click(function () {login_required(); request_upvote(this.dataset.id); return false;});
+        $(".upvote").click(function () {
+            if (logged_in()) {
+                request_upvote(this.dataset.id);
+                return false;
+            }
+        });
 
         $(".rk-singleclick").click(function() {$(this).button("loading");});
 
@@ -235,7 +242,7 @@ $(document).ready(function(){
         //
 
         $('.rk-create').submit(function(event) {
-            login_required()
+            logged_in()
 
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
@@ -285,7 +292,7 @@ $(document).ready(function(){
         //
 
         $(".rk-create-display-toggle").click(function() {
-            login_required();
+            logged_in();
             show_reply_box($(this).data("id"));
             return false;
         });
@@ -306,7 +313,7 @@ $(document).ready(function(){
         //
 
         $("#rk-follower").click(function() {
-            login_required();
+            logged_in();
             $(this).button('loading');
             $.post($(this).data("href"))
                 .done(function (data) {
@@ -319,7 +326,7 @@ $(document).ready(function(){
         });
 
         $("#rk-movement-member").click(function() {
-            login_required();
+            logged_in();
             $(this).button('loading');
             $.post($("#rk-movement-member").data("href"))
                 .done(function (data) {
