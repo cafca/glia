@@ -94,7 +94,7 @@ $(document).ready(function(){
 
         if (author_id == window.user_id) {
             $(".upvote-"+thought_id).toggleClass("btn-default");
-            $(".upvote-"+thought_id).toggleClass("btn-inverse");
+            $(".upvote-"+thought_id).toggleClass("btn-primary");
         }
 
         $(".upvote-count-"+thought_id).text(vote_count);

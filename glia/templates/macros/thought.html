@@ -59,7 +59,7 @@
 {% endmacro %}
 
 {% macro upvote(thought) %}
-<button class="upvote btn btn-xs {% if thought.upvoted() %}btn-inverse{% else %}btn-default{% endif %} upvote-{{thought.id}}" data-id="{{thought.id}}" type="button">
+<button class="upvote btn btn-xs {% if thought.upvoted() %}btn-primary{% else %}btn-default{% endif %} upvote-{{thought.id}}" data-id="{{thought.id}}" type="button">
   <span class="upvote-count upvote-count-{{thought.id}}">{{thought.upvote_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
 </button>
 {% endmacro %}

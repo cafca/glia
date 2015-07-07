@@ -64,7 +64,18 @@ $(document).ready(function() {
         </blockquote>
         {% endif %}
 
-        {{ thought_macros.thought_lead(thought, controlled_personas, truncate=False) }}
+        <div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
+          <span class="rk-thought-title">
+            <h2>
+            {{ thought_macros.upvote(thought) }}
+              {{ thought_macros.label_badges(labels) }}
+              {{ thought.text|mentions(thought) }}
+            </h2>
+          </span>
+
+          <!-- Attachments -->
+          {{ percept_macros.render_all(thought) }}
+        </div>
       </div>
     </div> <!-- ./ thought listing -->
 
@@ -94,37 +105,46 @@ $(document).ready(function() {
   </div> <!-- ./ content area -->
 
   <div class="col-sm-3 col-sm-push-1">
-    <h3>Info</h3>
-    <p>Original post by {{ id_macros.identity(thought.author) }} {{thought.created|localtime|naturaltime}}.</p>
-    <p><a href="#" id="rk-thought-context-length"></a></p>
+    <div {% if thought.mindset %}
+        style="background-color: #{{thought.mindset.author.color}};"
+        class="panel rk-colorpanel"
+        {% else %}
+        class="panel-primary rk-colorpanel"
+        {% endif %}
+      >
+      <div class="panel-heading">
+        {% if thought.mindset %}
+        <a href="{{ thought.mindset.get_absolute_url() }}"><h2>{{ thought.mindset.name }}</h2></a>
+        {% endif %}
+      </div>
+      <div class="panel-body" style=>
+        <p>Thought by {{ id_macros.identity(thought.author) }} {{thought.created|localtime|naturaltime}}.</p>
 
-    {% if thought.mindset %}
-    <p>Posted on <a href="{{ thought.mindset.get_absolute_url() }}">{{ thought.mindset.name }}</a></p>
-    {% endif %}
+        <p><a href="#" id="rk-thought-context-length"></a></p>
 
-    {{ thought_macros.repost_button(thought) }}
-
-    <h3>Availability</h3>
-    {% if thought.authorize("delete", active_persona.id) %}
-      {% if thought.state >= 0 %}
-      <p>
-        <a class="btn btn-default btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
-          <i class="fa fa-eye-slash"></i> Remove
-        </a>
-      </p>
-      {% elif thought.state == -2 %}
-      <p>This Thought is currently hidden.</p>
-      <p>
-        <a class="btn btn-success btn-sm" href="{{ url_for('.delete_thought', id=thought.id) }}">
-          <i class="fa fa-eye"></i> Publish again
-        </a>
-      </p>
-      {% endif %}
-    {% elif thought.state >= 0 %}
-    <p><i class="fa fa-eye"></i> This Thought is available</p>
-    {% else %}
-    <p><i class="fa fa-exclamation-circle"></i> This Thought is currently unavailable.</p>
-    {% endif %}
+        {% if thought.state >= 0 %}
+        <p><i class="fa fa-eye"></i> This Thought is available</p>
+        {% else %}
+        <p><i class="fa fa-exclamation-circle"></i> This Thought is currently unavailable.</p>
+        {% endif %}
+      </div>
+      <div class="panel-footer">
+        <div class="form-inline">
+          {{ thought_macros.repost_button(thought) }}
+          {% if thought.authorize("delete", active_persona.id) %}
+            {% if thought.state >= 0 %}
+              <a class="btn btn-default" href="{{ url_for('.delete_thought', id=thought.id) }}">
+                <i class="fa fa-eye-slash"></i> Remove
+              </a>
+            {% elif thought.state == -2 %}
+              <a class="btn btn-success" href="{{ url_for('.delete_thought', id=thought.id) }}">
+                <i class="fa fa-eye"></i> Publish again
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
