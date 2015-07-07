@@ -213,7 +213,7 @@ def text(message):
     if len(message['msg']) == 0:
         errors += "You were about to say something?"
 
-    if message["parent_id"]:
+    if "parent_id" in message:
         parent = Thought.query.get(message["parent_id"])
         if parent is None:
             errors += "Could not find the message before yours. "

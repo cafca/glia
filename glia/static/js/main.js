@@ -14,6 +14,7 @@ $(document).ready(function(){
     PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
 
+    // Connect personal websocket
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/personas')
     psocket = io.connect('http://' + document.domain + ':' + location.port + '/personas');
     psocket.on('connect', function() {
@@ -24,7 +25,7 @@ $(document).ready(function(){
         notification(data.title, data.msg);
     })
 
-
+    // Connect movement websocket
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/movements')
     socket = io.connect('http://' + document.domain + ':' + location.port + '/movements');
     socket.on('connect', function() {
@@ -77,7 +78,6 @@ $(document).ready(function(){
 
     socket.on('message', function(data) {
         append_timeline(data.username, data.msg, data);
-        $("#rk-chat-parent").val(data.thought_id);
     });
 
     socket.on('comment', function(data) {
@@ -250,12 +250,17 @@ $(document).ready(function(){
 
             if ($(this).find($(".rk-create-counter")).hasClass("safe")) {
                 $btn.button('loading');
-                socket.emit('text', {
-                        'msg': $text,
-                        'room_id': window.room_id,
-                        'map_id': window.map_id,
-                        'parent_id': $parent
-                    }, function(data) {
+                data = {
+                    'msg': $text,
+                    'room_id': window.room_id,
+                    'map_id': window.map_id
+                }
+
+                if ($parent != undefined) {
+                    data["parent_id"] = $parent;
+                }
+
+                socket.emit('text', data, function(data) {
                         $btn.button('reset');
                 });
                 clear();
