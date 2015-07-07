@@ -380,5 +380,17 @@ $(document).ready(function(){
             $btn.button('success');
             $btn.prop('disabled', true);
         });
+
+        // INTRO AND WELCOME
+
+        $('#rk-welcome-show-login').click(function() {
+            $('#rk-welcome-actions').slideUp({
+                duration: 'fast',
+                complete: function() {
+                    $('#rk-welcome-login').slideDown('fast');
+                }}
+            );
+
+        });
     });
 });

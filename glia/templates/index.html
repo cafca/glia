@@ -2,6 +2,7 @@
 
 {% import "macros/thought.html" as thought_macros %}
 {% import "macros/identity.html" as id_macros %}
+{% import "macros/helpers.html" as helper_macros %}
 
 {% block content %}
 <div class="row" id="rk-index">
@@ -37,6 +38,9 @@
 
   {% if blog_data|length > 0 %}
     <div class="rk-frontpage col-sm-7 col-sm-pull-2">
+
+    {{ helper_macros.intro(login_form) }}
+
     {% for blog in blog_data %}
       <div class="rk-frontpage-item">
         <a href="{{ blog.ident.get_absolute_url() }}"><div class="rk-frontpage-ident">

@@ -3,6 +3,8 @@ import logging
 from flask import Blueprint
 from flask.ext.login import current_user
 
+from forms import LoginForm
+
 from nucleus.nucleus.models import Mindset, Movement, MovementMemberAssociation as Mma
 
 app = Blueprint('web', __name__)
@@ -22,6 +24,11 @@ def inject_repost_mindsets():
     return dict(
         repost_mindsets=rv
     )
+
+
+@app.context_processor
+def inject_login_form():
+    return {"login_form": LoginForm() if current_user.is_anonymous() else None}
 
 import views
 import events
