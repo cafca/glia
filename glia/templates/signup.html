@@ -47,7 +47,7 @@ $(".rk-signup-form").submit(function() {
     {% else %}
       <label for="username">What would you like to be called here?</label>
     {% endif %}
-    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username">
+    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" value="{{form.username.data|default('', True) }}" \>
   </div>
 
   <div class="form-group {% if form.email.errors %}has-error{% endif %}">
@@ -56,7 +56,7 @@ $(".rk-signup-form").submit(function() {
     {% else %}
       <label for="email">Email address (we don't send too many emails)</label>
     {% endif %}
-    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" value="{{form.email.data|default('', True) }}" \>
   </div>
 
   <div class="form-group {% if form.password.errors %}has-error{% endif %}">
@@ -65,7 +65,7 @@ $(".rk-signup-form").submit(function() {
     {% else %}
       <label for="password">Password</label>
     {% endif %}
-    <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+    <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="{{form.password.data|default('', True) }}" \>
   </div>
 
   <div class="form-group {% if form.color.errors %}has-error{% endif %}">
@@ -74,7 +74,7 @@ $(".rk-signup-form").submit(function() {
     {% else %}
       <label for="color">Which is the best color?</label>
     {% endif %}
-    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" /></p>
+    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" value="{{form.color.data|default('', True) }}" /></p>
   </div>
 
   <p>We care about your privacy, and we never spam. By creating an account, you agree to RKTIK's User Agreement and Privacy Policy.</p>
