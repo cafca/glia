@@ -108,8 +108,20 @@
         </div> <!-- /.navbar-collapse -->
       </div> <!-- ./container-fluid -->
     </nav>
-
-
+    <nav class="navbar navbar2 navbar-static-top navbar-default hidden-xs">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <!-- Movements -->
+          <ul class="nav navbar-nav">
+            {% for m in nav_movements %}
+              <li {% if movement and movement.id == m.id %}class="active"{% endif %}>
+                <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </nav>
 
     {% for message in get_flashed_messages() %}
         <div class='alert alert-success' role="alert"><span>{{message}}</span></div>
