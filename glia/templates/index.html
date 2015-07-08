@@ -59,7 +59,7 @@
           {% if blog.top_posts|length > 0 %}
             {% for thought in blog.top_posts %}
               {% if loop.first %}
-                {{ thought_macros.thought_lead(blog.top_posts[0], controlled_personas) }}
+                {{ thought_macros.thought_lead(thought, controlled_personas) }}
               {% else %}
                 {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True) }}
               {% endif %}

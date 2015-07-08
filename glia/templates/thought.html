@@ -84,7 +84,7 @@ $(document).ready(function() {
           <div class="pull-right rk-create-counter"></div>
           <input class="rk-create-parent" name="parent" type="hidden" value="{{ thought.id }}">
           <div class="form-group">
-            <textarea class="form-control rk-create-text" name="text"></textarea>
+            <textarea class="form-control rk-create-text" name="text" placeholder="{% if current_user.is_anonymous() %}Please log in or signup to write replies.{% endif %}"></textarea>
           </div>
           <div class="rk-create-extend">
             <p>That's a lot of text! Do you want to make a long reply?</p>
@@ -114,6 +114,8 @@ $(document).ready(function() {
       <div class="panel-heading">
         {% if thought.mindset %}
         <a href="{{ thought.mindset.get_absolute_url() }}"><h2>{{ thought.mindset.name }}</h2></a>
+        {% else %}
+        <a href="{{ url_for('web.thought', id=thought.parent.id) }}"><h2>In reply to {{ id_macros.identity(thought.parent.author, nolink=true) }}</h2></a>
         {% endif %}
       </div>
       <div class="panel-body" style=>

@@ -105,6 +105,12 @@
             {{ id_macros.identity(thought.author) }}
         </span>
     </span>
+
+    <span class="rk-assocs">
+      {% for percept_assoc in thought.tags %}
+        {{ percept_macros.percept_icon(percept_assoc.percept)}}
+      {% endfor %}
+    </span>
   </div>
 </div>
 {% else %}{{ not_authorized(thought) }}{% endif %}
@@ -129,12 +135,17 @@
   <div class="rk-line-container">
     <div class="rk-thought-title">
       <p>
-      {{ label_badges(labels) }}
-      <a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text|mentions(thought, nolink=True) }}</a>
+        {{ label_badges(labels) }}
+        <a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text|mentions(thought, nolink=True) }}</a>
       {% if no_percepts %}
-      {% for percept_assoc in thought.percept_assocs %}{{ percept_macros.percept_icon(percept_assoc.percept)}}{% endfor %}
+        <span class="rk-assocs">
+        {% for percept_assoc in thought.percept_assocs %}
+          {{ percept_macros.percept_icon(percept_assoc.percept)}}
+        {% endfor %}
+        </span>
       {% endif %}
       </p>
+
     </div>
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
