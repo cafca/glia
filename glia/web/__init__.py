@@ -11,6 +11,8 @@ from nucleus.nucleus.models import Mindset, Movement, MovementMemberAssociation 
 app = Blueprint('web', __name__)
 app.logger = logging.getLogger('web')
 
+VIEW_CACHE_TIMEOUT = 50
+
 
 @app.context_processor
 def inject_repost_mindsets():

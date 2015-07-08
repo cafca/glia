@@ -12,12 +12,13 @@ from flask.ext.login import login_required, current_user
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from . import app
+from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
 from glia.web.dev_helpers import http_auth
+from glia.web.helpers import make_view_cache_key
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus import UnauthorizedError
-from nucleus.nucleus.database import db
+from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, \
     Identity, FollowerNotification
 
@@ -58,6 +59,10 @@ def handle_invalid_usage(error):
 @app.route('/async/chat/<mindset_id>/before-<index_id>/', methods=["GET"])
 @login_required
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def async_chat(mindset_id, index_id=None):
     from flask import jsonify
     errors = ""

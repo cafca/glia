@@ -54,7 +54,7 @@ def localtime(value, tzval="UTC"):
     return value
 
 
-def make_cache_key(*args, **kwargs):
+def make_view_cache_key(*args, **kwargs):
     """Make a cache key for view function depending on logged in user and path
 
     Returns:
@@ -63,7 +63,6 @@ def make_cache_key(*args, **kwargs):
     persona = current_user.active_persona.id if not current_user.is_anonymous() else "anon"
     url = request.url
     rv = "-".join([persona, url]).encode('utf-8')
-    print "key", rv
     return sha256(rv).hexdigest()
 
 

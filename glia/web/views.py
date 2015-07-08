@@ -19,7 +19,7 @@ from uuid import uuid4
 from sqlalchemy import func, inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from . import app
+from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
@@ -34,8 +34,6 @@ from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, 
 #
 # UTILITIES
 #
-
-VIEW_CACHE_TIMEOUT = 50
 
 
 @app.before_request
