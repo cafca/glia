@@ -299,6 +299,7 @@ $(document).ready(function(){
 
         $(".rk-create-display-toggle").click(function() {
             logged_in();
+            $(this).hide();
             show_reply_box($(this).data("id"));
             return false;
         });
