@@ -10,11 +10,12 @@
     {% if top_posts|length > 0 %}
       <div class="panel-body">
         <h3>Top Thought</h3>
+        <hr />
       </div>
 
       <ul class="list-group rk-toc-movements">
         {% for thought in top_posts %}
-        <li class="list-group-item"><a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text }}</a></li>
+        <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
         {% endfor %}
       </ul> <!-- ./ movement list -->
     {% endif %}
@@ -22,10 +23,11 @@
     {% if more_movements[:]|length() > 0 %}
       <div class="panel-body">
         <h3>Discover Movements</h3>
+        <hr />
       </div>
       <ul class="list-group">
       {% for movement in more_movements %}
-      <li class="list-group-item">{{ id_macros.movement(movement) }} {{ movement.description|default("", True) }}</li>
+      <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item">{{ id_macros.movement(movement, nolink=True) }} {{ movement.description|default("", True) }}</li></a>
       {% endfor %}
       </ul>
     {% endif %}
@@ -39,7 +41,7 @@
   {% if blog_data|length > 0 %}
     <div class="rk-frontpage col-sm-7 col-sm-pull-2">
 
-    {{ helper_macros.intro(login_form) }}
+    {{ helper_macros.intro(global_login_form) }}
 
     {% for blog in blog_data %}
       <div class="rk-frontpage-item">

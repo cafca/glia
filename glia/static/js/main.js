@@ -281,12 +281,24 @@ $(document).ready(function(){
                 thousandSeparator:  ',',
                 onOverCount:        function(count, countable, counter){
                     form = countable.closest(".rk-create");
-                    form.find(".rk-create-submit").prop("disabled", true);
+                    form.find(".rk-create-submit")
+                        .prop("disabled", true)
+                        .toggleClass("btn-primary")
+                        .toggleClass("btn-default");
+                    form.find(".rk-create-longform")
+                        .toggleClass("btn-primary")
+                        .toggleClass("btn-default");
                     form.find(".rk-create-extend").toggle("highlight");
                 },
                 onSafeCount:        function(count, countable, counter){
                     form = countable.closest(".rk-create");
-                    form.find(".rk-create-submit").prop("disabled", false);
+                    form.find(".rk-create-submit")
+                        .prop("disabled", false)
+                        .toggleClass("btn-primary")
+                        .toggleClass("btn-default");
+                    form.find(".rk-create-longform")
+                        .toggleClass("btn-primary")
+                        .toggleClass("btn-default");
                     form.find(".rk-create-extend").toggle("highlight");
                 },
                 onMaxCount:         function(count, countable, counter){}
@@ -299,6 +311,7 @@ $(document).ready(function(){
 
         $(".rk-create-display-toggle").click(function() {
             logged_in();
+            $(this).hide();
             show_reply_box($(this).data("id"));
             return false;
         });

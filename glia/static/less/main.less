@@ -120,6 +120,7 @@ a > .fa:hover {
 .rk-create {
     .rk-create-extend {
         display: none;
+        color: #333333;
     }
 
     .rk-create-counter {
@@ -277,6 +278,31 @@ a > .fa:hover {
 
 .rk-toc {
     padding-bottom: 1em;
+    border: none;
+    background-color: inherit;
+
+    h3 {
+        color: fadeout(rgb(51, 51, 51), 25%);
+    }
+
+    a {
+        color: fadeout(#0b3954, 25%);
+    }
+
+    a.btn {
+        color: white;
+    }
+
+    .list-group > a > .list-group-item {
+        background-color: inherit;
+        border: none;
+        border-left: 1px solid #fcfcfc;
+        margin-left: -1px;
+    }
+
+    .list-group > a > .list-group-item:hover, .list-group > a > .list-group-item:focus {
+        border-left: 1px solid #ddd;
+    }
 }
 
 .rk-toc-movements > ul > li {
@@ -379,6 +405,12 @@ a > .fa:hover {
     }
 }
 
+.rk-thought-reply {
+    .rk-create-text {
+        height: 100px;
+    }
+}
+
 .rk-comments {
     margin: 2em 0;
 
@@ -388,6 +420,11 @@ a > .fa:hover {
 
     .rk-create {
         display: none;
+    }
+
+    .rk-create-text {
+        width: 370px;
+        height: 100px;
     }
 }
 
