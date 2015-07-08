@@ -67,7 +67,7 @@ window.admin_id = "{{ movement.admin_id }}";
               <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
                 <i class="fa fa-fw fa-users"></i> Leave Movement
               </button>
-            {% elif not movement.private %}
+            {% elif (not movement.private or request.args.get('invitation_code', default=None)) %}
             <div class="btn-group">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>

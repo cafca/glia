@@ -32,22 +32,12 @@
 </div>
 {% endmacro %}
 
-{% macro promote_button(thought, movement) %}
-{% if movement.current_role() == "admin" %}
-<span>
-    <button
-      class="btn btn-xs btn-default rk-promote"
-      href="#"
-      {% if movement.has_blogged(thought) %}
-      disabled=disabled
-      {% endif %}
-      data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Promote'
-      data-thought-id="{{ thought.id }}"
-      data-promote-url="{{ url_for('web.async_promote', movement_id=movement.id) }}">
-      Promote
-    </button>
+{% macro promote_indicator(thought, movement) %}
+<span class="caption">
+  <span class="rk-promote {% if movement.has_blogged(thought) %}rk-promote-done{% endif %}">
+    <span style="width: {{ movement.voting_done(thought) * 100 }}%"></span>
+  </span>
 </span>
-{% endif %}
 {% endmacro %}
 
 {% macro repost_button(thought, btn="btn-primary") %}
@@ -68,7 +58,7 @@
 {# --- THOUGHT MACROS --- #}
 
 
-{% macro thought_lead(thought, controlled_personas, truncate=True, promote_to=None, labels=None) %}
+{% macro thought_lead(thought, controlled_personas, truncate=True, promote=None, labels=None) %}
 {% if thought|authorize("read") %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
@@ -88,8 +78,8 @@
 
     {{ comments_button(thought) }}
 
-    {% if promote_to != None %}
-      {{ promote_button(thought, movement=promote_to) }}
+    {% if promote %}
+      {{ promote_indicator(thought, movement=promote) }}
     {% endif %}
 
     <span>
@@ -118,7 +108,7 @@
 
 
 
-{% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote_to=None, labels=None) %}
+{% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote=None, labels=None) %}
 {% if thought|authorize("read") %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
@@ -127,14 +117,14 @@
     {{ upvote(thought) }}
     {{ comments_button(thought) }}
 
-    {% if promote_to != None %}
-      {{ promote_button(thought, movement=promote_to) }}
+    {% if promote %}
+      {{ promote_indicator(thought, movement=promote) }}
     {% endif %}
   </span>
 
   <div class="rk-line-container">
     <div class="rk-thought-title">
-      <p>
+      <h3>
         {{ label_badges(labels) }}
         <a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text|mentions(thought, nolink=True) }}</a>
       {% if no_percepts %}
@@ -144,7 +134,7 @@
         {% endfor %}
         </span>
       {% endif %}
-      </p>
+      </h3>
 
     </div>
 

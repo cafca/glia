@@ -117,9 +117,9 @@ $(document).ready(function() {
 
     {% for thought in thoughts %}
       {% if loop.first %}
-        {{ thought_macros.thought_lead(thought, controlled_personas, promote_to=thought.promote_target) }}
+        {{ thought_macros.thought_lead(thought, controlled_personas, promote=movement) }}
       {% else %}
-        {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True, promote_to=thought.promote_target) }}
+        {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True, promote=movement) }}
       {% endif %}
     {% endfor %}
   </div> <!-- ./ thought listing -->

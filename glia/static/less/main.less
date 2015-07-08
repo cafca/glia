@@ -48,7 +48,28 @@ a > .fa:hover {
 .member .non-member-only { display: none; }
 
 .rk-promote {
-    border-color: #fb4e0b;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    box-sizing: border-box;
+    display: inline-block;
+    font-size: 12px;
+    height: 18px;
+    line-height: 1.5;
+    text-align: center;
+    vertical-align: middle;
+    width: 40px;
+
+    span {
+        background-color: @medium;
+        float: left;
+        height: 100%;
+        width: 50%;
+    }
+
+    &.done span {
+        display: none;
+    }
 }
 
 //
@@ -359,6 +380,10 @@ a > .fa:hover {
     .rk-assocs {
         margin-left: .5em;
     }
+
+    .rk-thought-meta {
+        font-size: 12px;
+    }
 }
 
 .rk-colorpanel {
@@ -375,14 +400,19 @@ a > .fa:hover {
     margin-bottom: 1em;
 
     .rk-line-container {
-        float: left
+        float: left;
+
+        h3 {
+            font-size: 18px;
+            margin: 0 0 10px;
+        }
     }
 
     .rk-thought-meta {
         color: lighten(gray, 10%);
         margin-bottom: 5px;
 
-        .btn {
+        .btn, .rk-promote {
             float: left;
             margin-right: 5px;
         }
