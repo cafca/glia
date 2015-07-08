@@ -37,12 +37,7 @@ def inject_login_form():
 @app.context_processor
 def inject_navbar_movements():
     if current_user.is_anonymous():
-        movements = Movement.query \
-            .join(Mma) \
-            .order_by(func.count(Mma.persona_id)) \
-            .group_by(Mma.persona_id) \
-            .group_by(Movement) \
-            .limit(7)
+        movements = Movement.top_movements(None)
     else:
         movements = Movement.query \
             .join(Mma) \

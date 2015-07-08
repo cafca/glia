@@ -16,7 +16,7 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
     DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
 from uuid import uuid4
-from sqlalchemy import func, inspect
+from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import app, VIEW_CACHE_TIMEOUT
@@ -306,29 +306,14 @@ def index():
     def thought_source(ident):
         return ident.blog if isinstance(ident, Persona) else ident.mindspace
 
-    def blog_sort(ident):
-        s = thought_source(ident).index \
-            .filter(Thought.state >= 0) \
-            .order_by(Thought.created.desc()) \
-            .first()
-        return s.created if s is not None else datetime.datetime.fromtimestamp(0)
-
-    more_movements = Movement.query \
-        .join(MovementMemberAssociation) \
-        .order_by(func.count(MovementMemberAssociation.persona_id)) \
-        .group_by(MovementMemberAssociation.persona_id) \
-        .group_by(Movement)
-
     if current_user.is_anonymous():
-        blogs = more_movements
+        blogs = more_movements = Movement.top_movements(None)
     else:
         blogs = current_user.active_persona.blogs_followed
-        more_movements \
-            .filter(MovementMemberAssociation.persona_id !=
-                current_user.active_persona.id)
+        more_movements = Movement.top_movements(current_user.active_persona.id)
 
     blog_data = []
-    for ident in sorted(blogs, key=blog_sort, reverse=True):
+    for ident in sorted(blogs, key=lambda b: b.attention, reverse=True):
         g_thought_selection = thought_source(ident).index.filter(Thought.state >= 0).all()
         g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
 
@@ -351,13 +336,7 @@ def index():
         })
 
     # Collect main page content
-    top_post_selection = Thought.query.filter(Thought.state >= 0)
-    top_post_selection = sorted(top_post_selection, key=Thought.hot, reverse=True)
-    top_posts = []
-    while len(top_posts) < min([9, len(top_post_selection)]):
-        candidate = top_post_selection.pop(0)
-        if candidate.upvote_count() > 0:
-            top_posts.append(candidate)
+    top_posts = Thought.top_thought()
 
     return render_template('index.html', movementform=movementform,
         blog_data=blog_data, top_posts=top_posts, more_movements=more_movements)
