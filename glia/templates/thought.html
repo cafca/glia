@@ -82,14 +82,15 @@ $(document).ready(function() {
       <div class="col-md-7">
         <form class="rk-create" action="{{ url_for('web.create_thought') }}" method="GET">
           <div class="pull-right rk-create-counter"></div>
-          <div class="rk-create-extend">
-            <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
-          </div>
           <input class="rk-create-parent" name="parent" type="hidden" value="{{ thought.id }}">
           <div class="form-group">
             <textarea class="form-control rk-create-text" name="text"></textarea>
           </div>
+          <div class="rk-create-extend">
+            <p>That's a lot of text! Do you want to make a long reply?</p>
+          </div>
           <button type="submit" class="rk-create-submit btn btn-primary btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+          <button class="btn btn-sm btn-default rk-create-longform">Make a long reply</button>
         </form>
       </div>
     </div> <!-- ./ top-level reply form -->

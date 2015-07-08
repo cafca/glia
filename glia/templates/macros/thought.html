@@ -192,25 +192,27 @@
 
     <div class="rk-thought-meta">
       <small><a href="{{ url_for('web.create_thought', parent=thought.id, mindset=thought.mindset.id) }}" class="rk-create-display-toggle" data-id="{{ thought.id }}">reply</a></small>
+
       <form class="rk-create" action="{{ url_for('web.create_thought') }}" method="GET">
         <input class="rk-create-parent" name="parent" type="hidden" value="{{ thought.id }}">
         <input type="hidden" name="mindset" value="{{ thought.mindset_id }}" />
         <div>
           <span>&nbsp;</span>
           <div class="pull-right rk-create-counter"></div>
-          <div class="rk-create-extend">
-            <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
-          </div>
         </div>
         <div class="form-group">
           <textarea class="form-control rk-create-text" name="text"></textarea>
         </div>
-        <button type="submit" class="rk-create-submit btn btn-sm btn-default" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+        <div class="rk-create-extend">
+          <p>That's a lot of text! Do you want to make a long reply?</p>
+        </div>
+        <button type="submit" class="rk-create-submit btn btn-sm btn-primary" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
           Reply
           {% if thought.mindset and thought.mindset != thought.parent.mindset %}
           in {{ thought.mindset.name }}
           {% endif %}
         </button>
+        <button class="btn btn-sm btn-default rk-create-longform">Make a long reply</button>
       </form>
     </div>
   </div>
