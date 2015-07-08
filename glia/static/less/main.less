@@ -277,6 +277,31 @@ a > .fa:hover {
 
 .rk-toc {
     padding-bottom: 1em;
+    border: none;
+    background-color: inherit;
+
+    h3 {
+        color: fadeout(rgb(51, 51, 51), 25%);
+    }
+
+    a {
+        color: fadeout(#0b3954, 25%);
+    }
+
+    a.btn {
+        color: white;
+    }
+
+    .list-group > a > .list-group-item {
+        background-color: inherit;
+        border: none;
+        border-left: 1px solid #fcfcfc;
+        margin-left: -1px;
+    }
+
+    .list-group > a > .list-group-item:hover, .list-group > a > .list-group-item:focus {
+        border-left: 1px solid #ddd;
+    }
 }
 
 .rk-toc-movements > ul > li {

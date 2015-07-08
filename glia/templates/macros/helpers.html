@@ -27,21 +27,21 @@
 {% endmacro %}
 
 
-{% macro intro(login_form) %}
+{% macro intro(global_login_form) %}
   {% if global_login_form %}
   <div class="rk-welcome panel panel-primary">
     <div class="panel-heading  bg-primary">
-      <h1 class="text-primary">Welcome to Rktik <small>The Virtual Mind for Communities</small></h1>
+      <h1 class="text-primary">Welcome to Rktik </h1>
     </div>
     <div class="panel-body">
-      <p class="lead">Rktik is the first virtual cognitive system, it lets groups of people form a collective identity and make it do real things.</p>
+      <p class="lead">Rktik is the first <strong>virtual mind for communities</strong>, it lets groups of people form a collective identity and make it do real things.</p>
       <p>Here you find places for having thoughtful conversations about society, politics and the world we live in, planning events and activities but also for sharing the funniest pictures you ever saw. We call these communities <em>movements</em>, because each of them unites real people in a movement towards a shared interest. </p>
       <p>Sign up now to join them or just have a look around and be surprised. </p>
     </div>
     <div class="panel-footer">
       <!-- Login form -->
       <form class="form-inline" id="rk-welcome-login" method="POST" action="{{ url_for('web.login') }}">
-        {{ login_form.hidden_tag() }}
+        {{ global_login_form.hidden_tag() }}
         <div class="input-group">
           <div class="input-group-addon">Email</div>
           <input type="text" id="email" name="email" class="form-control" />
