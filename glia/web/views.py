@@ -16,16 +16,17 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
     DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
 from uuid import uuid4
-from sqlalchemy import func, inspect
+from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from . import app
+from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
-    send_external_notifications, send_movement_invitation
+    send_external_notifications, send_movement_invitation, \
+    valid_redirect, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
-from nucleus.nucleus.database import db
+from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
@@ -294,6 +295,10 @@ def delete_thought(id=None):
 
 @app.route('/', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def index():
     """Front page"""
     movementform = CreateMovementForm()
@@ -301,29 +306,17 @@ def index():
     def thought_source(ident):
         return ident.blog if isinstance(ident, Persona) else ident.mindspace
 
-    def blog_sort(ident):
-        s = thought_source(ident).index \
-            .filter(Thought.state >= 0) \
-            .order_by(Thought.created.desc()) \
-            .first()
-        return s.created if s is not None else datetime.datetime.fromtimestamp(0)
-
-    more_movements = Movement.query \
-        .join(MovementMemberAssociation) \
-        .order_by(func.count(MovementMemberAssociation.persona_id)) \
-        .group_by(MovementMemberAssociation.persona_id) \
-        .group_by(Movement)
-
     if current_user.is_anonymous():
-        blogs = more_movements
+        blogs = more_movements = Movement.query \
+            .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
     else:
         blogs = current_user.active_persona.blogs_followed
-        more_movements \
-            .filter(MovementMemberAssociation.persona_id !=
-                current_user.active_persona.id)
+        more_movements = Movement.query \
+            .filter(Movement.id.in_(
+                current_user.active_persona.suggested_movements()))
 
     blog_data = []
-    for ident in sorted(blogs, key=blog_sort, reverse=True):
+    for ident in sorted(blogs, key=lambda b: b.attention, reverse=True):
         g_thought_selection = thought_source(ident).index.filter(Thought.state >= 0).all()
         g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
 
@@ -346,13 +339,7 @@ def index():
         })
 
     # Collect main page content
-    top_post_selection = Thought.query.filter(Thought.state >= 0)
-    top_post_selection = sorted(top_post_selection, key=Thought.hot, reverse=True)
-    top_posts = []
-    while len(top_posts) < min([9, len(top_post_selection)]):
-        candidate = top_post_selection.pop(0)
-        if candidate.upvote_count() > 0:
-            top_posts.append(candidate)
+    top_posts = Thought.top_thought()
 
     return render_template('index.html', movementform=movementform,
         blog_data=blog_data, top_posts=top_posts, more_movements=more_movements)
@@ -397,13 +384,13 @@ def login():
         else:
             login_user(form.user, remember=True)
             session["active_persona"] = form.user.active_persona.id
-            flash("Welcome back, {}".format(form.user.active_persona.username))
             app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
-        return form.redirect(url_for('.index'))
+        return form.redirect(valid_redirect(request.args.get('next'))or url_for('web.index'))
     elif request.method == "POST":
         app.logger.error("Invalid password for email '{}'".format(form.email.data))
         form.password.errors.append("Invalid password.")
-    return render_template('login.html', form=form)
+    form_action = url_for('web.login', next=valid_redirect(request.args.get('next')))
+    return render_template('login.html', form=form, form_action=form_action)
 
 
 @app.route('/logout', methods=["GET", "POST"])
@@ -426,7 +413,7 @@ def logout():
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
     movement = Movement.query.get_or_404(id)
-    if movement.current_role() in ["member", "admin"]:
+    if not current_user.is_anonymous() and movement.current_role() in ["member", "admin"]:
         rv = redirect(url_for("web.movement_mindspace", id=id))
     else:
         code = request.args.get('invitation_code', default=None)
@@ -437,6 +424,10 @@ def movement(id):
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def movement_blog(id, page=1):
     """Display a movement's profile"""
     movement = Movement.query.get_or_404(id)
@@ -454,6 +445,10 @@ def movement_blog(id, page=1):
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -548,6 +543,10 @@ def notifications(page=1):
 
 @app.route('/persona/<id>/')
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def persona(id):
     persona = Persona.query.get_or_404(id)
 
@@ -584,6 +583,10 @@ def persona(id):
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def persona_blog(id, page=1):
     """Display a persona's blog"""
     if id is None:
@@ -679,8 +682,8 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
-        if request.args.get('next', default=None):
-            rv = request.args.get('next')
+        if valid_redirect(request.args.get('next')):
+            rv = valid_redirect(request.args.get('next'))
         return redirect(rv)
 
     if request.method == "GET":
@@ -698,8 +701,8 @@ def signup():
     if mma:
         kwargs["invitation_code"] = mma.invitation_code
 
-    if request.args.get('next', default=None):
-        kwargs['next'] = request.args.get('next')
+    if valid_redirect(request.args.get('next')):
+        kwargs['next'] = valid_redirect(request.args.get('next'))
 
     form_url = url_for('web.signup', **kwargs)
 
@@ -738,6 +741,9 @@ def signup_validation(id, signup_code):
 
 @app.route('/tag/<name>/')
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT
+)
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
@@ -748,6 +754,10 @@ def tag(name):
 
 @app.route('/thought/<id>/')
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def thought(id=None):
     thought = Thought.query.get_or_404(id)
 

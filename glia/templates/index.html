@@ -45,9 +45,16 @@
 
     {% for blog in blog_data %}
       <div class="rk-frontpage-item">
-        <a href="{{ blog.ident.get_absolute_url() }}"><div class="rk-frontpage-ident">
-          <h4>{{ blog.ident.username }} <span class="small">{{ blog.ident.description }}</span></h4>
-        </div></a>
+        <a href="{{ blog.ident.get_absolute_url() }}">
+          <div class="rk-frontpage-ident">
+            <h4>{{ blog.ident.username }} <span class="small">{{ blog.ident.description }}</span>
+            <small class="pull-right rk-attention">
+              <i class="fa fa-eye"></i> {{blog.ident.attention}}
+            </small>
+            </h4>
+          </div>
+
+        </a>
 
         {% if blog.recent_blog_post %}
         <div class="rk-new-blog">

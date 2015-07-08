@@ -21,3 +21,11 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
 
 TIMEZONE = 'Europe/Berlin'
+
+#
+# Performance options
+#
+
+# Only count one upvote per user account, even if they voted with more than
+# one Persona
+UPVOTES_FILTER_DISTINCT_USERS = True

@@ -205,6 +205,6 @@
     window.user_id = "{{ current_user.active_persona.id }}";
     window.user_name = "{{  current_user.active_persona.username }}";
     {% endblock %}
-    window.signup_url = "{{ url_for('web.signup') }}";</script>
+    window.login_url = "{{ url_for('web.login', next=request.url) }}";</script>
   </body>
 </html>

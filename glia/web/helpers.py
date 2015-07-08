@@ -3,8 +3,9 @@ import os
 import pytz
 import sendgrid
 
-from flask import render_template
+from flask import render_template, request
 from flask.ext.login import current_user
+from hashlib import sha256
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
@@ -51,6 +52,18 @@ def localtime(value, tzval="UTC"):
     value = value.astimezone(pytz.timezone(tzval))  # convert to local time (tz-aware)
     value = value.replace(tzinfo=None)  # make tz-naive again
     return value
+
+
+def make_view_cache_key(*args, **kwargs):
+    """Make a cache key for view function depending on logged in user and path
+
+    Returns:
+        string: Cache key for use by Flask-Cache
+    """
+    persona = current_user.active_persona.id if not current_user.is_anonymous() else "anon"
+    url = request.url
+    rv = "-".join([persona, url]).encode('utf-8')
+    return sha256(rv).hexdigest()
 
 
 def send_email(message):
@@ -192,3 +205,9 @@ def send_validation_email(user, db):
         logger.error("Server error sending confirmation email: {}".format(e))
         logger.warning("User is being auto validated in debug environment")
         user.validate()
+
+
+def valid_redirect(path):
+    """Return True if path is in rktik domain"""
+    from flask import current_app
+    return path if path and path.startswith(current_app.config.get('SERVER_HOST')) else None

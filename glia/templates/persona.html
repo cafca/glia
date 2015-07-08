@@ -37,7 +37,7 @@ $(document).ready(function() {
     <div class="panel panel-default">
       <div class="panel-body">
         <p class="lead">Get on board and chat with {{ persona.username }}</p>
-        <a class="btn btn-lg btn-primary">Sign up now</a>
+        <a class="btn btn-lg btn-primary" href="{{ url_for('web.signup', next=request.url) }}">Sign up now</a>
       </div>
     </div>
     {% else %}
