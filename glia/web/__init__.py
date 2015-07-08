@@ -10,7 +10,7 @@ from nucleus.nucleus.models import Mindset, Movement, MovementMemberAssociation 
 app = Blueprint('web', __name__)
 app.logger = logging.getLogger('web')
 
-VIEW_CACHE_TIMEOUT = 50
+VIEW_CACHE_TIMEOUT = 5
 
 
 @app.context_processor
