@@ -28,10 +28,6 @@ html > body {
     span { margin: 5px 10px; }
 }
 
-html, body, .main-container, .main-container > .row {
-    // height: 100%;
-}
-
 a > .fa:hover {
     text-decoration: none;
 }
@@ -75,21 +71,33 @@ a > .fa:hover {
     }
 }
 
-.navbar {
-    border-bottom: 1px solid #ddd;
+.navbar-default {
+    background-color: #e7e7e7;
+
+    .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
+        background-color: lighten(@base, 10%);
+        color: white;
+
+        .badge {
+            background-color: @accent;
+        }
+    }
 }
 
 .navbar2 {
     margin-top: -20px;
-    background-color: #e7e7e7;
-    border-bottom: 1px solid darken(#ddd, 10%);
+    background-color: darken(#f8f8f8, 1%);
+    border-bottom: none;
     z-index: 50;
-    height: 20px;
+    min-height: 26px;
 
+    .navbar-nav > li > a {
+        padding: 3px 10px;
+    }
 
-    .navbar-nav > .active > a {
-        color: white;
-        background-color: darken(#e7e7e7, 20%);
+    .navbar-nav > .active > a, .navbar-nav > .active > a {
+        color: @dark;
+        background-color: #fcfcfc;
     }
 }
 
