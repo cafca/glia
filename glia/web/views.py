@@ -23,9 +23,9 @@ from . import app
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
-    send_external_notifications, send_movement_invitation
+    send_external_notifications, send_movement_invitation, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
-from nucleus.nucleus.database import db
+from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
     Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
@@ -34,6 +34,8 @@ from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, 
 #
 # UTILITIES
 #
+
+VIEW_CACHE_TIMEOUT = 50
 
 
 @app.before_request
@@ -294,6 +296,10 @@ def delete_thought(id=None):
 
 @app.route('/', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def index():
     """Front page"""
     movementform = CreateMovementForm()
@@ -426,7 +432,7 @@ def logout():
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
     movement = Movement.query.get_or_404(id)
-    if movement.current_role() in ["member", "admin"]:
+    if not current_user.is_anonymous() and movement.current_role() in ["member", "admin"]:
         rv = redirect(url_for("web.movement_mindspace", id=id))
     else:
         code = request.args.get('invitation_code', default=None)
@@ -437,6 +443,10 @@ def movement(id):
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def movement_blog(id, page=1):
     """Display a movement's profile"""
     movement = Movement.query.get_or_404(id)
@@ -454,6 +464,10 @@ def movement_blog(id, page=1):
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -548,6 +562,10 @@ def notifications(page=1):
 
 @app.route('/persona/<id>/')
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def persona(id):
     persona = Persona.query.get_or_404(id)
 
@@ -584,6 +602,10 @@ def persona(id):
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def persona_blog(id, page=1):
     """Display a persona's blog"""
     if id is None:
@@ -738,6 +760,9 @@ def signup_validation(id, signup_code):
 
 @app.route('/tag/<name>/')
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT
+)
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
@@ -748,6 +773,10 @@ def tag(name):
 
 @app.route('/thought/<id>/')
 @http_auth.login_required
+@cache.cached(
+    timeout=VIEW_CACHE_TIMEOUT,
+    key_prefix=make_view_cache_key
+)
 def thought(id=None):
     thought = Thought.query.get_or_404(id)
 

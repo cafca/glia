@@ -3,8 +3,9 @@ import os
 import pytz
 import sendgrid
 
-from flask import render_template
+from flask import render_template, request
 from flask.ext.login import current_user
+from hashlib import sha256
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
@@ -51,6 +52,19 @@ def localtime(value, tzval="UTC"):
     value = value.astimezone(pytz.timezone(tzval))  # convert to local time (tz-aware)
     value = value.replace(tzinfo=None)  # make tz-naive again
     return value
+
+
+def make_cache_key(*args, **kwargs):
+    """Make a cache key for view function depending on logged in user and path
+
+    Returns:
+        string: Cache key for use by Flask-Cache
+    """
+    persona = current_user.active_persona.id if not current_user.is_anonymous() else "anon"
+    url = request.url
+    rv = "-".join([persona, url]).encode('utf-8')
+    print "key", rv
+    return sha256(rv).hexdigest()
 
 
 def send_email(message):
