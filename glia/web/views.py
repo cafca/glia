@@ -307,10 +307,13 @@ def index():
         return ident.blog if isinstance(ident, Persona) else ident.mindspace
 
     if current_user.is_anonymous():
-        blogs = more_movements = Movement.top_movements(None)
+        blogs = more_movements = Movement.query \
+            .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
     else:
         blogs = current_user.active_persona.blogs_followed
-        more_movements = Movement.top_movements(current_user.active_persona.id)
+        more_movements = Movement.query \
+            .filter(Movement.id.in_(
+                current_user.active_persona.suggested_movements()))
 
     blog_data = []
     for ident in sorted(blogs, key=lambda b: b.attention, reverse=True):
@@ -381,7 +384,6 @@ def login():
         else:
             login_user(form.user, remember=True)
             session["active_persona"] = form.user.active_persona.id
-            flash("Welcome back, {}".format(form.user.active_persona.username))
             app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
         return form.redirect(valid_redirect(request.args.get('next'))or url_for('web.index'))
     elif request.method == "POST":

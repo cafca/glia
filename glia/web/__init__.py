@@ -2,7 +2,6 @@ import logging
 
 from flask import Blueprint
 from flask.ext.login import current_user
-from sqlalchemy import func
 
 from forms import LoginForm
 
@@ -37,11 +36,14 @@ def inject_login_form():
 @app.context_processor
 def inject_navbar_movements():
     if current_user.is_anonymous():
-        movements = Movement.top_movements(None)
+        movements = Movement.top_movements()
     else:
-        movements = Movement.query \
+        user_movements = Movement.query \
             .join(Mma) \
             .filter_by(persona=current_user.active_persona)
+
+        movements = [dict(id=m.id, username=m.username)
+            for m in user_movements]
 
     return dict(nav_movements=movements)
 
