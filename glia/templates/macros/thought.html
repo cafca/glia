@@ -162,11 +162,11 @@
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
-  <span class="rk-thought-meta">
-    {{ upvote(thought) }}
-  </span>
 
   <div class="rk-line-container">
+    <span class="rk-thought-meta">
+      {{ upvote(thought) }}
+    </span>
     <div class="rk-thought-meta">
       <span class="small">
         {{ id_macros.identity(thought.author) }}
@@ -212,7 +212,7 @@
           in {{ thought.mindset.name }}
           {% endif %}
         </button>
-        <button class="btn btn-sm btn-default rk-create-longform">Make a long reply</button>
+        <button type="submit" class="btn btn-sm btn-default rk-create-longform">Make a long reply</button>
       </form>
     </div>
   </div>

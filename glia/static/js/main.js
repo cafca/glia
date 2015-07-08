@@ -242,14 +242,20 @@ $(document).ready(function(){
         // CREATE THOUGHT
         //
 
+        $('.rk-create').click(function(event) {
+          $(this).data('clicked',$(event.target))
+        });
+
         $('.rk-create').submit(function(event) {
-            logged_in()
+            logged_in();
 
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
             var $parent = $(this).find('.rk-create-parent').val();
+            var $counter = $(this).find($(".rk-create-counter"));
 
-            if ($(this).find($(".rk-create-counter")).hasClass("safe")) {
+            var $async = ($(this).data('clicked')[0] != $(this).find($(".rk-create-longform"))[0]);
+            if ($counter.hasClass("safe") && $async) {
                 $btn.button('loading');
                 data = {
                     'msg': $text,
