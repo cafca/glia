@@ -761,7 +761,11 @@ def thought(id=None):
 
     if thought.state < 0 and not thought.authorize("delete", current_user.active_persona.id):
         flash("This Thought is currently unavailable.")
-        return(redirect(request.referrer or url_for('.index')))
+        if request.referrer and request.referrer != request.url:
+            redirect_target = request.referrer
+        else:
+            redirect_target = url_for('web.index')
+        return redirect(redirect_target)
 
     reply_form = CreateReplyForm(parent=thought.id)
 
