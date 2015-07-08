@@ -14,7 +14,7 @@
 
 <p class="lead">Go ahead. I am waiting for you.</p>
 
-<form method="POST" action="{{ url_for('.login') }}">
+<form method="POST" action="{{ form_action }}">
   {{ form.hidden_tag() }}
   <div class="form-group {% if form.email.errors %}has-error{% endif %}">
     {% if form.email.errors %}
@@ -33,11 +33,11 @@
     {% endif %}
     <input type="password" class="form-control" id="password" name="password" placeholder="Password">
   </div>
-  <button type="submit" class="btn btn-default">Login now</button>
+  <button type="submit" class="btn btn-primary">Login now</button>
 </form>
 </div>
 <div class="col-sm-4 col-sm-push-2">
-<p class="lead"><a href="{{ url_for('web.signup') }}">No account? Click here get one, now!</a></p>
+<p class="lead"><a href="{{ url_for('web.signup', next=request.args.get('next', default=None)) }}">No account? Click here get one, now!</a></p>
 
 </div>
 </div>

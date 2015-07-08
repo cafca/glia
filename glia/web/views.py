@@ -23,7 +23,8 @@ from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
 from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
-    send_external_notifications, send_movement_invitation, make_view_cache_key
+    send_external_notifications, send_movement_invitation, \
+    valid_redirect, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
@@ -403,11 +404,12 @@ def login():
             session["active_persona"] = form.user.active_persona.id
             flash("Welcome back, {}".format(form.user.active_persona.username))
             app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
-        return form.redirect(url_for('.index'))
+        return form.redirect(valid_redirect(request.args.get('next'))or url_for('web.index'))
     elif request.method == "POST":
         app.logger.error("Invalid password for email '{}'".format(form.email.data))
         form.password.errors.append("Invalid password.")
-    return render_template('login.html', form=form)
+    form_action = url_for('web.login', next=valid_redirect(request.args.get('next')))
+    return render_template('login.html', form=form, form_action=form_action)
 
 
 @app.route('/logout', methods=["GET", "POST"])
@@ -699,8 +701,8 @@ def signup():
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
-        if request.args.get('next', default=None):
-            rv = request.args.get('next')
+        if valid_redirect(request.args.get('next')):
+            rv = valid_redirect(request.args.get('next'))
         return redirect(rv)
 
     if request.method == "GET":
@@ -718,8 +720,8 @@ def signup():
     if mma:
         kwargs["invitation_code"] = mma.invitation_code
 
-    if request.args.get('next', default=None):
-        kwargs['next'] = request.args.get('next')
+    if valid_redirect(request.args.get('next')):
+        kwargs['next'] = valid_redirect(request.args.get('next'))
 
     form_url = url_for('web.signup', **kwargs)
 

@@ -205,3 +205,9 @@ def send_validation_email(user, db):
         logger.error("Server error sending confirmation email: {}".format(e))
         logger.warning("User is being auto validated in debug environment")
         user.validate()
+
+
+def valid_redirect(path):
+    """Return True if path is in rktik domain"""
+    from flask import current_app
+    return path if path and path.startswith(current_app.config.get('SERVER_HOST')) else None

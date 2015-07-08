@@ -123,7 +123,7 @@ $(document).ready(function(){
 
     function logged_in() {
         if (window.user_id == "None") {
-            location.href = window.signup_url + "?next=" + window.location;
+            location.href = window.login_url;
             return false;
         }
         return true;
