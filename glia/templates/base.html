@@ -110,16 +110,19 @@
     </nav>
     <nav class="navbar navbar2 navbar-static-top navbar-default hidden-xs">
       <div class="container-fluid">
+        <!-- Movements -->
         <div class="navbar-header">
-          <!-- Movements -->
-          <ul class="nav navbar-nav">
-            {% for m in nav_movements %}
-              <li {% if movement and movement.id == m.id %}class="active"{% endif %}>
-                <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
-              </li>
-            {% endfor %}
-          </ul>
+          <a class="navbar-brand" data-toggle="tooltip" data-placement="bottom" title="This number measures atention you get. Be nice and submit cool stuff to make it rise.">
+            <i class="fa fa-eye"></i> <strong>{{current_user.active_persona.attention}}</strong>
+          </a>
         </div>
+        <ul class="nav navbar-nav">
+          {% for m in nav_movements %}
+            <li {% if movement and movement.id == m.id %}class="active"{% endif %}>
+              <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
+            </li>
+          {% endfor %}
+        </ul>
       </div>
     </nav>
 

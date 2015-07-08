@@ -13,6 +13,7 @@ var psocket;
 $(document).ready(function(){
     PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
+    $('[data-toggle="tooltip"]').tooltip();
 
     // Connect personal websocket
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/personas')

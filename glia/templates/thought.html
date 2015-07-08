@@ -12,8 +12,6 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 
 $(document).ready(function() {
-  $('[data-toggle="tooltip"]').tooltip();
-
   $('#rk-thought-context-length').editable({
     autotext: 'always',
     type: 'text',
