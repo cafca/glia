@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/movement.html" as movement_macros %}
+{% import "macros/identity.html" as id_macros %}
+"
+
+{% block script %}
+window.room_id = "{{ movement.mindspace.id }}";
+window.map_id = "{{ movement.mindspace.id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+window.movement_id = "{{  movement.id }}";
+window.admin_id = "{{ movement.admin.id }}";
+
+$(document).ready(function() {
+  $('#rk-mission').editable();
+  $('.rk-promote').tooltip({
+       'delay': { show: 450, hide: 300 },
+       'placement': 'right',
+       'title': "When this Thought has received {{ movement.required_votes() }} votes it will be promoted to the movement blog"
+  });
+});
+{% endblock %}
+
+{% block content %}
+<section class="row">
+  <div class=" col-sm-4 col-sm-push-8">
+    <div class="rk-chat panel panel-default {% if movement.current_role() not in ['visitor', 'anonymous'] %}member{% endif %}">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ movement.username }} Chat</h3>
+      </div>
+
+      {% if current_user.is_anonymous() %}
+      <div class="panel-body">
+        <p class="lead">Get an RKTIK account to become part of this movement today. It takes only a minute.</p>
+        {% if movement.description %}
+        <p>This movement's mission is <em>{{ movement.description}}</em></p>
+        {% endif %}
+        <a href="{{ url_for('web.signup', next=request.path) }}" class="btn btn-primary btn-lg">Sign up now</a>
+      </div>
+
+      {% else %}
+      <div class="panel-body rk-movement-info">
+        <div class="form-group">
+        {% if movement.active_member() %}
+          <a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=movement.mindspace.id) }}">Create Thought</a>
+        {% endif %}
+
+        {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
+
+        {% if movement.active_member() %}
+          <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
+            <i class="fa fa-fw fa-users"></i> Leave Movement
+          </button>
+        {% else %}
+          <div class="btn-group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+              <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">Join as <em>{{ current_user.active_persona.username }}</em></a></li>
+              <li><a href="{{ url_for('web.create_persona', for_movement=movement.id) }}">Join with a new username</a></li>
+            </ul>
+          </div>
+        {% endif %}
+        </div>
+
+        <dl class="dl-horizontal dl-sm">
+          <dt>Mission</dt>
+          <dd><a href="#" id="rk-mission" data-type="text" data-pk="{{movement.id}}" data-url="{{ url_for('web.async_movement', movement_id=movement.id) }}" data-title="Enter your mission">
+            {{ movement.description|default("No mission set", True) }}
+          </a></dd>
+          <dt class="member-only">Recently seen</dt>
+          <dd class="member-only" id="rk-chat-nicknames"></dd>
+        </dl>
+
+        <p class="non-member-only">Become a member of <em>{{ movement.username }}</em> to start chatting and collaborating with other
+        members of this movement </p>
+      </div>
+
+      {% if movement.active_member() %}
+        {{ chat_macros.chat(movement.mindspace) }}
+      {% endif %}
+    {% endif %}
+    </div> <!-- ./ chat panel -->
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        {% if not current_user.is_anonymous() %}
+        <a class="btn btn-small btn-default pull-right" href="{{ url_for('web.invite_members', movement_id=movement.id) }}"><i class="fa fa-envelope-o"></i> Invite</a>
+        {% endif %}
+        <h4>{{ movement.member_count }} Members</h4>
+      </div>
+      <div class="panel-body hidden-xs">
+      {% for mma in member_selection %}
+        <p>
+        {% if mma.role != "member" %}
+          {{ id_macros.persona(mma.persona, flair=mma.role.title()) }}
+        {% else %}
+          {{ id_macros.persona(mma.persona) }}
+        {% endif %}
+
+        {% if mma.description %}
+          <small>{{ mma.description }}</small>
+        {% endif %}
+        </p>
+      {% endfor %}
+      </div>
+    </div> <!-- ./ member panel -->
+  </div> <!-- ./ sidebar -->
+
+  <div class="thought-listing col-sm-8 col-sm-pull-4">
+    {{ movement_macros.nav(movement, "Mindspace") }}
+
+    {% for thought in thoughts %}
+      {% if loop.first %}
+        {{ thought_macros.thought_lead(thought, controlled_personas, promote=movement) }}
+      {% else %}
+        {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True, promote=movement) }}
+      {% endif %}
+    {% endfor %}
+  </div> <!-- ./ thought listing -->
+</section>
+
+{% endblock %}

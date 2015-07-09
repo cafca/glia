@@ -1,0 +1,70 @@
+{% import "macros/percept.html" as percept_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+
+{% macro chatline(thought) %}
+{% if thought.parent %}
+    <li class="list-group-item rk-chatline-meta">
+      {% if thought.parent|authorize("read") %}
+        <em>Comment on</em> {{ thought_macros.short(thought.parent) }}
+      {% else %}
+        <em>Comment on private thought</em>
+      {% endif %}
+    </li>
+
+{% endif %}
+<li class="list-group-item">
+  {% if thought|authorize("read") %}
+      {{ thought_macros.upvote(thought) }}
+      <span class="rk-chatline">
+        {{ id_macros.identity(thought.author) }}
+        <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.created|localtime|naturaltime}} </a>
+        {{ thought.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(thought) }}
+      </span>
+      <div>
+      {% for tagp in thought.tags %}<a href="{{ url_for('web.tag', name=tagp.percept.tag.name) }}">#{{ tagp.percept.title }}</a>&nbsp;{% endfor %}
+    </li>
+
+    {% for category, percepts in thought.attachments.items() %}
+    {% for percept_assoc in percepts %}
+    <li class="list-group-item rk-chat-percept">
+      {{ percept_macros.percept(percept_assoc.percept, size='small') }}
+    </li>
+    {% endfor %}
+    {% endfor %}
+  {% else %}
+    <span class="rk-chatline">
+      Private thought hidden
+    </span>
+  {% endif %}
+
+{% endmacro %}
+
+
+{% macro chat(map) %}
+
+<ul class="list-group" id="rk-chat-lines">
+  <li class="list-group-item text-center" id="rk-chat-more">
+    <a class="btn btn-default" role="button" id="rk-chat-more-button" href="{{ url_for('.async_chat', mindset_id=map.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' >Load more</a>
+  </li>
+</ul>
+
+<div class="panel-footer">
+<form class="rk-create" class="form-inline" action="{{ url_for('web.create_thought') }}" method="GET">
+  <input type="hidden" name="mindset" value="{{ map.id }}" />
+  <div>
+    <span>&nbsp;</span>
+    <div class="pull-right rk-create-counter"></div>
+    <div class="rk-create-extend">
+      <p>That's a lot of text! Do you want to make a long post? <input type="submit" class="btn btn-sm btn-primary" value="Yes, please"></p>
+    </div>
+  </div>
+  <div class="form-group">
+    <input class="rk-create-text" name="text" autocomplete="off" class="form-control input-sm" placeholder="Be nice."/>
+    <button id="rk-chat-submit" class="btn btn-sm btn-default rk-create-submit" disabled="disabled" class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+  </div>
+</form>
+</div>
+
+{% endmacro%}

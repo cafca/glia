@@ -14,11 +14,11 @@ import re
 from flask import request, jsonify, abort, redirect, current_app
 from sqlalchemy import func
 
-from nucleus.nucleus.models import Persona, Souma, Group
+from nucleus.nucleus.models import Persona, Souma, Movement
 from nucleus.nucleus.vesicle import Vesicle
 from nucleus.nucleus import ERROR
 
-from .. import db
+from nucleus.nucleus.database import db
 
 from . import app
 
@@ -245,9 +245,9 @@ def personas(persona_id):
         pass
 
 
-@app.route('/v0/groups/', methods=["GET", "POST"])
-def find_groups():
-    """Return top groups or group search results
+@app.route('/v0/movements/', methods=["GET", "POST"])
+def find_movements():
+    """Return top movements or movement search results
 
     The 'POST'-method expects a JSON formatted request body with a key 'query'
     containing a search term at least three characters long.
@@ -258,11 +258,11 @@ def find_groups():
 
     if request.method == "GET":
         # ------------------------
-        # --- Retrieve top groups
+        # --- Retrieve top movements
 
-        app.logger.info("Returning top groups")
+        app.logger.info("Returning top movements")
 
-        results = Group.query.limit(10).all()
+        results = Movement.query.limit(10).all()
 
     elif request.method == "POST":
         # ------------------------
@@ -270,16 +270,16 @@ def find_groups():
 
         if "query" not in request.json or len(request.json['query']) == 0:
             errors.append(ERROR["MISSING_PARAMETER"]("search query"))
-            app.logger.warning("Group search request missing query parameter")
+            app.logger.warning("Movement search request missing query parameter")
 
         query = request.json['query'][0]
 
         if not isinstance(query, basestring) or len(query) < 3:
             errors.append(ERROR["INVALID_VALUE"]("search query too short"))
-            app.logger.info("Group search query too short (was '{}')".format(query))
+            app.logger.info("Movement search query too short (was '{}')".format(query))
 
         else:
-            app.logger.info("Group search request for query '{}'".format(query))
+            app.logger.info("Movement search request for query '{}'".format(query))
 
             if query == "null":
                 query = None
@@ -287,7 +287,7 @@ def find_groups():
             # ------------------------
             # --- Retrieve results
 
-            results = Group.query.filter(Group.username.like("%{}%".format(query))).all()
+            results = Movement.query.filter(Movement.username.like("%{}%".format(query))).all()
 
     # ------------------------
     # --- Compile return value
@@ -296,20 +296,20 @@ def find_groups():
         return jsonify({"meta": {"errors": errors}})
     else:
         results = [result.export() for result in results]
-        return jsonify({"groups": results})
+        return jsonify({"movements": results})
 
 
-@app.route('/v0/groups/<group_id>/', methods=["GET", "PUT"])
-def groups(group_id):
-    """Access and modify group records on the server"""
+@app.route('/v0/movements/<movement_id>/', methods=["GET", "PUT"])
+def movements(movement_id):
+    """Access and modify movement records on the server"""
 
     if request.method == "GET":
-        # Return group info
-        g = Group.query.get(group_id)
+        # Return movement info
+        mvmnt = Movement.query.get(movement_id)
         resp = dict()
-        if g:
-            resp["groups"] = list()
-            resp["groups"].append(g.export(include=[
+        if mvmnt:
+            resp["movements"] = list()
+            resp["movements"].append(mvmnt.export(include=[
                 "id",
                 "username",
                 "description",
@@ -317,61 +317,61 @@ def groups(group_id):
                 "admin_id"]))
         else:
             resp["meta"] = dict()
-            resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](group_id), ]
+            resp["meta"]["errors"] = [ERROR["OBJECT_NOT_FOUND"](movement_id), ]
 
         return jsonify(resp)
 
     elif request.method == "PUT":
-        # Store new group record on server
+        # Store new movement record on server
 
         # Validate request data
-        if "groups" not in request.json or not isinstance(request.json["groups"], list):
+        if "movements" not in request.json or not isinstance(request.json["movements"], list):
             app.logger.error("Malformed request: {}".format(request.json))
-            return error_message([ERROR["MISSING_KEY"]("groups")])
+            return error_message([ERROR["MISSING_KEY"]("movements")])
 
-        new_group = request.json['groups'][0]
+        movement = request.json['movements'][0]
 
         # Check required fields
         required_fields = [
-            'group_id', 'username', 'description', 'admin_id']
+            'movement_id', 'username', 'description', 'admin_id']
         errors = list()
         for field in required_fields:
-            if field not in new_group:
+            if field not in movement:
                 errors.append(ERROR["MISSING_KEY"](field))
 
         # Check for duplicate identifier
-        if "group_id" in new_group:
-            g_existing = Group.query.get(new_group["group_id"])
-            if g_existing:
-                errors.append(ERROR["DUPLICATE_ID"](new_group["group_id"]))
+        if "movement_id" in movement:
+            m_existing = Movement.query.get(movement["movement_id"])
+            if m_existing:
+                errors.append(ERROR["DUPLICATE_ID"](movement["movement_id"]))
 
         # Retrieve admin record
-        admin = Persona.query.get(new_group["admin_id"])
+        admin = Persona.query.get(movement["admin_id"])
         if admin is None:
-            errors.append(ERROR["DUPLICATE_ID"](new_group["admin_id"]))
+            errors.append(ERROR["DUPLICATE_ID"](movement["admin_id"]))
 
         # Return in case of errors
         if errors:
             return error_message(errors)
 
-        # Register new group
-        g = Group(
-            id=new_group["group_id"],
-            username=new_group["username"],
-            description=new_group["description"],
+        # Register new movement
+        m = Movement(
+            id=movement["movement_id"],
+            username=movement["username"],
+            description=movement["description"],
             admin=admin,
         )
         db.session.add(g)
         db.session.commit()
 
-        app.logger.info("New group '{}' registered".format(g.username.encode('utf-8')))
+        app.logger.info("New movement '{}' registered".format(m.username.encode('utf-8')))
 
         return jsonify({
-            "groups": [{
-                "id": g.id,
-                "username": g.username,
-                "description": g.description,
-                "created": g.created.isoformat()
+            "movements": [{
+                "id": m.id,
+                "username": m.username,
+                "description": m.description,
+                "created": m.created.isoformat()
             }]
         })
 

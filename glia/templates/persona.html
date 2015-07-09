@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/identity.html" as id_macros with context %}
+{% import "macros/movement.html" as movement_macros %}
+
+{% block script %}
+window.room_id = "{{ chat.id }}";
+window.map_id = "{{ chat.id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+window.admin_id = "{{ persona.id }}";
+
+$(document).ready(function() {
+  {% if persona == active_persona %}
+  $('.rk-persona-identity .rk-username').editable({
+    type: 'text',
+    pk: '{{persona.id}}',
+    name: 'username',
+    value: '{{ persona.username }}',
+    url: '{{ url_for('web.async_persona', id=persona.id) }}',
+    mode: 'inline',
+    error: function(response, newValue) {
+      $(".editable-error-block").addClass("small");
+      return response.responseJSON.message;
+    },
+  });
+  {% endif %}
+});
+{% endblock %}
+
+{% block content %}
+<section class="row">
+  <div class="col-sm-4 col-sm-push-8">
+    {% if current_user.is_anonymous() %}
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <p class="lead">Get on board and chat with {{ persona.username }}</p>
+        <a class="btn btn-lg btn-primary" href="{{ url_for('web.signup', next=request.url) }}">Sign up now</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="rk-chat panel panel-default">
+      <div class="panel-heading">
+        {% if current_user.active_persona == persona %}
+        <h3 class="panel-title">{{ persona.username }} Personal Mindspace
+        <small><em>Only you can see messages in here</em></small></h3>
+        {% else %}
+        <h3 class="panel-title">Chat with {{ persona.username }} in private</h3>
+        {% endif %}
+      </div>
+
+      {{ chat_macros.chat(chat) }}
+    </div> <!-- ./ panel -->
+  {% endif %}
+  </div> <!-- ./ chat column -->
+
+  <div class="rk-persona col-sm-8 col-sm-pull-4">
+    <div class="row rk-persona-infobox" style="border-color: #{{ persona.color }}">
+      <div class="col-sm-3 rk-persona-picture" style="background-color: #{{ persona.color }}">
+
+      </div>
+
+      <div class="col-sm-6 rk-persona-identity">
+        <h1>{{ id_macros.persona(persona, nolink=True) }}</h1>
+        <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
+        {{ id_macros.follow_toggle(persona, current_user.active_persona) }}
+      </div>
+
+      <div class="col-sm-3 rk-persona-meta">
+        <dl class="dl-horizontal dl-sm">
+          <dt>Attention</dt>
+          <dd>{{ persona.attention }}</dd>
+          <dt>Following</dt>
+          <dd>{{ persona.blogs_followed|length }}</dd>
+          <dt>Movements</dt>
+          <dd>{{ persona.movement_assocs|length }}</dd>
+          <dt>Blog posts</dt>
+          <dd>{{ persona.blog.index.count() }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="rk-persona-movements">
+      <div class="row">
+      {% for mma in movements %}
+      <div class="col-sm-3">
+        {% set et=mma.role|capitalize + ", joined " + mma.created|localtime|naturaltime %}
+        {{ movement_macros.box(mma.movement, extra_text=et)}}
+      </div>
+      {% else %}
+      <div class="col-sm-6">
+      <h4>{{ persona.username}} has not joined any movements yet</h4>
+      {% if active_persona != persona %}
+      <p>Go ahead and recommend joining one of yours in the chat on the right!</p>
+      {% endif %}
+      </div>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

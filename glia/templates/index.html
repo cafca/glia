@@ -1,24 +1,99 @@
 {% extends "base.html" %}
 
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/identity.html" as id_macros %}
+{% import "macros/helpers.html" as helper_macros %}
+
 {% block content %}
+<div class="row" id="rk-index">
+  <div class="rk-toc panel panel-default col-sm-3 col-sm-push-8">
+    {% if top_posts.count() > 0 %}
+      <div class="panel-body">
+        <h3>Top Thought</h3>
+        <hr />
+      </div>
 
+      <ul class="list-group rk-toc-movements">
+        {% for thought in top_posts %}
+          {% if thought|authorize("read") %}
+            <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
+          {% endif %}
+        {% endfor %}
+      </ul> <!-- ./ movement list -->
+    {% endif %}
 
-{% if current_user.is_authenticated() %}
-    <h1>Hello {{ current_user.active_persona.username }}!</h1>
-    <p><a href="{{ url_for('.logout') }}">Logout</a></p>
-    <form action="{{ url_for('.groups') }}" method="POST">
-        {{ groupform.hidden_tag() }}
-        {{ groupform.name }} {% if groupform.name.errors %} {{groupform.name.errors}} {% endif %}
-        <button type="submit" class="btn">Go to new group</button>
-    </form>
-{% else %}
-    <h1>Hello, why don't you <a href="{{ url_for('.login') }}">login</a>, or create a <a href="{{ url_for('.signup') }}">new account?</a></h1>
-{% endif %}
+    {% if more_movements[:]|length() > 0 %}
+      <div class="panel-body">
+        <h3>Discover Movements</h3>
+        <hr />
+      </div>
+      <ul class="list-group">
+      {% for movement in more_movements %}
+      <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item">{{ id_macros.movement(movement, nolink=True) }} {{ movement.description|default("", True) }}</li></a>
+      {% endfor %}
+      </ul>
+    {% endif %}
 
-<ul>
-{% for group in groups %}
-<li><a href="{{ url_for('.group', id=group.id) }}">{{ group.username }}</a></li>
-{% endfor %}
-</ul>
+    <div class="panel-body">
+    <a role="button" class="btn btn-primary" href="{{ url_for('web.movements') }}">Start Your Movement Today</a>
+    </div>
 
+  </div> <!-- ./rktik-toc -->
+
+  {% if blog_list|length > 0 %}
+    <div class="rk-frontpage col-sm-7 col-sm-pull-2">
+
+    {{ helper_macros.intro(global_login_form) }}
+
+    {% for source in blog_list %}
+      <div class="rk-frontpage-item">
+        <div class="rk-frontpage-ident panel panel-default"  style="border-color: #{{ source.ident.color }}">
+          <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
+            <a href="{{ source.url }}">
+              <h2>{{ source.ident.username }}
+                <small>{% if source.ident.kind == "movement" %}{{ source.ident.description }}{% else %}Personal Blog{% endif %}</small>
+                <span class="pull-right rk-attention">
+                  <i class="fa fa-eye"></i> {{source.ident.attention}}
+                </span>
+              </h2>
+            </a>
+          </div>
+          {% if "mindspace" in source %}
+            <div class="panel-body">
+            {% for t in source["mindspace"] %}
+              {{ thought_macros.thought_line(t, no_percepts=True) }}
+            {% else %}
+              <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
+              <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
+            {% endfor %}
+              <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more from Member Mindspace</a></small>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="rk-frontpage-item-listing">
+          {% if source.blog|length > 0 %}
+            {% for thought in source.blog %}
+              {% if loop.first %}
+                {{ thought_macros.thought_lead(thought, None) }}
+              {% else %}
+                {{ thought_macros.thought_line(thought, None, no_percepts=True) }}
+              {% endif %}
+            {% endfor %}
+          {% elif source.ident.kind == "movement" %}
+            <p class="lead">This movement's blog is empty.
+              {% if not source.ident.private %}Vote on thoughts in the movement mindspace to promote them to this blog.{% endif %}
+            </p>
+          {% else %}
+            <p class="lead">This Persona's blog is empty. </h2>
+          {% endif %}
+        </div>
+      </div> <!-- ./ movement panel -->
+    {% endfor %}
+    </div>
+  {% else %}
+  <h1>Join some Movements!</h1>
+  {% endif %}
+
+</div> <!-- ./ index -->
 {% endblock %}

@@ -1,0 +1,245 @@
+{% import "macros/percept.html" as percept_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+
+{# --- UTILITIES --- #}
+
+
+{% macro comments_button(thought) %}
+<span>
+    <a class="btn btn-xs btn-default" href="{{ url_for('web.thought', id=thought.id, _anchor='comments') }}">
+        <span class="upvote-count" id="comment-count-{{thought.id}}">{{thought.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
+    </a>
+</span>
+{% endmacro %}
+
+{% macro label_badges(labels) %}
+    {% if labels %}
+      {% for label in labels %}
+          {% if not label.kind %}
+              {% set kind = "default" %}
+          {% else %}
+              {% set kind = label.kind %}
+          {% endif %}
+          <span class="label label-{{kind}}">{{ label.text }}</span>
+      {% endfor %}
+    {% endif %}
+{% endmacro %}
+
+{% macro not_authorized(thought) %}
+<div class="rk-thought rk-hidden">
+  <p>Private thought hidden</p>
+</div>
+{% endmacro %}
+
+{% macro promote_indicator(thought, movement) %}
+<span class="caption">
+  <span id="rk-promote-{{ thought.id }}" class="rk-promote {% if movement.has_blogged(thought) %}rk-promote-done{% endif %}">
+    <span style="width: {{ movement.voting_done(thought) * 100 }}%"></span>
+  </span>
+</span>
+{% endmacro %}
+
+{% macro repost_button(thought, btn="btn-primary") %}
+  <span class="rk-repost-spawn" data-toggle="modal" data-thought-text="Repost: {{thought.text}}" data-thought-id="{{thought.id}}" data-target="#rk-repost">
+    <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom" title="Share this Thought with People, Movements or anywhere else!">
+      <i class="fa fa-retweet"></i> Repost
+    </button>
+  </span>
+{% endmacro %}
+
+{% macro upvote(thought) %}
+<button class="upvote btn btn-xs {% if thought.upvoted() %}btn-primary{% else %}btn-default{% endif %} upvote-{{thought.id}}" data-id="{{thought.id}}" type="button">
+  <span class="upvote-count upvote-count-{{thought.id}}">{{thought.upvote_count()}}</span> <i class="fa fa-white fa-arrow-up"></i>
+</button>
+{% endmacro %}
+
+
+{# --- THOUGHT MACROS --- #}
+
+
+{% macro thought_lead(thought, controlled_personas, truncate=True, promote=None, labels=None) %}
+{% if thought|authorize("read") %}
+<!-- THOUGHT {{thought.id}} -->
+<div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
+  <span class="rk-thought-title">
+    <h2>
+      {{ label_badges(labels) }}
+      <a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text|mentions(thought, nolink=True) }}</a>
+    </h2>
+  </span>
+
+  <!-- Attachments -->
+  {{ percept_macros.render_all(thought, truncate=truncate) }}
+
+  <!-- Meta -->
+  <div class="rk-thought-meta">
+    {{ upvote(thought) }}
+
+    {{ comments_button(thought) }}
+
+    {% if promote %}
+      {{ promote_indicator(thought, movement=promote) }}
+    {% endif %}
+
+    <span>
+        <span class="caption">
+            {{thought.created|localtime|naturaltime}}
+        </span>
+    </span>
+
+    <span class="inline-semantic"> by </span>
+
+    <span class="attribute">
+        <span class="caption">
+            {{ id_macros.identity(thought.author) }}
+        </span>
+    </span>
+
+    <span class="rk-assocs">
+      {% for percept_assoc in thought.tags %}
+        {{ percept_macros.percept_icon(percept_assoc.percept)}}
+      {% endfor %}
+    </span>
+  </div>
+</div>
+{% else %}{{ not_authorized(thought) }}{% endif %}
+{% endmacro %}
+
+
+
+{% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote=None, labels=None) %}
+{% if thought|authorize("read") %}
+<!-- THOUGHT {{thought.id}} -->
+<div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
+  <!-- Meta -->
+  <span class="rk-thought-meta">
+    {{ upvote(thought) }}
+    {{ comments_button(thought) }}
+
+    {% if promote %}
+      {{ promote_indicator(thought, movement=promote) }}
+    {% endif %}
+  </span>
+
+  <div class="rk-line-container">
+    <div class="rk-thought-title">
+      <h3>
+        {{ label_badges(labels) }}
+        <a href="{{ url_for('web.thought', id=thought.id) }}">{{ thought.text|mentions(thought, nolink=True) }}</a>
+      {% if no_percepts %}
+        <span class="rk-assocs">
+        {% for percept_assoc in thought.percept_assocs %}
+          {{ percept_macros.percept_icon(percept_assoc.percept)}}
+        {% endfor %}
+        </span>
+      {% endif %}
+      </h3>
+
+    </div>
+
+    {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
+    <!-- Attachments -->
+    {{ percept_macros.render_all(thought, truncate=truncate) }}
+    {% endif %}
+  </div>
+</div>
+{% else %}{{ not_authorized(thought) }}{% endif %}
+{% endmacro %}
+
+
+{% macro short(thought) %}
+{% if thought|authorize("read") %}
+  <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.author.username}}: {{thought.text|mentions(thought, nolink=True)}}</a>
+{% else %}{{ not_authorized(thought) }}{% endif %}
+{% endmacro %}
+
+
+{# --- COMMENT MACROS --- #}
+
+
+{% macro comment(thought, controlled_personas, no_percepts=False, truncate=True) %}
+{% if thought|authorize("read") %}
+<!-- THOUGHT {{thought.id}} -->
+<div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
+  <!-- Meta -->
+
+  <div class="rk-line-container">
+    <span class="rk-thought-meta">
+      {{ upvote(thought) }}
+    </span>
+    <div class="rk-thought-meta">
+      <span class="small">
+        {{ id_macros.identity(thought.author) }}
+        {% if thought.mindset and thought.mindset != thought.parent.mindset %}
+        in <a href="{{ thought.mindset.get_absolute_url() }}"><span class="label label-default">{{ thought.mindset.name }}</span></a>
+        {% endif %}
+        {{ thought.created|localtime|naturaltime }}
+        <a href="{{ url_for('web.thought', id=thought.id) }}">link</a>
+      </span>
+    </div>
+
+    <div class="rk-thought-title">
+      <p>{{ thought.text|mentions(thought) }}</p>
+      {% if no_percepts %}
+      {% for percept_assoc in thought.percept_assocs %}{{ percept_macros.percept_icon(percept_assoc.percept)}}{% endfor %}
+      {% endif %}
+    </div>
+
+    {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
+    <!-- Attachments -->
+    {{ percept_macros.render_all(thought, truncate=truncate) }}
+    {% endif %}
+
+    <div class="rk-thought-meta">
+      <small><a href="{{ url_for('web.create_thought', parent=thought.id, mindset=thought.mindset.id) }}" class="rk-create-display-toggle" data-id="{{ thought.id }}">reply</a></small>
+
+      <form class="rk-create" action="{{ url_for('web.create_thought') }}" method="GET">
+        <input class="rk-create-parent" name="parent" type="hidden" value="{{ thought.id }}">
+        <input type="hidden" name="mindset" value="{{ thought.mindset_id }}" />
+        <div>
+          <span>&nbsp;</span>
+          <div class="pull-right rk-create-counter"></div>
+        </div>
+        <div class="form-group">
+          <textarea class="form-control rk-create-text" name="text"></textarea>
+        </div>
+        <div class="rk-create-extend">
+          <p>That's a lot of text! Do you want to make a long reply?</p>
+        </div>
+        <button type="submit" class="rk-create-submit btn btn-sm btn-primary" class="btn btn-default btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
+          Reply
+          {% if thought.mindset and thought.mindset != thought.parent.mindset %}
+          in {{ thought.mindset.name }}
+          {% endif %}
+        </button>
+        <button type="submit" class="btn btn-sm btn-default rk-create-longform">Make a long reply</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% else %}{{ not_authorized(thought) }}{% endif %}
+{% endmacro %}
+
+
+
+{% macro comment_tree(thought, controlled_personas, deep=3, truncate=True) %}
+
+{{ comment(thought, controlled_personas, truncate=truncate) }}
+
+{% if deep > 0 %}
+  {% set new_deep=(deep-1) %}
+  <div class="rk-replies clearfix">
+    {% for c in thought.comments|sort_hot %}
+      {% if c.context_length > 0 %}
+      {{ comment_tree(c, controlled_personas, deep=new_deep) }}
+      {% else %}
+      <small>[<a href="{{ url_for('web.thought', id=c.id) }}">Reply
+      was hidden from this context by the author</a>]</small>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% endmacro %}

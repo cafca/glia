@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% import "macros/thought.html" as thought_macros %}
+
+{% block content %}
+<div class="row">
+  <div class="col-sm-11 col-sm-push-1">
+    <a href="{{ url_for('web.tag', name=tag.name) }}"><h1>#{{ tag.name }}</h1></a>
+    {% for syn in tag.synonyms %}
+      {% if syn.title != tag.name %}
+        <em>#{{ syn.title }}</em>&nbsp;
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{% for thought in thoughts %}
+<div class="row">
+  <div class="col-sm-push-2 col-sm-10">
+    {{ thought_macros.thought_line(thought) }}
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

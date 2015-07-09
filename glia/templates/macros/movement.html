@@ -1,0 +1,70 @@
+{% import "macros/percept.html" as percept_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+
+{% macro nav(movement, current) %}
+{% if movement|authorize("update") %}
+  {% set nav_items = {
+      "Blog": url_for("web.movement_blog", id=movement.id),
+      "Mindspace": url_for("web.movement_mindspace", id=movement.id),
+      "Admin": "#"
+    } %}
+{% else %}
+  {% set nav_items = {
+    "Blog": url_for("web.movement_blog", id=movement.id),
+    "Mindspace": url_for("web.movement_mindspace", id=movement.id)
+  } %}
+{% endif %}
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{{ url_for('web.movement_mindspace', id=movement.id) }}">{{ movement.username }}</a>
+    </div> <!-- ./ navbar-header -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        {% for name, url in nav_items.iteritems() %}
+          {% if name == current %}
+          <li class="active"><a href="{{ url }}"><i class="fa fa-file-text-o"></i> {{ name }}<span class="sr-only">(current)</span></a></li>
+          {% else %}
+          <li><a href="{{ url }}"><i class="fa fa-file-text-o"></i> {{ name }} </a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div>
+</nav>
+{% endmacro %}
+
+
+{% macro box(movement, extra_text=None) %}
+
+<!-- MOVEMENT BOX {{movement.id}} -->
+
+  <div class="rk-movement-box panel" style="background-color: #{{ movement.color }}">
+    <a href="{{ url_for('web.movement', id=movement.id) }}">
+      <div class="panel-heading">
+
+          <h4>{{ movement.username }}</h4>
+      </div>
+    </a>
+
+    <div class="panel-body">
+      {% if movement.description|length > 0 %}
+        <p>{{ movement.description}}</p>
+      {% endif %}
+      {% if extra_text %}
+        <p>{{ extra_text }}</p>
+      {% endif %}
+      <p><em>{{ movement.member_count }} member{% if movement.member_count > 1 %}s{% endif %}</em></p>
+    </div>
+  </div>
+
+{% endmacro %}

@@ -1,7 +1,0 @@
-{
-    "Python": {
-        "python": '~/Projects/khemia/bin/python',
-        "pythonExtraPaths": ['~/Projects/khemia/lib/python2.7/site-packages',
-        ]
-    },
-}

@@ -2,7 +2,8 @@ import logging
 import sys
 
 from colorlog import ColoredFormatter
-from flask import Request
+from flask import Request, session
+from jinja2 import Environment, PackageLoader, Markup, evalcontextfilter
 
 formatter = ColoredFormatter(
     "%(log_color)s%(name)s :: %(module)s [%(filename)s:%(lineno)d]%(reset)s %(message)s",
@@ -40,6 +41,7 @@ class AnonymousPersona(object):
     """Used by Flask-Login"""
 
     class active_persona():
+        id = None
         username = "Anonymous"
 
     def get_id(self):
@@ -52,7 +54,7 @@ class AnonymousPersona(object):
         return False
 
     def is_anonymous(self):
-        return False
+        return True
 
 
 class ProxiedRequest(Request):
@@ -88,3 +90,45 @@ class ProxiedRequest(Request):
 # from real_ip_address import ProxiedRequest
 # app = [...]
 # app.request_class = ProxiedRequest
+
+
+@evalcontextfilter
+def inject_mentions(eval_ctx, text, thought, nolink=False):
+    """Replace portions of Thought text with a link to the mentioned Identity for
+    every mention registered on the Thought"""
+
+    from flask import url_for
+    env = Environment(loader=PackageLoader('glia', 'templates'))
+    env.globals['url_for'] = url_for
+    template = env.get_template('macros/identity.html')
+    mentions = [pa.percept for pa in thought.percept_assocs.all() if pa.percept.kind == "mention"]
+
+    for mention in mentions:
+        if mention.identity.kind == "persona":
+            rendered_link = template.module.persona(mention.identity, nolink=nolink)
+        else:
+            rendered_link = template.module.movement(mention.identity, nolink=nolink)
+
+        if eval_ctx.autoescape:
+            rendered_link = Markup(rendered_link)
+        text = text.replace("".join(["@", mention.text]), rendered_link)
+
+    if eval_ctx.autoescape:
+        text = Markup(text)
+
+    return text
+
+
+def gallery_col_width(pa_list):
+    """Return the right column width for displaying a number of images"""
+    if len(pa_list) <= 4:
+        rv = 12 / len(pa_list)
+    else:
+        rv = 4
+    return rv
+
+
+def sort_hot(query):
+    """Sort thoughts by their hotness"""
+    from nucleus.nucleus.models import Thought
+    return sorted(query, key=Thought.hot, reverse=True)

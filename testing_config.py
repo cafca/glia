@@ -7,16 +7,24 @@
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
-import os
 import datetime
+import logging
+import os
 
 from keyczar.keys import RsaPrivateKey
 
 # On Heroku, the port bound to is not the same port the app will be accessible at from the outside
 # this means that we bind to os.environ['PORT'] (>1000) but are actually visible at port 80
-SERVER_HOST = 'glia.herokuapp.com'
+SERVER_HOST = 'dev.rktik.com'
 SERVER_PORT = int(os.environ['PORT'])
 AUTH_ENABLED = bool(os.environ['SOUMA_AUTH'])
+HEROKU = True
+
+DEBUG = True
+LOG_LEVEL = logging.DEBUG
+
+# Memcache
+CACHE_TYPE = 'spreadsaslmemcachedcache'
 
 SERVER_NAME = SERVER_HOST
 

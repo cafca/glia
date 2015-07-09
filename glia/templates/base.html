@@ -1,19 +1,213 @@
-<!doctype html>
-<head>
-    <title>{%block title %}glia{% endblock %}</title>
-    <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='frameless.less') }}">
-    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='less.js') }}"></script>
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
-    <script type="text/javascript" charset="utf-8">{% block script %}{% endblock %}</script>
-</head>
-<body>
-    <article class="{% block layout_name %}{% endblock %}">
-        {% for message in get_flashed_messages() %}
-            <div class='flash'><span>{{message}}</span></div>
-        {% endfor %}
-        <div id="container">
-        {% block content %}{% endblock %}
+{% import "macros/identity.html" as id_macros %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{%block title %}Rktik{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+    <!-- X-Editable -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+    <!-- PNotify -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pnotify.custom.min.css') }}">
+
+    <!-- Glia Styles -->
+    {% if config.get("DEBUG") == False %}
+    <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
+    {% else %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    {% endif %}
+
+    {% block extra_styles %}{% endblock %}
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <nav class="navbar navbar-static-top navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{{ url_for('.index') }}">RKTIK</a>
         </div>
-    </article>
-</body>
+
+        <!-- Navbar contents below this will be toggled on mobile -->
+
+        <!-- Persona/Groups menu -->
+        <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+          <!-- Link movements, sorted by identity, here -->
+          {% for p in current_user.associations|sort(attribute='created') %}
+            {% if p == current_user.active_persona %}
+              <li class="active dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                  {{ id_macros.persona(p, nolink=True) }}
+                  {% if p.notification_list()|length > 0 %}
+                  <span class="badge">{{ p.notification_list()|length }}</span>
+                  {% endif %}
+                  <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu rk-notifications" role="menu">
+                  {% for notification in p.notification_list() %}
+                    <li class="rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
+                  {% else %}
+                    <li><a href="#">No unread notifications</a></li>
+                  {% endfor %}
+                  <li class="divider"></li>
+                  <li><a href="{{ url_for('web.notifications') }}">See all notifications</a></li>
+                </ul>
+              </li>
+            {% else %}
+            <li><a href="{{ url_for('web.activate_persona', id=p.id) }}">
+              {{ id_macros.persona(p, nolink=True) }}
+              {% if p.notification_list()|length > 0 %}
+              <span class="badge">{{ p.notification_list()|length }}</span>
+              {% endif %}
+            </a></li>
+            {% endif %}
+          {% endfor %}
+          {% if not current_user.is_anonymous() %}
+            <li><a href="{{ url_for('web.create_persona') }}"web.><i class="fa fa-plus"></i> Add a new Persona</a></li>
+          {% endif %}
+          </ul>
+
+          <!-- Toolbox -->
+          <ul class="nav navbar-nav navbar-right">
+            {% if current_user.is_anonymous() %}
+            <li><a  href="{{ url_for('web.login') }}">Login &amp; Signup  </a></li>
+            {% else %}
+            <li>
+              <a href="{{ url_for('web.persona', id=active_persona.id) }}">Your Mindspace</a>
+            </li>
+            <li>
+              <a href="{{ url_for('web.persona_blog', id=active_persona.id) }}">Your Blog</a>
+            </li>
+            <li><a href="{{ url_for('.logout') }}">Logout</a></li>
+            {% endif %}
+          </ul>
+
+          <!-- Right-aligned search form -->
+<!--           <form class="navbar-form navbar-right" role="search">
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Search">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+            </div>
+          </form> -->
+        </div> <!-- /.navbar-collapse -->
+      </div> <!-- ./container-fluid -->
+    </nav>
+    <nav class="navbar navbar2 navbar-static-top navbar-default hidden-xs">
+      <div class="container-fluid">
+        <!-- Movements -->
+        {% if not current_user.is_anonymous() %}
+        <div class="navbar-header">
+          <a class="navbar-brand" data-toggle="tooltip" data-placement="bottom" title="This number measures atention you get. Be nice and submit cool stuff to make it rise.">
+            <i class="fa fa-eye"></i> <strong>{{current_user.active_persona.attention}}</strong>
+          </a>
+        </div>
+        {% endif %}
+        <ul class="nav navbar-nav">
+          {% for m in nav_movements %}
+            <li {% if movement and movement.id == m.id %}class="active"{% endif %}>
+              <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </nav>
+
+    {% for message in get_flashed_messages() %}
+        <div class='alert alert-success' role="alert"><span>{{message}}</span></div>
+    {% endfor %}
+
+
+    <div class="container-fluid main-container">
+
+      {% block content %}{% endblock %}
+
+    </div>
+
+    <div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        {% if current_user.is_anonymous() %}
+          <div class="modal-header">
+            <h4>Signup required</h4>
+          </div>
+          <div class="modal-body">
+          <p class="lead">You need to <a style="text-decoration: underline;" href="{{ url_for('web.signup') }}">sign up</a> to do this.</p>
+          </div>
+        {% else %}
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><i class="fa fa-retweet"></i> Repost as <span id="rk-repost-username"></span></h4>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="rk-repost-text"><h4>Text</h4></label>
+                    <textarea id="rk-repost-text" class="form-control rk-create-text" name="text"></textarea>
+                    <input type="hidden" class="rk-create-parent" value="" />
+                  </div>
+                </div>
+                <div class="col-sm-6 rk-repost-mindsets">
+                  <h4>Pick a Place</h4>
+                    <ul class="list-unstyled">
+                  {% for map in repost_mindsets %}
+                      <form class="rk-repost-form">
+                        <li>
+                          <button type="submit" class="btn btn-default btn-block rk-repost-button" data-mindset-id="{{ map.id }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Creating Thought' data-success-text='<i class="fa fa-check"></i> {{ map.name }}'>{{ map.name }}</button>
+                        </li>
+                      </form>
+                  {% endfor %}
+                    </ul>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <!-- Socket.IO -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <!-- Less Compiler -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
+    <!-- X-Editable -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <!-- PNotify -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/pnotify.custom.min.js') }}"></script>
+    <!-- JQuery Simply Countable -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/jquery.simplyCountable.js') }}"></script>
+    <!-- Glia JS -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+    <script type="text/javascript" charset="utf-8">{% block script %}
+    window.user_id = "{{ current_user.active_persona.id }}";
+    window.user_name = "{{  current_user.active_persona.username }}";
+    {% endblock %}
+    window.login_url = "{{ url_for('web.login', next=request.url) }}";</script>
+  </body>
+</html>

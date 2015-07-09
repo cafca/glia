@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/movement.html" as movement_macros %}
+{% import "macros/helpers.html" as helper_macros %}
+{% import "macros/identity.html" as id_macros with context %}
+
+{% block script %}
+window.room_id = "{{ persona.blog_id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+window.movement_id = "{{  persona.id }}";
+window.admin_id = "{{ persona.id }}";
+{% endblock %}
+
+{% block content %}
+<section class="row">
+  <div class="thought-listing col-sm-8 col-sm-push-2">
+    <div class="jumbotron rk-blog-header" style="background-color: #{{ persona.color }};">
+      <h1>{{ persona.username }}</h1>
+      <p>Personal Blog</p>
+      {{ id_macros.follow_toggle(persona, current_user.active_persona, size="lg") }}
+      <a class="btn btn-lg btn-primary" href="{{ url_for('web.persona', id=persona.id) }}">Visit mindspace</a>
+    </div>
+
+    {% for thought in thoughts.items %}
+        {{ thought_macros.thought_lead(thought, controlled_personas) }}
+    {% else %}
+      <div class="rk-thought rk-thought-lead">
+        <h1>No blog posts found</h1>
+        <p class="lead">{{ persona.username }} is just getting started. Visit their <a href="{{ url_for('web.persona', id=persona.id) }}">mindspace</a> to say <em>hello</em>.</p>
+      </div>
+    {% endfor %}
+
+    {{ helper_macros.paginate(thoughts) }}
+
+  </div> <!-- ./ thought listing -->
+
+  <div class="col-sm-8 col-sm-push-2">
+    <div class="panel panel-default">
+
+      <div class="panel-body">
+        {% if current_user.is_anonymous() %}
+          <p class="lead">Get an RKTIK account to follow this blog and many others.
+          <a href="{{ url_for('web.signup', next=request.path) }}" class="btn btn-primary btn-lg pull-right">Sign up now</a></p>
+
+        {% else %}
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+            {{ id_macros.follow_toggle(persona, current_user.active_persona) }}
+            </div>
+          </div>
+
+          <div class="col-sm-8">
+            <h4>Followers receive updates from this persona on their frontpage.</h4>
+          </div>
+        </div>
+        {% endif %}
+    </div> <!-- ./ panel -->
+  </div> <!-- ./ chat column -->
+</section>
+
+{% endblock %}

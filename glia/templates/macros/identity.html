@@ -1,0 +1,36 @@
+{% macro persona(p, flair=None, nolink=False) %}
+{% if nolink == False %}<a href="{{ url_for('web.persona', id=p.id) }}">{% endif %}
+  <i class="fa fa-circle" style="color: #{{p.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ p.username }}</span>
+{% if nolink == False %}</a>{% endif %}
+{% if flair %}<span class="label label-default">{{ flair }}</span>{% endif %}
+{% endmacro %}
+
+{% macro movement(m, flair=None, nolink=False) %}
+{% if nolink == False %}<a href="{{ url_for('web.movement', id=m.id) }}">{% endif %}
+  <i class="fa fa-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ m.username }}</span>
+{% if nolink == False %}</a>{% endif %}
+{% if flair %}<span class="label label-default">{{ flair }}</span>{% endif %}
+{% endmacro %}
+
+{% macro identity(i, flair=None, nolink=False) %}
+{% if i.kind == "persona" %}
+{{ persona(i, flair, nolink) }}
+{% else %}
+{{ movement(i, flair, nolink) }}
+{% endif %}
+{% endmacro %}
+
+
+{% macro follow_toggle(ident, follower, size=None) %}
+  {% if ident != follower %}
+    {% if ident in follower.blogs_followed %}
+      <button class="btn btn-default{% if size %} btn-{{size}}{% endif %}" type="submit" id="rk-follower" data-href="{{ url_for('.async_toggle_following', id=ident.id) }}">
+        <i class="fa fa-fw fa-eye"></i> Unfollow
+      </button>
+    {% else %}
+      <button class="btn btn-primary{% if size %} btn-{{size}}{% endif %}" type="submit" id="rk-follower" data-href="{{ url_for('.async_toggle_following', id=ident.id) }}">
+        <i class="fa fa-fw fa-eye"></i> Follow
+      </button>
+    {% endif %}
+  {% endif %}
+{% endmacro %}

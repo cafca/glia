@@ -1,0 +1,564 @@
+
+//
+// COLORS
+//
+
+@base: #0B3954;
+@accent: #C81D25;
+@dark: #A39BA8;
+@medium: #B8C5D6;
+@light: #F4F8FC;
+
+
+//
+//  MAIN STYLES
+//
+
+
+html > body {
+    font-family: Delicious;
+    background-color: darken(white, 1%);
+}
+
+.flash {
+    width: 100%;
+    background-color: rgba(161, 221, 255, 0.36);
+    border-bottom: 1px solid rgba(86, 120, 139, 0.28);
+
+    span { margin: 5px 10px; }
+}
+
+a > .fa:hover {
+    text-decoration: none;
+}
+
+
+.dl-sm {
+    dt {
+        width: 80px;
+    }
+
+    dd {
+        margin-left: 100px;
+    }
+}
+
+.member-only { display: none; }
+.member .member-only { display: inherit; }
+.member .non-member-only { display: none; }
+
+.rk-promote {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    box-sizing: border-box;
+    display: inline-block;
+    font-size: 12px;
+    height: 18px;
+    line-height: 1.5;
+    text-align: center;
+    vertical-align: middle;
+    width: 40px;
+
+    span {
+        background-color: @medium;
+        float: left;
+        height: 100%;
+        width: 50%;
+    }
+
+    &.done span {
+        display: none;
+    }
+}
+
+//
+// HEADER
+//
+
+
+.rk-welcome {
+    h1 {
+        color: white;
+    }
+
+    small {
+        color: darken(white, 10%);
+    }
+
+    #rk-welcome-login {
+        display: none;
+        height: 34px;
+    }
+}
+
+.navbar-default {
+    background-color: #e7e7e7;
+
+    .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
+        background-color: lighten(@base, 10%);
+        color: white;
+
+        .badge {
+            background-color: @accent;
+        }
+    }
+}
+
+.navbar2 {
+    margin-top: -20px;
+    background-color: darken(#f8f8f8, 1%);
+    border-bottom: none;
+    z-index: 50;
+    min-height: 26px;
+
+    .navbar-nav > li > a, .navbar-brand {
+        padding: 3px 10px;
+        height: 26px;
+    }
+
+    .navbar-nav > .active > a, .navbar-nav > .active > a {
+        color: @dark;
+        background-color: #fcfcfc;
+    }
+}
+
+.rk-notifications {
+    z-index: 100;
+    .rk-unread {
+        background-color: @light;
+    }
+}
+
+.rk-blog-header {
+    color: darken(white, 1%);
+}
+
+//
+// CREATE THOUGHT UI
+//
+
+.rk-create {
+    .rk-create-extend {
+        display: none;
+        color: #333333;
+    }
+
+    .rk-create-counter {
+        padding-right: 6px;
+    }
+}
+
+.rk-longform-longform {
+    height: 200px !important;
+}
+
+.over {
+    color: red;
+    font-weight: bold;
+}
+
+//
+// CHAT
+//
+
+.panel-default .panel-heading, .panel-default .panel-footer {
+    background-color: @light;
+}
+
+.rk-chat {
+    .dl-horizontal {
+        margin: 0;
+    }
+
+    #rk-chat-nicknames > strong::after {
+        content: ", ";
+    }
+
+    #rk-chat-nicknames > strong:last-of-type::after {
+        content: none !important;
+    }
+
+    #rk-chat-lines {
+        overflow: scroll;
+        height: 25em;
+        border-top: 1px solid darken(white, 7%);
+        border-bottom: 1px solid darken(white, 7%);
+
+        .upvote {
+            float: left;
+            width: 32px;
+            margin-right: 5px;
+        }
+
+        .author_name {
+            font-weight: bold;
+            color: grey;
+            margin-right: 5px;
+        }
+
+        .rk-chatline > p {
+            overflow-wrap: break-word;
+        }
+
+        .rk-chat-percept {
+            background-color: #fafafa;
+        }
+
+        .rk-system {
+            padding: 0 15px;
+            background-color: lighten(yellow, 45%);
+        }
+
+        .rk-chatline-meta {
+            padding: 0 15px;
+            background-color: @light;
+            color: @dark;
+            a {
+                color: darken(@dark, 10%);
+            }
+
+        }
+    }
+
+    .rk-create {
+        margin: .5em 0 .5em;
+        width: 100%;
+
+        .rk-create-text {
+            width: 80%;
+        }
+
+        button {
+            width: 18%;
+        }
+    }
+}
+
+//
+// REPOST MODAL
+//
+
+#rk-repost-text {
+    height: 15em;
+}
+
+.rk-repost-mindsets {
+    height: 18em;
+    overflow: scroll;
+
+    .btn {
+        margin-bottom: 3px;
+    }
+}
+
+//
+// MOVEMENTS
+//
+
+.rk-movement-info {
+    btn-default { margin-bottom: 1em; }
+}
+
+.rk-movement-box {
+    a:hover {
+        text-decoration: none;
+    }
+
+    .panel-heading {
+        border-bottom: 1px dotted white;
+
+        h4 {
+            color: darken(white, 1%);
+            font-size: 22px;
+        }
+    }
+
+    .panel-body {
+        background-color: white;
+    }
+}
+
+.rk-movement-invite #invites {
+    height: 200px;
+}
+
+//
+// FRONTPAGE-SPECIFIC
+//
+
+.rk-frontpage {
+    .rk-frontpage-ident {
+        margin-top: 1.5em;
+        background-color: #fcfcfc;
+
+        .panel-heading {
+            background-color: #666;
+            font-variant: small-caps;
+            padding: 10px 0 7px;
+            border-bottom: none;
+
+            h2 {
+                font-size: 22px;
+                color: white;
+                margin: 0 15px;
+            }
+
+            small {
+                color: white;
+                margin-left: 5px;
+                font-variant: normal;
+                font-style: italic;
+            }
+
+            a:hover, a:focus {
+                text-decoration: none;
+            }
+
+            .rk-attention {
+                color: darken(white, 10%);
+                font-size: 18px;
+                margin-top: 3px;
+            }
+        }
+
+        .panel-body {
+            .rk-thought-title h3 {
+                font-size: 14px;
+            }
+
+            .rk-thought-line {
+                margin-bottom: 5px;
+            }
+        }
+    }
+
+    .panel .panel {
+        // Reset margin for text panels inside movement panels
+        margin: 0
+    }
+}
+
+.rk-toc {
+    padding-bottom: 1em;
+    border: none;
+    background-color: inherit;
+
+    h3 {
+        color: fadeout(rgb(51, 51, 51), 25%);
+    }
+
+    hr {margin-bottom: -5px}
+
+    a {
+        color: fadeout(#0b3954, 25%);
+    }
+
+    a.btn {
+        color: white;
+    }
+
+    .list-group > a > .list-group-item {
+        background-color: inherit;
+        border: none;
+        border-left: 1px solid #fcfcfc;
+        margin-left: -1px;
+    }
+
+    .list-group > a > .list-group-item:hover, .list-group > a > .list-group-item:focus {
+        border-left: 1px solid #ddd;
+    }
+}
+
+.rk-toc-movements > ul > li {
+    overflow: scroll;
+    margin-bottom: 0.5em;
+}
+
+.rk-frontpage-item {
+    margin-top: 5em;
+}
+
+.rk-frontpage-item:first-child {
+    margin-top: 0;
+}
+
+//
+// THOUGHTS
+//
+
+.rk-thought-listing {
+    .rk-line-container {
+        padding: 5px 0 0 5px;
+    }
+}
+
+.rk-thought-lead {
+    margin-bottom: 2.5em;
+
+    h2 {
+        font-weight: bold;
+        overflow: scroll;
+    }
+
+    .rk-assocs {
+        margin-left: .5em;
+    }
+
+    .rk-thought-meta {
+        font-size: 12px;
+    }
+}
+
+.rk-colorpanel {
+    .panel-heading a {
+        color: white;
+    }
+
+    .panel-body {
+        background-color: white;
+    }
+}
+
+.rk-thought-line {
+    margin-bottom: 1em;
+
+    .rk-line-container {
+        float: left;
+
+        h3 {
+            font-size: 18px;
+            margin: 0 0 10px;
+        }
+    }
+
+    .rk-thought-meta {
+        color: lighten(gray, 10%);
+        margin-bottom: 5px;
+
+        .btn, .rk-promote {
+            float: left;
+            margin-right: 5px;
+        }
+    }
+
+    .rk-create {
+        margin-top: 1em;
+    }
+}
+
+.rk-thought-box {
+    .caption {
+        font-size: 12px;
+    }
+
+    .panel > div {
+        padding: 2px;
+    }
+
+    .panel > a:hover {
+        text-decoration:none;
+    }
+
+    .rk-thought-box-content {
+        overflow: scroll;
+    }
+
+    .rk-thought-box-percepts {
+        line-height: 1.8em;
+    }
+}
+
+.rk-thought-reply {
+    .rk-create-text {
+        height: 100px;
+    }
+}
+
+.rk-comments {
+    margin: 2em 0;
+
+    .rk-thought-line > .rk-line-container {
+        max-width: 30em;
+    }
+
+    .rk-create {
+        display: none;
+    }
+
+    .rk-create-text {
+        width: 370px;
+        height: 100px;
+    }
+}
+
+.rk-replies {
+    margin-left: 2.5em;
+    padding-left: 5px;
+    border-left: 1px dashed @medium;
+}
+
+.rk-replies&.rk-comments {
+    margin-left: 0;
+    padding-left: 0;
+    border: none;
+}
+
+//
+// PERCEPTS
+//
+
+.rk-percept {
+    margin: .5em 0;
+
+    .row {
+        margin: .5em -5px 20px -5px;
+        clear: both;
+    }
+}
+
+.rk-link {
+    height: 28px;
+    padding: 2px;
+}
+
+.rk-favicon {
+    width: 24px;
+    height: 24px;
+}
+
+.rk-favicon-small {
+    width: 16px;
+    height: 16px;
+}
+
+.rk-text {
+    overflow-wrap: break-word;
+}
+
+//
+// PERSONA PAGE
+//
+
+.rk-persona-infobox {
+    margin-bottom: 1em;
+    border-top: 3px solid @base;
+    background-color: #fafafa;
+
+    .rk-persona-picture {
+        min-height: 150px;
+        background-color: @medium;
+    }
+
+    .rk-persona-meta > dl {
+        margin-top: 1.4em;
+    }
+}
+
+.rk-persona-movements {
+    .rk-persona-movements-box {
+        margin-bottom: 2em;
+        border-top: 2px solid @medium;
+        padding-top: 1em;
+    }
+}

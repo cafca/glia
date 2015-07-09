@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ controlled_personas }}
+<h1>Thoughts</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Message</th>
+            <th>Author</th>
+            <th>Modified</th>
+            <th>Created</th>
+            <th>State</th>
+            <th>Parent</th>
+            <th>Vesicles</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for thought in thoughts %}
+      <tr>
+        <td>{{ thought.id }}</td>
+        <td>{{ thought.text }}</td>
+        <td>{{ thought.author.username}}</td>
+        <td>{{ thought.modified | localtime|naturaltime }}</td>
+        <td>{{ thought.created | localtime|naturaltime}} </td>
+        <td>{{ thought.get_state()}}</td>
+        <td>{{ thought.parent_id }}</td>
+        <td>{{ thought.vesicles | length }}</td>
+        {% if thought.get_state() >= 0 and thought.author.controlled() %}
+            <td><form action="{{url_for('.delete_thought', id=thought.id)}}" method="POST">
+                <button class="btn" type="submit">Delete</a>
+            </form></td>
+        {% else %}
+            <td>&nbsp;</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+<h1>Mindsets</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Kind</th>
+            <th>Author</th>
+            <th>Modified</th>
+            <th>State</th>
+            <th>Thoughts</th>
+            <th>Vesicles</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for mindset in mindsets %}
+      <tr>
+        <td>{{ mindset.id }}</td>
+        <td>{{ mindset.kind }}</td>
+        <td>{{ mindset.author.username}}</td>
+        <td>{{ mindset.modified | localtime|naturaltime }}</td>
+        <td>{{ mindset.get_state()}}</td>
+        <td>{% for thought in mindset.index %}{{thought}}<br />{% endfor %}</td>
+        <td>{{ mindset.vesicles | length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+<h1>Users</h1>
+{% for user in users %}
+<h3>{{ user.email }}</h3>
+<dl class="dl-horizontal">
+  <dt>Active</dt>
+  <dd>{{user.active}}</dd>
+  <dt>Validated</dt>
+  <dd>{{user.validated_on|localtime|naturaltime}}</dd>
+  <dt>Authenticated</dt>
+  <dd>{{user.authenticated}}</dd>
+  <dt>Created</dt>
+  <dd>{{user.created|localtime|naturaltime}}</dd>
+  <dt>Modified</dt>
+  <dd>{{user.modified|localtime|naturaltime}}</dd>
+  <dt>Email</dt>
+  <dd>{{user.email}}</dd>
+  <dt>ID</dt>
+  <dd>{{user.id}}</dd>
+</dl>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Persona ID</id>
+            <th>Username</th>
+            <th>Email-Address</th>
+            <th>Modified</th>
+            <th>Vesicles</th>
+            <th>Private Key</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for persona in user.associations %}
+      <tr>
+        <td>
+          {{ persona.id }}
+          {% if persona.stub %} (stub){% endif %}
+          {% if persona == user.active_persona %} (active){% endif %}
+        </td>
+        <td>{{ persona.username }}</td>
+        <td>{{ persona.email }}</td>
+        <td>{{ persona.modified }}</td>
+        <td>{{ persona.vesicles | length }}</td>
+        <td>{% if persona.crypt_private %}<i class="icon-key"></i>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+
+<h1>Percepts</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</id>
+            <th>Title</th>
+            <th>Kind</th>
+            <th>Created</th>
+            <th>Modified</th>
+            <th>Source</th>
+            <th>Vesicles</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for percept in percepts %}
+      <tr>
+        <td>{{ percept.id }}</td>
+        <td>{{ percept.kind }}</td>
+        <td>{{ percept.title }}</td>
+        <td>{{ percept.created }}</td>
+        <td>{{ percept.modified }}</td>
+        <td>{{ percept.source }}</td>
+        <td>{{ percept.vesicles | length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+<h1>Movements</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</id>
+            <th>Name/Description</th>
+            <th>Members</th>
+            <th>Blog</th>
+            <th>Mindspace</th>
+            <th>Vesicles</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for movement in movements %}
+      <tr>
+        <td>{{ movement.id }}</td>
+        <td><strong>{{ movement.username }}</strong> <br /> {{ movement.description }}</td>
+        <td>{% for mma in movement.members %}
+        <p>{{ loop.index }}: {{ mma.persona.username }} ({{ mma.role }})</p>
+        {% endfor %}</td>
+        <td>{{ movement.blog }}</td>
+        <td>{{ movement.mindspace }}</td>
+        <td>{{ movement.vesicles | length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+{%endblock%}

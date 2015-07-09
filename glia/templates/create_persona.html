@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% import "macros/identity.html" as id_macros %}
+
+{% block extra_styles %}
+<link rel='stylesheet' href='{{ url_for("static", filename="css/spectrum.css") }}' />
+{% endblock %}
+
+{% block extra_scripts %}
+<script src='{{ url_for("static", filename="js/spectrum.js") }}'></script>
+{% endblock %}
+
+{% block script %}
+$("#rk-colorpicker").spectrum({
+  showPaletteOnly: true,
+  showPalette:true,
+  flat: true,
+  showInput: true,
+  color: '#0B3954',
+  palette: [
+    {% for color in allowed_colors %}
+    '#{{ color }}',
+    {% endfor %}
+  ]
+});
+
+$(".rk-signup-form").submit(function() {
+  $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+});
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-sm-4 col-sm-push-4">
+
+{% if movement %}
+<h1>Join movement <strong>{{ id_macros.movement(movement) }}</strong> as a new Persona</h1>
+{% else %}
+<h1>Add a new Persona to your account</h1>
+{% endif %}
+
+<form method="POST" class="rk-signup-form" action="{{ url_for('.create_persona', for_movement=movement_id) }}">
+  {{ form.hidden_tag() }}
+  <div class="form-group {% if form.username.errors %}has-error{% endif %}">
+    {% if form.username.errors %}
+      <label for="username">{% for error in form.username.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="username">What would you like your name to be?</label>
+    {% endif %}
+    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username">
+  </div>
+
+  <div class="form-group {% if form.password.errors %}has-error{% endif %}">
+    {% if form.password.errors %}
+      <label for="password">{% for error in form.password.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="password">Enter your password again</label>
+    {% endif %}
+    <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+  </div>
+
+  <div class="form-group {% if form.color.errors %}has-error{% endif %}">
+    {% if form.color.errors %}
+      <label for="color">{% for error in form.color.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+      <label for="color">Choose a color</label>
+    {% endif %}
+    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" /></p>
+  </div>
+
+  {% if movement %}
+  <button type="submit" class="btn btn-default rk-singleclick" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Please wait'>Join now</button>
+  {% else %}
+  <button type="submit" class="btn btn-default rk-singleclick" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Please wait'>Add Persona</button>
+  {% endif %}
+</form>
+</div>
+</div>
+{% endblock %}

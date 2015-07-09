@@ -18,15 +18,28 @@ USE_DEBUG_SERVER = True
 LOG_LEVEL = logging.DEBUG
 
 # Define addresses
-SERVER_HOST = 'app.souma.io'
+SERVER_HOST = 'localhost'
 SERVER_PORT = 24500
 SERVER_NAME = "{}:{}".format(SERVER_HOST, SERVER_PORT)
 
 AUTH_ENABLED = False
 
 # Define database setup
-DATABASE_FILE = '../server.db'
-SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
+
+# SQLITE SETUP
+# DATABASE_FILE = '../server.db'
+# SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE_FILE
+
+# POSTGRESQL SETUP
+# Create database with psql:
+# >> CREATE DATABASE glia_dev ENCODING 'utf8';
+SQLALCHEMY_DATABASE_URI = "postgresql://localhost/glia_dev"
+
+SQLALCHEMY_RECORD_QUERIES = False
+
+# Memcache config
+CACHE_TYPE = "memcached"
+CACHE_MEMCACHED_SERVERS = ["127.0.0.1", ]
 
 # Load server cert
 SERVER_KEY_FILE = "./server_private.key"
@@ -48,3 +61,13 @@ except IOError:
     SECRET_KEY = os.urandom(24)
     with open('secret_key', 'wb') as f:
         f.write(SECRET_KEY)
+
+# Get sendgrid credentials
+try:
+    with open('sendgrid.auth', 'r') as f:
+        sg_auth = f.read()
+except IOError:
+    logging.warning("""Sendgrid configuration could not be read. Please create
+        ./sendgrid.auth file with contents 'username:password'.""")
+else:
+    SENDGRID_USERNAME, SENDGRID_PASSWORD = sg_auth.split(":", 1)

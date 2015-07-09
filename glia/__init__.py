@@ -13,13 +13,16 @@ import os
 from blinker import Namespace
 from flask import Flask
 from flask.ext.socketio import SocketIO
-from flask.ext.login import LoginManager
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import LoginManager, current_user
+from flask.ext.misaka import Misaka
+from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
+from humanize.time import naturaldelta
 
-from .database import db
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
-
+from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.models import Persona
+from glia.helpers import inject_mentions, gallery_col_width, sort_hot
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -37,9 +40,6 @@ def create_app(log_info=True):
                         + " environment variable to specify additional options.")
         logging.warning('>> export GLIA_CONFIG="./development_config.py"')
 
-    # naturaltime allows templates to render human readable time
-    app.jinja_env.filters['naturaltime'] = naturaltime
-
     # For Heroku: ProxiedRequest replaces request.remote_addr which the real one
     # instead of their internal IP
     app.request_class = ProxiedRequest
@@ -56,16 +56,52 @@ def create_app(log_info=True):
     # Setup websockets
     socketio.init_app(app)
 
+    # Setup Memcache
+    cache_config = {k: app.config[k] for k in app.config.keys() if k.startswith('CACHE')}
+    if app.config['HEROKU']:
+        cache_config['CACHE_MEMCACHED_SERVERS'] = [os.getenv('MEMCACHIER_SERVERS')]
+        cache_config['CACHE_MEMCACHED_USERNAME'] = os.getenv('MEMCACHIER_USERNAME')
+        cache_config['CACHE_MEMCACHED_PASSWORD'] = os.getenv('MEMCACHIER_PASSWORD')
+    cache.init_app(app, config=cache_config)
+
     # Setup login manager
     login_manager.init_app(app)
     login_manager.anonymous_user = AnonymousPersona
-    from flask import redirect, url_for
-    login_manager.unauthorized = lambda: redirect(url_for('web.login'))
+    login_manager.login_view = "web.login"
+    login_manager.login_message = "Please login to continue browsing RKTIK"
 
     @login_manager.user_loader
     def load_user(userid):
         from nucleus.nucleus.models import User
         return User.query.get(userid)
+
+    @app.context_processor
+    def persona_context():
+        """Makes active persona available in templates"""
+        return dict(
+            active_persona=current_user.active_persona
+        )
+
+    # Setup markdown support for templates
+    Misaka(app)
+
+    # Setup time filter
+    # - Import here to avoid circular import
+    from web.helpers import localtime, authorize_filter
+    app.jinja_env.filters['naturaltime'] = naturaltime
+    app.jinja_env.filters['naturaldelta'] = naturaldelta
+    app.jinja_env.filters['localtime'] = lambda value: localtime(value, tzval=app.config["TIMEZONE"]) if value is not None else None
+
+    # Additional template filters and extensions
+    app.jinja_env.filters['mentions'] = inject_mentions
+    app.jinja_env.filters['gallery_col_width'] = gallery_col_width
+    app.jinja_env.filters['sort_hot'] = sort_hot
+    app.jinja_env.filters['authorize'] = authorize_filter
+    app.jinja_env.add_extension('jinja2.ext.do')
+
+    # Setup debug toolbar
+    toolbar = DebugToolbarExtension()
+    toolbar.init_app(app)
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint

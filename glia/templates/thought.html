@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/thought.html" as thought_macros with context %}
+{% import "macros/percept.html" as percept_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+{% block script %}
+window.room_id = "{{ thought.mindset_id }}";
+window.map_id = "{{ thought.mindset_id }}";
+window.user_id = "{{ current_user.active_persona.id }}";
+window.user_name = "{{  current_user.active_persona.username }}";
+
+$(document).ready(function() {
+  $('.rk-repost-spawn > button').tooltip({
+       'delay': { show: 450, hide: 300 }
+  });
+
+  $('#rk-thought-context-length').editable({
+    autotext: 'always',
+    type: 'text',
+    name: 'context_length',
+    pk: '{{ thought.id }}',
+    url: '{{ url_for('web.async_thought', thought_id=thought.id) }}',
+    title: 'How many do you want to show?',
+    display: function(value, response) {
+      if (value > 0) {
+        $(this).html("Displaying " + value + " previous Thoughts for context.");
+      } else {
+        $(this).html("Author has chosen not to display context for this Thought.");
+      }
+    },
+    error: function(response, newValue) {
+      if (response.status == 400) {
+        return response.message;
+      } else {
+        return "There was an error processing your input.";
+      }
+    },
+    success: function(response, newValue) {
+      location.reload();
+    },
+    value: {{ thought.context_length|default("0", True) }},
+    placement: 'bottom',
+    disabled: {% if thought.author == active_persona %}false{% else %}true{% endif %}
+  });
+});
+{% endblock %}
+
+{% block content %}
+
+<section class="row">
+  <div class="col-sm-7 col-sm-push-1">
+    <div class="rk-thought-listing  rk-thought-{{ thought.id }} row">
+      <div class="col-sm-12">
+        {% if context|length > 0 %}
+        <blockquote style="padding-bottom: -20px">
+        {% for s in context %}
+        <p>
+          {{ thought_macros.short(s) }}
+          {% if s.mindset != thought.mindset %}
+          <span class="label label-default">{{s.mindset.name}}</span>
+          {% endif %}
+        </p>
+        {% endfor %}
+        </blockquote>
+        {% endif %}
+
+        <div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
+          <span class="rk-thought-title">
+            <h2>
+            {{ thought_macros.upvote(thought) }}
+              {{ thought_macros.label_badges(labels) }}
+              {{ thought.text|mentions(thought) }}
+            </h2>
+          </span>
+
+          <!-- Attachments -->
+          {{ percept_macros.render_all(thought, truncate=False) }}
+        </div>
+      </div>
+    </div> <!-- ./ thought listing -->
+
+    <a id="comments"></a>
+    <div class="rk-thought-reply row">
+      <div class="col-md-7">
+        <form class="rk-create" action="{{ url_for('web.create_thought') }}" method="GET">
+          <div class="pull-right rk-create-counter"></div>
+          <input class="rk-create-parent" name="parent" type="hidden" value="{{ thought.id }}">
+          <div class="form-group">
+            <textarea class="form-control rk-create-text" name="text" placeholder="{% if current_user.is_anonymous() %}Please log in or signup to write replies.{% endif %}"></textarea>
+          </div>
+          <div class="rk-create-extend">
+            <p>That's a lot of text! Do you want to make a long reply?</p>
+          </div>
+          <button type="submit" class="rk-create-submit btn btn-primary btn-sm" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Reply</button>
+          <button class="btn btn-sm btn-default rk-create-longform">Make a long reply</button>
+        </form>
+      </div>
+    </div> <!-- ./ top-level reply form -->
+
+    <div class="rk-thought-listing rk-comments rk-replies">
+    &nbsp;
+    {% for s in thought.comments %}
+      {{ thought_macros.comment_tree(s, controlled_personas, truncate=True) }}
+    {% endfor %}
+    </div> <!-- ./ comments -->
+  </div> <!-- ./ content area -->
+
+  <div class="col-sm-3 col-sm-push-1">
+    <div {% if thought.mindset %}
+        style="background-color: #{{thought.mindset.author.color}};"
+        class="panel rk-colorpanel"
+        {% else %}
+        class="panel-primary rk-colorpanel"
+        {% endif %}
+      >
+      <div class="panel-heading">
+        {% if thought.mindset %}
+        <a href="{{ thought.mindset.get_absolute_url() }}"><h2>{{ thought.mindset.name }}</h2></a>
+        {% else %}
+        <a href="{{ url_for('web.thought', id=thought.parent.id) }}"><h2>In reply to {{ id_macros.identity(thought.parent.author, nolink=true) }}</h2></a>
+        {% endif %}
+      </div>
+      <div class="panel-body" style=>
+        <p>Thought by {{ id_macros.identity(thought.author) }} {{thought.created|localtime|naturaltime}}.</p>
+
+        <p><a href="#" id="rk-thought-context-length"></a></p>
+
+        {% if thought.state >= 0 %}
+        <p><i class="fa fa-eye"></i> This Thought is available</p>
+        {% else %}
+        <p><i class="fa fa-exclamation-circle"></i> This Thought is currently unavailable.</p>
+        {% endif %}
+      </div>
+      <div class="panel-footer">
+        <div class="form-inline">
+          {{ thought_macros.repost_button(thought) }}
+          {% if thought.authorize("delete", active_persona.id) %}
+            {% if thought.state >= 0 %}
+              <a class="btn btn-default" href="{{ url_for('.delete_thought', id=thought.id) }}">
+                <i class="fa fa-eye-slash"></i> Remove
+              </a>
+            {% elif thought.state == -2 %}
+              <a class="btn btn-success" href="{{ url_for('.delete_thought', id=thought.id) }}">
+                <i class="fa fa-eye"></i> Publish again
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
