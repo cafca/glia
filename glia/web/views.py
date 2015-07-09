@@ -194,7 +194,7 @@ def create_thought():
         form.parent.data = request.args['parent']
     parent = Thought.query.get_or_404(form.parent.data) if form.parent.data else None
 
-    if "mindset" in request.args and request.args['mindset'] is not None:
+    if request.args.get("mindset"):
         form.mindset.data = request.args['mindset']
     elif parent is not None:
         ms = parent.mindset
@@ -202,7 +202,7 @@ def create_thought():
         flash("New thoughts needs either a parent or a mindset to live in.")
         app.logger.error("Neither parent nor mindset given {}")
 
-    ms = Mindset.query.get(form.mindset.data) if form.mindset.data else None
+    ms = Mindset.query.get_or_404(form.mindset.data) if form.mindset.data else None
 
     if form.validate_on_submit():
         try:
@@ -312,16 +312,21 @@ def index():
 
     sources = sorted(sources, key=lambda s: s.attention, reverse=True)
 
-    blog_data = [dict(
-        ident=s,
-        blog=list(s.blog.index.order_by(Thought.created.desc()).limit(3))
-    ) for s in sources]
+    blog_list = list()
+    for s in sources:
+        source_data = dict()
+        source_data["ident"] = s
+        source_data["blog"] = list(s.blog.index.order_by(Thought.created.desc()).limit(3))
+        if isinstance(s, Movement) and s.active_member():
+            source_data["mindspace"] = Thought.query.filter(
+                Thought.id.in_(s.mindspace_top_thought(count=3)))
+        blog_list.append(source_data)
 
     # Collect main page content
     top_posts = Thought.top_thought()
 
     return render_template('index.html', movementform=movementform,
-        blog_data=blog_data, top_posts=top_posts, more_movements=more_movements)
+        blog_list=blog_list, top_posts=top_posts, more_movements=more_movements)
 
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])

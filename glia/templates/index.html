@@ -38,29 +38,35 @@
 
   </div> <!-- ./rktik-toc -->
 
-  {% if blog_data|length > 0 %}
+  {% if blog_list|length > 0 %}
     <div class="rk-frontpage col-sm-7 col-sm-pull-2">
 
     {{ helper_macros.intro(global_login_form) }}
 
-    {% for source in blog_data %}
+    {% for source in blog_list %}
       <div class="rk-frontpage-item">
-        <a href="{{ source.ident.get_absolute_url() }}">
-          <div class="rk-frontpage-ident">
-            <h4>{{ source.ident.username }} <span class="small">{{ source.ident.description }}</span>
-            <small class="pull-right rk-attention">
-              <i class="fa fa-eye"></i> {{source.ident.attention}}
-            </small>
-            </h4>
+        <div class="rk-frontpage-ident panel panel-default"  style="border-color: #{{ source.ident.color }}">
+          <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
+            <a href="{{ source.ident.get_absolute_url() }}">
+              <h2>{{ source.ident.username }}
+                <span class="pull-right rk-attention">
+                  <i class="fa fa-eye"></i> {{source.ident.attention}}
+                </span>
+              </h2>
+            </a>
           </div>
-
-        </a><!--
-
-        {% if source.recent_blog_post %}
-        <div class="rk-new-blog">
-          <h4>{{ thought_macros.thought_line(source.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
+          {% if "mindspace" in source %}
+            <div class="panel-body">
+            {% for t in source["mindspace"] %}
+              <p>{{ thought_macros.thought_line(t, no_percepts=True) }}</p>
+            {% else %}
+            <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
+            <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
+            {% endfor %}
+            <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more from Member Mindspace</a></small>
+          </div>
+          {% endif %}
         </div>
-        {% endif %} -->
 
         <div class="rk-frontpage-item-listing">
           {% if source.blog|length > 0 %}
@@ -71,8 +77,10 @@
                 {{ thought_macros.thought_line(thought, None, no_percepts=True) }}
               {% endif %}
             {% endfor %}
+          {% elif source.ident.kind == "movement" %}
+            <p class="lead">This movement's blog is empty. Vote on thoughts in the movement mindspace to promote them to this blog. </p>
           {% else %}
-            <p>Nothing here, yet</p>
+            <p class="lead">This Persona's blog is empty. </h2>
           {% endif %}
         </div>
       </div> <!-- ./ movement panel -->
