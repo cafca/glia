@@ -292,24 +292,42 @@ a > .fa:hover {
         margin-top: 1.5em;
         background-color: #fcfcfc;
 
-        a:hover, a:focus {
-            font-decoration: none;
-        }
-
-        h2 {font-size: 22px; margin: 0; color: white; margin: 0 15px;}
-
-
-
         .panel-heading {
             background-color: #666;
             font-variant: small-caps;
             padding: 10px 0 7px;
             border-bottom: none;
 
+            h2 {
+                font-size: 22px;
+                color: white;
+                margin: 0 15px;
+            }
+
             small {
                 color: darken(white, 15%);
                 font-variant: normal;
                 font-style: italic;
+            }
+
+            a:hover, a:focus {
+                text-decoration: none;
+            }
+
+            .rk-attention {
+                color: darken(white, 10%);
+                font-size: 18px;
+                margin-top: 3px;
+            }
+        }
+
+        .panel-body {
+            .rk-thought-title h3 {
+                font-size: 14px;
+            }
+
+            .rk-thought-line {
+                margin-bottom: 5px;
             }
         }
     }
@@ -317,11 +335,6 @@ a > .fa:hover {
     .panel .panel {
         // Reset margin for text panels inside movement panels
         margin: 0
-    }
-
-    .rk-attention {
-        color: darken(white, 10%);
-        margin-top: -1px;
     }
 }
 

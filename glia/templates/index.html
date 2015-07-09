@@ -59,12 +59,12 @@
           {% if "mindspace" in source %}
             <div class="panel-body">
             {% for t in source["mindspace"] %}
-              <p>{{ thought_macros.thought_line(t, no_percepts=True) }}</p>
+              {{ thought_macros.thought_line(t, no_percepts=True) }}
             {% else %}
-            <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
-            <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
+              <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
+              <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
             {% endfor %}
-            <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more from Member Mindspace</a></small>
+              <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more from Member Mindspace</a></small>
           </div>
           {% endif %}
         </div>
