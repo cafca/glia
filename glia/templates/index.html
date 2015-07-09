@@ -47,15 +47,15 @@
 
     {% for source in blog_list %}
       <div class="rk-frontpage-item">
+        <a href="{{ source.url }}">
+          <h1 class="rk-frontpage-item-title"></i> {{ source.ident.username }}</h1>
+        </a>
         <div class="rk-frontpage-ident panel panel-default"  style="border-color: #{{ source.ident.color }}">
           <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
-            <a href="{{ source.url }}">
-              <h2>{{ source.ident.username }}
-                <small>{% if source.ident.kind == "movement" %}{{ source.ident.description }}{% else %}Personal Blog{% endif %}</small>
-                <span class="pull-right rk-attention">
-                  <i class="fa fa-eye"></i> {{source.ident.attention}}
-                </span>
-              </h2>
+              <p>{% if source.ident.kind == "movement" %}{{ source.ident.description }}{% else %}Personal Blog{% endif %}</p>
+              <span class="pull-right rk-attention">
+                <i class="fa fa-eye"></i> {{source.ident.attention}}
+              </span>
             </a>
           </div>
           {% if "mindspace" in source %}
