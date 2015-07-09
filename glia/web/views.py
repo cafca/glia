@@ -606,6 +606,7 @@ def signup():
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
+            url="http://www.rktik.com/movement/27fe161d2ba64f4bb4986a99bebea18a/mindspace",
             source="system"
         )
         db.session.add(notification)
