@@ -49,6 +49,7 @@
           <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
             <a href="{{ source.ident.get_absolute_url() }}">
               <h2>{{ source.ident.username }}
+                <small>{% if source.ident.kind == "movement" %}{{ source.ident.description }}{% else %}Personal Blog{% endif %}</small>
                 <span class="pull-right rk-attention">
                   <i class="fa fa-eye"></i> {{source.ident.attention}}
                 </span>

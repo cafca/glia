@@ -65,26 +65,6 @@ def mark_notifications_read():
 #
 
 
-@app.route('/debug/')
-@http_auth.login_required
-def debug():
-    """ Display raw data """
-    thoughts = Thought.query.all()
-    percepts = Percept.query.all()
-    movements = Movement.query.all()
-    mindsets = Mindset.query.all()
-    users = User.query.all()
-
-    return render_template(
-        'debug.html',
-        thoughts=thoughts,
-        users=users,
-        percepts=percepts,
-        movements=movements,
-        mindsets=mindsets
-    )
-
-
 @app.route('/persona/<id>/activate')
 @http_auth.login_required
 def activate_persona(id):

@@ -292,13 +292,25 @@ a > .fa:hover {
         margin-top: 1.5em;
         background-color: #fcfcfc;
 
+        a:hover, a:focus {
+            font-decoration: none;
+        }
+
         h2 {font-size: 22px; margin: 0; color: white; margin: 0 15px;}
+
+
 
         .panel-heading {
             background-color: #666;
             font-variant: small-caps;
             padding: 10px 0 7px;
             border-bottom: none;
+
+            small {
+                color: darken(white, 15%);
+                font-variant: normal;
+                font-style: italic;
+            }
         }
     }
 
@@ -321,6 +333,8 @@ a > .fa:hover {
     h3 {
         color: fadeout(rgb(51, 51, 51), 25%);
     }
+
+    hr {margin-bottom: -5px}
 
     a {
         color: fadeout(#0b3954, 25%);
