@@ -52,7 +52,16 @@
         </a>
         <div class="rk-frontpage-ident panel panel-default"  style="border-color: #{{ source.ident.color }}">
           <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
-              <p>{% if source.ident.kind == "movement" %}{{ source.ident.description }}{% else %}Personal Blog{% endif %}</p>
+              <p>
+              {% if source.ident.kind == "movement" %}
+                {% if not source.ident.private or source.ident.active_member() %}
+                  <a href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">{{ source.ident.description|default("Mindspace", True) }}</a>
+                {% else %}
+                  {{ source.ident.description|default("Mindspace", True) }}
+                {% endif %}
+              {% else %}
+                Personal Blog
+              {% endif %}</p>
               <span class="pull-right rk-attention">
                 <i class="fa fa-eye"></i> {{source.ident.attention}}
               </span>
