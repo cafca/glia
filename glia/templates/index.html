@@ -7,7 +7,7 @@
 {% block content %}
 <div class="row" id="rk-index">
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-8">
-    {% if top_posts|length > 0 %}
+    {% if top_posts.count() > 0 %}
       <div class="panel-body">
         <h3>Top Thought</h3>
         <hr />
@@ -15,7 +15,9 @@
 
       <ul class="list-group rk-toc-movements">
         {% for thought in top_posts %}
-        <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
+          {% if thought|authorize("read") %}
+            <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
+          {% endif %}
         {% endfor %}
       </ul> <!-- ./ movement list -->
     {% endif %}

@@ -28,7 +28,7 @@ from glia.web.helpers import send_validation_email, \
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.models import Persona, User, Movement, \
-    Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
+    Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
     Mindspace, Blog, Dialogue
 
@@ -304,7 +304,7 @@ def index():
         blog_list.append(source_data)
 
     # Collect main page content
-    top_posts = Thought.top_thought()
+    top_posts = Thought.query.filter(Thought.id.in_(Thought.top_thought()))
 
     return render_template('index.html', movementform=movementform,
         blog_list=blog_list, top_posts=top_posts, more_movements=more_movements)
@@ -714,6 +714,10 @@ def tag(name):
 )
 def thought(id=None):
     thought = Thought.query.get_or_404(id)
+
+    if not thought.authorize("read", current_user.active_persona.id):
+        flash("This Thought is private")
+        return(redirect(url_for("web.index")))
 
     # Load conversation context
     context = []
