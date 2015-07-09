@@ -85,7 +85,7 @@ class CreatePersonaForm(Form):
             self.password.errors.append("Your password was not correct. Try again?")
             rv = False
 
-        if current_user.associations.join(Persona).filter(Persona.username == self.username.data).count() > 0:
+        if self.username.data in [p.username for p in current_user.associations]:
             self.username.errors.append("You already have a Persona going by that username")
             rv = False
 

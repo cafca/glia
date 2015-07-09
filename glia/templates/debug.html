@@ -99,8 +99,7 @@
         </tr>
     </thead>
     <tbody>
-      {% for asc in user.associations %}
-      {% set persona=asc.persona %}
+      {% for persona in user.associations %}
       <tr>
         <td>
           {{ persona.id }}

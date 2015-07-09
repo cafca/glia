@@ -27,7 +27,7 @@ from glia.web.helpers import send_validation_email, \
     valid_redirect, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
-from nucleus.nucleus.models import Persona, User, Movement, PersonaAssociation, \
+from nucleus.nucleus.models import Persona, User, Movement, \
     Thought, Mindset, Percept, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
     Mindspace, Blog, Dialogue
@@ -124,7 +124,8 @@ def create_persona(for_movement=None):
             username=form.username.data,
             created=created_dt,
             modified=created_dt,
-            color=form.color.data)
+            color=form.color.data,
+            user=current_user)
 
         # Create keypairs
         app.logger.info("Generating private keys for {}".format(persona))
@@ -143,10 +144,6 @@ def create_persona(for_movement=None):
 
         current_user.active_persona = persona
         db.session.add(current_user)
-
-        association = PersonaAssociation(
-            user=current_user, persona=persona)
-        db.session.add(association)
 
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
@@ -664,9 +661,7 @@ def signup():
         user.set_password(form.password.data)
         db.session.add(user)
 
-        association = PersonaAssociation(
-            user=user, persona=persona)
-        db.session.add(association)
+        persona.user = user
         try:
             db.session.commit()
         except IntegrityError, e:

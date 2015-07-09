@@ -77,9 +77,8 @@ def create_app(log_info=True):
 
     @app.context_processor
     def persona_context():
-        """Makes controlled_personas available in templates"""
+        """Makes active persona available in templates"""
         return dict(
-            controlled_personas=Persona.list_controlled(),
             active_persona=current_user.active_persona
         )
 
