@@ -17,7 +17,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pnotify.custom.min.css') }}">
 
     <!-- Glia Styles -->
+    {% if config.get("DEBUG") == False %}
     <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
+    {% else %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    {% endif %}
 
     {% block extra_styles %}{% endblock %}
 
