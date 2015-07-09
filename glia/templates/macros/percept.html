@@ -55,7 +55,7 @@
 {% elif percept.kind == 'link' %}
 <button disabled="disabled" class="btn btn-xs">
   <i class="fa fa-link"></i>
-  <img class="rk-favicon-small" src="{{ percept.favicon_url() }}" />
+  {{ percept.domain }}
 </button>
 {% elif percept.kind == 'text' %}
 <button disabled="disabled" href="#" class="btn btn-xs">
