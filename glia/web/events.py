@@ -21,12 +21,13 @@ from .. import socketio, db
 from glia.web.helpers import send_external_notifications
 from nucleus.nucleus.helpers import find_mentions
 from nucleus.nucleus.models import Mindset, Thought, Movement, \
-    Persona, Mention, MentionNotification, ReplyNotification
+    Persona, Mention, MentionNotification, ReplyNotification, Mindspace
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
 # Create blinker signal namespace
 local_model_changed = notification_signals.signal('local-model-changed')
+movement_chat = notification_signals.signal('movement-chat')
 
 
 def socketio_authenticated_only(f):
@@ -59,6 +60,18 @@ def connectp():
 #
 # MOVEMENT WEBSOCKET
 #
+
+
+@movement_chat.connect
+def movement_chat_relay(sender, **data):
+    if not data.get("room_id"):
+        raise ValueError("Invalid messaging channel")
+    if not data.get("message"):
+        raise ValueError("Missing message")
+
+    print sender, data
+    socketio.emit('status', {"msg": data.get('message')},
+        room=data.get("room_id"), namespace="/movements")
 
 
 @socketio.on_error(namespace='/movements')
@@ -322,6 +335,11 @@ def vote_request(message):
                 "author_id": upvote.author_id
             }]
         }
+
+        if isinstance(thought.mindset, Mindspace) \
+                and isinstance(thought.mindset.author, Movement):
+            data["votes"][0]["voting_done"] = \
+                thought.mindset.author.voting_done(thought)
 
         message_vote = {
             "author_id": upvote.author_id,

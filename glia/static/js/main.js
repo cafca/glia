@@ -91,11 +91,16 @@ $(document).ready(function(){
         thought_id = data.votes[0].thought_id;
         author_id = data.votes[0].author_id;
         vote_count = data.votes[0].vote_count;
+        voting_done = data.votes[0].voting_done;
         console.log("Thought "+thought_id+" now has "+vote_count+" votes.");
 
         if (author_id == window.user_id) {
             $(".upvote-"+thought_id).toggleClass("btn-default");
             $(".upvote-"+thought_id).toggleClass("btn-primary");
+        }
+
+        if (voting_done != undefined) {
+            $("#rk-promote-"+thought_id+" > span").animate({width: voting_done*100+"%"});
         }
 
         $(".upvote-count-"+thought_id).text(vote_count);

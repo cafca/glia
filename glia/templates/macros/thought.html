@@ -34,7 +34,7 @@
 
 {% macro promote_indicator(thought, movement) %}
 <span class="caption">
-  <span class="rk-promote {% if movement.has_blogged(thought) %}rk-promote-done{% endif %}">
+  <span id="rk-promote-{{ thought.id }}" class="rk-promote {% if movement.has_blogged(thought) %}rk-promote-done{% endif %}">
     <span style="width: {{ movement.voting_done(thought) * 100 }}%"></span>
   </span>
 </span>
