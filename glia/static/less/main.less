@@ -104,12 +104,23 @@ a > .fa:hover {
     background-color: #e7e7e7;
 
     .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
-        background-color: lighten(@base, 10%);
-        color: white;
+        background-color: darken(#e7e7e7, 7%);
 
         .badge {
             background-color: @accent;
         }
+    }
+}
+
+.navbar1 {
+    .navbar-brand {
+        background-color: @base;
+        color: white;
+    }
+
+    .navbar-brand:hover, .navbar-brand:focus {
+        background-color: @accent;
+        color: white;
     }
 }
 
@@ -119,6 +130,11 @@ a > .fa:hover {
     border-bottom: none;
     z-index: 50;
     min-height: 26px;
+
+    .navbar-brand {
+        background-color: #f5f5f5;
+        color: #777;
+    }
 
     .navbar-nav > li > a, .navbar-brand {
         padding: 3px 10px;
