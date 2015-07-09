@@ -41,7 +41,7 @@
 {% endmacro %}
 
 {% macro repost_button(thought, btn="btn-primary") %}
-  <span data-toggle="modal" data-thought-text="Repost: {{thought.text}}" data-thought-id="{{thought.id}}" data-target="#rk-repost">
+  <span class="rk-repost-spawn" data-toggle="modal" data-thought-text="Repost: {{thought.text}}" data-thought-id="{{thought.id}}" data-target="#rk-repost">
     <button class="btn {{btn}}" data-toggle="tooltip" data-placement="bottom" title="Share this Thought with People, Movements or anywhere else!">
       <i class="fa fa-retweet"></i> Repost
     </button>

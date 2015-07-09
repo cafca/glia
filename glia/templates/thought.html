@@ -12,6 +12,10 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 
 $(document).ready(function() {
+  $('.rk-repost-spawn > button').tooltip({
+       'delay': { show: 450, hide: 300 }
+  });
+
   $('#rk-thought-context-length').editable({
     autotext: 'always',
     type: 'text',

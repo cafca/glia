@@ -16,6 +16,11 @@ window.admin_id = "{{ movement.admin.id }}";
 
 $(document).ready(function() {
   $('#rk-mission').editable();
+  $('.rk-promote').tooltip({
+       'delay': { show: 450, hide: 300 },
+       'placement': 'right',
+       'title': "When this Thought has received {{ movement.required_votes() }} votes it will be promoted to the movement blog"
+  });
 });
 {% endblock %}
 
