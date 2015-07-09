@@ -297,6 +297,7 @@ def index():
         source_data = dict()
         source_data["ident"] = s
         source_data["blog"] = list(s.blog.index.order_by(Thought.created.desc()).limit(3))
+        source_data["url"] = url_for('web.persona_blog', id=s.id) if isinstance(s, Persona) else s.get_absolute_url()
         if isinstance(s, Movement) and s.active_member():
             source_data["mindspace"] = Thought.query.filter(
                 Thought.id.in_(s.mindspace_top_thought(count=3)))
@@ -437,15 +438,6 @@ def movement_mindspace(id):
         if candidate.upvote_count() > 0:
             top_posts.append(candidate)
 
-    recent_blog_post = movement.blog.index \
-        .filter(Thought.state >= 0) \
-        .order_by(Thought.created.desc()) \
-        .first()
-
-    if recent_blog_post and datetime.datetime.utcnow() \
-            - recent_blog_post.created > datetime.timedelta(days=1):
-        recent_blog_post = None
-
     member_selection = MovementMemberAssociation.query \
         .filter_by(movement=movement) \
         .filter_by(active=True) \
@@ -454,7 +446,7 @@ def movement_mindspace(id):
 
     return render_template('movement_mindspace.html',
         movement=movement, thoughts=top_posts,
-        member_selection=member_selection, recent_blog_post=recent_blog_post)
+        member_selection=member_selection)
 
 
 @app.route('/movement/', methods=["GET", "POST"])

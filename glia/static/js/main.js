@@ -13,6 +13,9 @@ var psocket;
 $(document).ready(function(){
     PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
+    $('.navbar-brand').tooltip({
+           'delay': { show: 450, hide: 300 }
+      });
 
     // Connect personal websocket
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/personas')

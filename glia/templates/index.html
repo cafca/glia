@@ -47,7 +47,7 @@
       <div class="rk-frontpage-item">
         <div class="rk-frontpage-ident panel panel-default"  style="border-color: #{{ source.ident.color }}">
           <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
-            <a href="{{ source.ident.get_absolute_url() }}">
+            <a href="{{ source.url }}">
               <h2>{{ source.ident.username }}
                 <small>{% if source.ident.kind == "movement" %}{{ source.ident.description }}{% else %}Personal Blog{% endif %}</small>
                 <span class="pull-right rk-attention">
@@ -79,7 +79,9 @@
               {% endif %}
             {% endfor %}
           {% elif source.ident.kind == "movement" %}
-            <p class="lead">This movement's blog is empty. Vote on thoughts in the movement mindspace to promote them to this blog. </p>
+            <p class="lead">This movement's blog is empty.
+              {% if not source.ident.private %}Vote on thoughts in the movement mindspace to promote them to this blog.{% endif %}
+            </p>
           {% else %}
             <p class="lead">This Persona's blog is empty. </h2>
           {% endif %}

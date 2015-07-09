@@ -114,12 +114,6 @@ $(document).ready(function() {
   <div class="thought-listing col-sm-8 col-sm-pull-4">
     {{ movement_macros.nav(movement, "Mindspace") }}
 
-    {% if recent_blog_post %}
-      <div class="alert alert-info">
-        <h4>{{ thought_macros.thought_line(recent_blog_post, labels=[{"text": "Blog", }], no_percepts=True) }}</h4>
-      </div>
-    {% endif %}
-
     {% for thought in thoughts %}
       {% if loop.first %}
         {{ thought_macros.thought_lead(thought, controlled_personas, promote=movement) }}
