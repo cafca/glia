@@ -43,32 +43,32 @@
 
     {{ helper_macros.intro(global_login_form) }}
 
-    {% for blog in blog_data %}
+    {% for source in blog_data %}
       <div class="rk-frontpage-item">
-        <a href="{{ blog.ident.get_absolute_url() }}">
+        <a href="{{ source.ident.get_absolute_url() }}">
           <div class="rk-frontpage-ident">
-            <h4>{{ blog.ident.username }} <span class="small">{{ blog.ident.description }}</span>
+            <h4>{{ source.ident.username }} <span class="small">{{ source.ident.description }}</span>
             <small class="pull-right rk-attention">
-              <i class="fa fa-eye"></i> {{blog.ident.attention}}
+              <i class="fa fa-eye"></i> {{source.ident.attention}}
             </small>
             </h4>
           </div>
 
-        </a>
+        </a><!--
 
-        {% if blog.recent_blog_post %}
+        {% if source.recent_blog_post %}
         <div class="rk-new-blog">
-          <h4>{{ thought_macros.thought_line(blog.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
+          <h4>{{ thought_macros.thought_line(source.recent_blog_post, labels=[{"text": "New Blog", }], no_percepts=True) }}</h4>
         </div>
-        {% endif %}
+        {% endif %} -->
 
         <div class="rk-frontpage-item-listing">
-          {% if blog.top_posts|length > 0 %}
-            {% for thought in blog.top_posts %}
+          {% if source.blog|length > 0 %}
+            {% for thought in source.blog %}
               {% if loop.first %}
-                {{ thought_macros.thought_lead(thought, controlled_personas) }}
+                {{ thought_macros.thought_lead(thought, None) }}
               {% else %}
-                {{ thought_macros.thought_line(thought, controlled_personas, no_percepts=True) }}
+                {{ thought_macros.thought_line(thought, None, no_percepts=True) }}
               {% endif %}
             {% endfor %}
           {% else %}

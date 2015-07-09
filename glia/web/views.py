@@ -300,40 +300,22 @@ def index():
     """Front page"""
     movementform = CreateMovementForm()
 
-    def thought_source(ident):
-        return ident.blog if isinstance(ident, Persona) else ident.mindspace
-
+    # Determine content source
     if current_user.is_anonymous():
-        blogs = more_movements = Movement.query \
+        sources = more_movements = Movement.query \
             .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
     else:
-        blogs = current_user.active_persona.blogs_followed
+        sources = current_user.active_persona.blogs_followed
         more_movements = Movement.query \
             .filter(Movement.id.in_(
                 current_user.active_persona.suggested_movements()))
 
-    blog_data = []
-    for ident in sorted(blogs, key=lambda b: b.attention, reverse=True):
-        g_thought_selection = thought_source(ident).index.filter(Thought.state >= 0).all()
-        g_top_posts = sorted(g_thought_selection, key=Thought.hot, reverse=True)[:3]
+    sources = sorted(sources, key=lambda s: s.attention, reverse=True)
 
-        if isinstance(ident, Movement):
-            recent_blog_post = ident.blog.index \
-                .filter(Thought.state >= 0) \
-                .order_by(Thought.created.desc()) \
-                .first()
-
-            if recent_blog_post and datetime.datetime.utcnow() \
-                    - recent_blog_post.created > datetime.timedelta(days=1):
-                recent_blog_post = None
-        else:
-            recent_blog_post = None
-
-        blog_data.append({
-            'ident': ident,
-            'top_posts': g_top_posts,
-            'recent_blog_post': recent_blog_post
-        })
+    blog_data = [dict(
+        ident=s,
+        blog=list(s.blog.index.order_by(Thought.created.desc()).limit(3))
+    ) for s in sources]
 
     # Collect main page content
     top_posts = Thought.top_thought()
