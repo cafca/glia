@@ -7,8 +7,9 @@
 
 {% macro comments_button(thought) %}
 <span>
-    <a class="btn btn-xs btn-default" href="{{ url_for('web.thought', id=thought.id, _anchor='comments') }}">
-        <span class="upvote-count" id="comment-count-{{thought.id}}">{{thought.comment_count()}}</span> <i class="fa fa-white fa-comment"></i>
+  {% set c = thought.comment_count() %}
+    <a class="btn btn-xs btn-link" href="{{ url_for('web.thought', id=thought.id, _anchor='comments') }}">
+        <span class="upvote-count" id="comment-count-{{thought.id}}">{{c}} comment{% if c!=1 %}s{% endif %}</span>
     </a>
 </span>
 {% endmacro %}
@@ -33,10 +34,8 @@
 {% endmacro %}
 
 {% macro promote_indicator(thought, movement) %}
-<span class="caption">
-  <span id="rk-promote-{{ thought.id }}" class="rk-promote {% if movement.has_blogged(thought) %}rk-promote-done{% endif %}">
-    <span style="width: {{ movement.voting_done(thought) * 100 }}%"></span>
-  </span>
+<span id="rk-promote-{{ thought.id }}" class="rk-promote {% if movement.has_blogged(thought) %}rk-promote-done{% endif %}">
+  <span style="width: {{ movement.voting_done(thought) * 100 }}%"></span>
 </span>
 {% endmacro %}
 
@@ -76,25 +75,19 @@
   <div class="rk-thought-meta">
     {{ upvote(thought) }}
 
-    {{ comments_button(thought) }}
-
     {% if promote %}
       {{ promote_indicator(thought, movement=promote) }}
     {% endif %}
 
-    <span>
-        <span class="caption">
-            {{thought.created|localtime|naturaltime}}
-        </span>
-    </span>
+    {{ comments_button(thought) }}
 
-    <span class="inline-semantic"> by </span>
+    <a class="btn btn-xs btn-link disabled">
+    {{thought.created|localtime|naturaltime}} by
+    </a>
 
-    <span class="attribute">
-        <span class="caption">
-            {{ id_macros.identity(thought.author) }}
-        </span>
-    </span>
+    <a class="btn btn-xs btn-link" href="{{ thought.author.get_absolute_url() }}">
+      {{ id_macros.identity(thought.author, nolink=True) }}
+    </a>
 
     <span class="rk-assocs">
       {% for percept_assoc in thought.tags %}
@@ -113,14 +106,7 @@
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
   <!-- Meta -->
-  <span class="rk-thought-meta">
-    {{ upvote(thought) }}
-    {{ comments_button(thought) }}
-
-    {% if promote %}
-      {{ promote_indicator(thought, movement=promote) }}
-    {% endif %}
-  </span>
+  {{ upvote(thought) }}
 
   <div class="rk-line-container">
     <div class="rk-thought-title">
@@ -135,7 +121,21 @@
         </span>
       {% endif %}
       </h3>
+    </div>
 
+    <div class="rk-thought-meta">
+      {% if promote %}
+        {{ promote_indicator(thought, movement=promote) }}
+      {% endif %}
+      {{ comments_button(thought) }}
+
+      <a class="btn btn-xs btn-link disabled">
+      {{thought.created|localtime|naturaltime}} by
+      </a>
+
+      <a class="btn btn-xs btn-link" href="{{ thought.author.get_absolute_url() }}">
+        {{ id_macros.identity(thought.author, nolink=True) }}
+      </a>
     </div>
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pnotify.custom.min.css') }}">
 
     <!-- Glia Styles -->
-    {% if config.get("DEBUG") == False %}
+    {% if config.get("DEBUG") == True %}
     <link rel="stylesheet/less" type="text/css" href="{{ url_for('static', filename='less/main.less') }}">
     {% else %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
@@ -33,7 +33,7 @@
     <![endif]-->
   </head>
   <body>
-    <nav class="navbar navbar-static-top navbar-default">
+    <nav class="navbar navbar1 navbar-static-top navbar-default">
       <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1">

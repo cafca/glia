@@ -117,7 +117,7 @@ def send_external_notifications(notification):
             logger.error("Server error sending notification email: {}".format(e))
 
 
-def send_movement_invitation(recipient, movement, message=None):
+def send_movement_invitation(recipient, movement, personal_message=None):
     """Send an email invitation to a user, asking them to join a movement
 
     Args:
@@ -146,7 +146,7 @@ def send_movement_invitation(recipient, movement, message=None):
     message.set_html(render_template("email/movement_invitation.html",
         movement=movement,
         sender=current_user.active_persona,
-        message=message,
+        personal_message=personal_message,
         invitation_code=mma.invitation_code))
     message.set_from('RKTIK {} movement'.format(movement.username))
 

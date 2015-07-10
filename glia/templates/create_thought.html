@@ -49,10 +49,10 @@ $(document).ready(function() {
     {% if form.text.errors %}
     <label for="text">{% for error in form.text.errors %}{{ error }} {% endfor %}</label>
     {% else %}
-    <label for="text">Text *</label>
+    <label for="text">Title *</label>
     {% endif %}
     <span id="rk-create-counter" class="pull-right" data-toggle="tooltip" data-placement="right" data-trigger="manual" data-title="Please make a shorter title"></span>
-    {{ form.text(class_="form-control rk-longform-text") }}
+    {{ form.text(class_="form-control rk-longform-text", placeholder="Title") }}
   </div>
 
   <div class="form-group {% if form.longform.errors %}has-error{% endif %}">
@@ -61,7 +61,7 @@ $(document).ready(function() {
     {% else %}
     <label for="longform">Longform</label>
     {% endif %}
-    {{ form.longform(class_="form-control rk-longform-longform") }}
+    {{ form.longform(class_="form-control rk-longform-longform", placeholder="Type away! You can also add links to images or websites.") }}
   </div>
 
   <div class="form-group {% if form.lfsource.errors %}has-error{% endif %}">
@@ -70,7 +70,7 @@ $(document).ready(function() {
     {% else %}
     <label for="lfsource">Source</label>
     {% endif %}
-    {{ form.lfsource(class_="form-control rk-longform-source") }}
+    {{ form.lfsource(class_="form-control rk-longform-source", placeholder="Optional link to a source or name of the author") }}
   </div>
 
   <div class="pull-right">

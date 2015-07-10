@@ -58,7 +58,7 @@ def handle_invalid_usage(error):
 @app.route('/async/chat/<mindset_id>', methods=["GET"])
 @app.route('/async/chat/<mindset_id>/before-<index_id>/', methods=["GET"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
@@ -111,7 +111,7 @@ def async_chat(mindset_id, index_id=None):
 
 @app.route("/async/movement/<movement_id>/", methods=["POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def async_movement(movement_id):
     """Edit a movement's description
 
@@ -155,7 +155,7 @@ def async_movement(movement_id):
 
 @app.route("/async/persona/<id>/", methods=["POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def async_persona(id):
     """Edit a Persona
 
@@ -196,7 +196,7 @@ def async_persona(id):
 
 @app.route("/async/movement/<movement_id>/promote", methods=["POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def async_promote(movement_id):
     """Promote a Thought to a Movement's blog
 
@@ -229,7 +229,7 @@ def async_promote(movement_id):
 
 @app.route("/async/thought/<thought_id>/", methods=["POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def async_thought(thought_id):
     """Edit a Thought
 
@@ -274,7 +274,7 @@ def async_thought(thought_id):
 
 @app.route("/async/id/<id>/toggle_following", methods=["POST", "GET"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def async_toggle_following(id):
     ident = Identity.query.get(id)
     if ident is None:
@@ -301,7 +301,7 @@ def async_toggle_following(id):
 
 @app.route("/async/movement/<movement_id>/toggle_membership", methods=["POST", "GET"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def async_toggle_movement_membership(movement_id):
     movement = Movement.query.get(movement_id)
     if movement is None:

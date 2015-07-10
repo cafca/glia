@@ -66,7 +66,7 @@ def mark_notifications_read():
 
 
 @app.route('/persona/<id>/activate')
-@http_auth.login_required
+# @http_auth.login_required
 def activate_persona(id):
     """Activate a Persona and redirect to origin"""
     p = Persona.query.get_or_404(id)
@@ -87,7 +87,7 @@ def activate_persona(id):
 
 @app.route('/persona/create', methods=["GET", "POST"])
 @app.route('/movement/<for_movement>/create_persona', methods=["GET", "POST"])
-@http_auth.login_required
+# @http_auth.login_required
 def create_persona(for_movement=None):
     """View for creating a new persona"""
     form = CreatePersonaForm()
@@ -157,7 +157,7 @@ def create_persona(for_movement=None):
 
 @app.route('/create', methods=["GET", "POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def create_thought():
     """Post a new Thought"""
 
@@ -239,7 +239,7 @@ def create_thought():
 
 @app.route('/thought/<id>/delete', methods=["GET", "POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def delete_thought(id=None):
     thought = Thought.query.get_or_404(id)
     form = DeleteThoughtForm()
@@ -271,7 +271,7 @@ def delete_thought(id=None):
 
 
 @app.route('/', methods=["GET"])
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
@@ -312,7 +312,7 @@ def index():
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
     movement = Movement.query.get_or_404(movement_id)
@@ -321,7 +321,7 @@ def invite_members(movement_id):
     form = InviteMembersForm()
     if form.validate_on_submit():
         for handle in form.handles:
-            if send_movement_invitation(handle, movement, message=form.message):
+            if send_movement_invitation(handle, movement, personal_message=form.message):
                 app.logger.info("Invited {} to {}".format(handle, movement))
                 invited.append(handle)
             else:
@@ -333,7 +333,7 @@ def invite_members(movement_id):
 
 
 @app.route('/login', methods=["GET", "POST"])
-@http_auth.login_required
+# @http_auth.login_required
 def login():
     """Login a user"""
     if not current_user.is_anonymous() and current_user.is_authenticated():
@@ -360,7 +360,7 @@ def login():
 
 @app.route('/logout', methods=["GET", "POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def logout():
     """Logout a user"""
     user = current_user
@@ -374,7 +374,7 @@ def logout():
 
 
 @app.route('/movement/<id>/')
-@http_auth.login_required
+# @http_auth.login_required
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
     movement = Movement.query.get_or_404(id)
@@ -388,7 +388,7 @@ def movement(id):
 
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
@@ -409,7 +409,7 @@ def movement_blog(id, page=1):
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
@@ -451,7 +451,7 @@ def movement_mindspace(id):
 
 @app.route('/movement/', methods=["GET", "POST"])
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def movements(id=None):
     """Create movements"""
     form = CreateMovementForm(id=id)
@@ -486,7 +486,7 @@ def movements(id=None):
 @app.route('/notifications')
 @app.route('/notifications/page-<page>')
 @login_required
-@http_auth.login_required
+# @http_auth.login_required
 def notifications(page=1):
     notifications = current_user.active_persona \
         .notifications \
@@ -498,7 +498,7 @@ def notifications(page=1):
 
 
 @app.route('/persona/<id>/')
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
@@ -538,7 +538,7 @@ def persona(id):
 @app.route('/anonymous/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
@@ -560,7 +560,7 @@ def persona_blog(id, page=1):
 
 
 @app.route('/signup', methods=["GET", "POST"])
-@http_auth.login_required
+# @http_auth.login_required
 def signup():
     """Signup a new user"""
     from uuid import uuid4
@@ -606,6 +606,7 @@ def signup():
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
             recipient=persona,
+            url="http://www.rktik.com/movement/27fe161d2ba64f4bb4986a99bebea18a/mindspace",
             source="system"
         )
         db.session.add(notification)
@@ -666,7 +667,7 @@ def signup():
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])
-@http_auth.login_required
+# @http_auth.login_required
 def signup_validation(id, signup_code):
     """Validate a user's email adress"""
 
@@ -694,7 +695,7 @@ def signup_validation(id, signup_code):
 
 
 @app.route('/tag/<name>/')
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT
 )
@@ -707,7 +708,7 @@ def tag(name):
 
 
 @app.route('/thought/<id>/')
-@http_auth.login_required
+# @http_auth.login_required
 @cache.cached(
     timeout=VIEW_CACHE_TIMEOUT,
     key_prefix=make_view_cache_key
