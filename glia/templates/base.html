@@ -15,6 +15,8 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
     <!-- PNotify -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pnotify.custom.min.css') }}">
+    <!-- Lightbox -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lightbox.css') }}">
 
     <!-- Glia Styles -->
     {% if config.get("DEBUG") == True %}
@@ -201,6 +203,8 @@
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/pnotify.custom.min.js') }}"></script>
     <!-- JQuery Simply Countable -->
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/jquery.simplyCountable.js') }}"></script>
+    <!-- Lightbox -->
+    <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/lightbox.js') }}"></script>
     <!-- Glia JS -->
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_scripts %}{% endblock %}
