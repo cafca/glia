@@ -3,6 +3,7 @@
 {% import "macros/thought.html" as thought_macros %}
 {% import "macros/identity.html" as id_macros %}
 {% import "macros/helpers.html" as helper_macros %}
+{% import "macros/movement.html" as movement_macros %}
 
 {% block content %}
 <div class="row" id="rk-index">
@@ -16,35 +17,17 @@
         <a href="{{ source.url }}">
           <h1 class="rk-frontpage-item-title"></i> {{ source.ident.username }}</h1>
         </a>
-        <div class="rk-frontpage-ident panel panel-default"  style="border-color: #{{ source.ident.color }}">
-          <div class="panel-heading" style="background-color: #{{ source.ident.color }}">
-              <p>
-              {% if source.ident.kind == "movement" %}
-                {% if not source.ident.private or source.ident.active_member() %}
-                  <a href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">{{ source.ident.description|default("Mindspace", True) }}</a>
-                {% else %}
-                  {{ source.ident.description|default("Mindspace", True) }}
-                {% endif %}
-              {% else %}
-                Personal Blog
-              {% endif %}</p>
-              <span class="pull-right rk-attention">
-                <i class="fa fa-eye"></i> {{source.ident.attention}}
-              </span>
-            </a>
-          </div>
-          {% if "mindspace" in source %}
-            <div class="panel-body">
-            {% for t in source["mindspace"] %}
-              {{ thought_macros.thought_line(t, no_percepts=True) }}
-            {% else %}
-              <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
-              <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
-            {% endfor %}
-              <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more from Member Mindspace</a></small>
-          </div>
-          {% endif %}
-        </div>
+        {% if source.ident.kind == "movement" %}
+          {{ movement_macros.nav(source.ident) }}
+        {% else %}
+        <p>
+          Personal Blog
+          <span class="pull-right rk-attention" style="color: #aaa;">
+            <i class="fa fa-eye"></i> {{source.ident.attention}}
+          </span>
+        </p>
+        {% endif %}
+        <hr />
 
         <div class="rk-frontpage-item-listing">
           {% if source.blog|length > 0 %}
@@ -63,7 +46,24 @@
             <p class="lead">This Persona's blog is empty. </h2>
           {% endif %}
         </div>
-      </div> <!-- ./ movement panel -->
+
+        {% if "mindspace" in source %}
+        <div class="rk-frontpage-ident panel panel-default"  style="border-color: #999">
+          <div class="panel-heading" style="background-color: #999">
+            <a href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}"><p>Mind of {{ source.ident.username }}</p></a>
+          </div>
+          <div class="panel-body">
+          {% for t in source["mindspace"] %}
+            {{ thought_macros.thought_line(t, no_percepts=True) }}
+          {% else %}
+            <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
+            <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
+          {% endfor %}
+            <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more in Mindspace</a></small>
+        </div>
+        </div> <!-- ./ mindspace panel -->
+        {% endif %}
+      </div> <!-- ./ frontpage item -->
     {% endfor %}
     </div>
   {% else %}

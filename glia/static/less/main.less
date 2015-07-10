@@ -62,7 +62,7 @@ a > .fa:hover {
     box-sizing: border-box;
     display: inline-block;
     font-size: 12px;
-    height: 18px;
+    height: 15px;
     line-height: 1.5;
     text-align: center;
     vertical-align: middle;
@@ -308,14 +308,16 @@ a > .fa:hover {
     height: 200px;
 }
 
+
 //
 // FRONTPAGE-SPECIFIC
 //
 
-.rk-frontpage {
-    .rk-frontpage-item-title {
+.rk-frontpage-item {
+    margin-bottom: 7em;
+}
 
-    }
+.rk-frontpage {
 
     .rk-frontpage-ident {
         background-color: #fcfcfc;
@@ -407,14 +409,6 @@ a > .fa:hover {
     margin-bottom: 0.5em;
 }
 
-.rk-frontpage-item {
-    margin-top: 5em;
-}
-
-.rk-frontpage-item:first-child {
-    margin-top: 0;
-}
-
 //
 // THOUGHTS
 //
@@ -422,6 +416,18 @@ a > .fa:hover {
 .rk-thought-listing {
     .rk-line-container {
         padding: 5px 0 0 5px;
+    }
+}
+
+.rk-thought-meta {
+    .rk-promote {
+        margin-right: 7px;
+    }
+
+    .btn-link {
+        padding-left: 0;
+        padding-right: 0;
+        opacity: .65;
     }
 }
 
@@ -437,8 +443,8 @@ a > .fa:hover {
         margin-left: .5em;
     }
 
-    .rk-thought-meta {
-        font-size: 12px;
+    .rk-promote {
+        margin-right: 3px;
     }
 }
 
@@ -455,22 +461,16 @@ a > .fa:hover {
 .rk-thought-line {
     margin-bottom: 1em;
 
-    .rk-line-container {
+    .upvote {
         float: left;
-
-        h3 {
-            font-size: 18px;
-            margin: 0 0 10px;
-        }
+        margin-right: 5px;
     }
 
-    .rk-thought-meta {
-        color: lighten(gray, 10%);
-        margin-bottom: 5px;
-
-        .btn, .rk-promote {
-            float: left;
-            margin-right: 5px;
+    .rk-line-container {
+        padding-left: 35px;
+        h3 {
+            font-size: 18px;
+            margin: 0;
         }
     }
 

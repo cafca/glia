@@ -16,7 +16,7 @@
   } %}
 {% endif %}
 
-<nav class="navbar navbar-inverse">
+<nav class="navbar navbar-default rk-movement-nav" style="border: 1px solid #{{ movement.color }}">
   <div class="container-fluid">
     <div class="navbar-header">
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -36,6 +36,15 @@
           <li><a href="{{ url }}"><i class="fa fa-file-text-o"></i> {{ name }} </a></li>
           {% endif %}
         {% endfor %}
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+        <p class="navbar-text">
+          <span class="rk-attention">
+            <i class="fa fa-eye"></i> {{movement.attention}}
+          </span>
+        </p>
+        </li>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div>
