@@ -6,8 +6,10 @@
 </span>
 {% elif percept.kind == 'link' %}
   {% if percept.iframe_url() %}
-  <div class="embed-responsive embed-responsive-16by9">
-    <iframe class="embed-responsive-item" src="{{ percept.iframe_url() }}" allowfullscreen></iframe>
+  <div class="rk-limit-width">
+    <div class="embed-responsive embed-responsive-16by9">
+      <iframe class="embed-responsive-item" src="{{ percept.iframe_url() }}" allowfullscreen></iframe>
+    </div>
   </div>
   {% else %}
   <a class="rk-link" href="{{ percept.url }}">
@@ -81,7 +83,7 @@
   {% endif %}
 
   {% if attachments["link"]|length != 0 %}
-  <ul>
+  <ul class="list-unstyled">
     {% for pa in attachments["link"] %}
     <li>
     {{ percept(pa.percept, icon=True, truncate=truncate)}}
