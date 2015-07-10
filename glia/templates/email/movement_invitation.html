@@ -14,7 +14,7 @@
     <p>{{sender.username}}: <em>{{ message }}</em></p>
     {% endif %}
 
-    <p><strong><a href="{{ url_for('web.signup', invitation=invitation_code, _external=True) }}">Click here and sign up for the {{movement.username}} movement</a></strong></p>
+    <p><strong><a href="{{ url_for('web.signup', invitation_code=invitation_code, _external=True) }}">Click here and sign up for the {{movement.username}} movement</a></strong></p>
 
     <p>Have a nice day,<br />
     - The RKTIK Team</p>
