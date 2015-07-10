@@ -48,17 +48,15 @@
 {% macro percept_icon(percept) %}
 <!-- PERCEPT: {{percept.id}} -->
 
-{% if percept.kind == 'picture' %}
-<button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
-{% elif percept.kind == 'tag' %}
+{% if percept.kind == 'tag' %}
 <a href="{{ url_for('web.tag', name=percept.tag.name) }}" class="btn btn-xs btn-default">#{{ percept.title }}</a>
 {% elif percept.kind == 'linkedpicture' %}
-<button disabled="disabled" href="#" class="btn btn-xs"><i class="fa fa-picture-o"></i></button>
+<a href="{{ percept.url }}" class="btn btn-xs btn-default"><i class="fa fa-picture-o"></i></a>
 {% elif percept.kind == 'link' %}
-<button disabled="disabled" class="btn btn-xs">
+<a class="btn btn-xs btn-default" href="{{ percept.url }}">
   <i class="fa fa-link"></i>
   {{ percept.domain }}
-</button>
+</a>
 {% elif percept.kind == 'text' %}
 <button disabled="disabled" href="#" class="btn btn-xs">
   <i class="fa fa-file-text-o"></i> read {{ percept.reading_time()|naturaldelta }}
