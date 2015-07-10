@@ -1,8 +1,8 @@
-{% macro percept(percept, icon=True, truncate=True, size="small") %}
+{% macro percept(percept, icon=True, truncate=True, size="small", lightbox=None) %}
 <!-- PERCEPT: {{percept.kind}} {{percept.id}} -->
 {% if percept.kind == 'linkedpicture' %}
 <span class="rk-image">
-  <img src="{{ percept.url }}" class="img-responsive img-rounded" alt="{{ percept.title }}"/>
+  <a href="{{ percept.url }}" data-lightbox="{% if lightbox %}{{ lightbox }}{% else %}{{ percept.title|default(percept.id, True) }}{% endif %}"><img src="{{ percept.url }}" class="img-responsive img-rounded" alt="{{ percept.title }}"/></a>
 </span>
 {% elif percept.kind == 'link' %}
   {% if percept.iframe_url() %}
@@ -45,13 +45,13 @@
 {% endmacro %}
 
 
-{% macro percept_icon(percept) %}
+{% macro percept_icon(percept, lightbox=None) %}
 <!-- PERCEPT: {{percept.id}} -->
 
 {% if percept.kind == 'tag' %}
 <a href="{{ url_for('web.tag', name=percept.tag.name) }}" class="btn btn-xs btn-default">#{{ percept.title }}</a>
 {% elif percept.kind == 'linkedpicture' %}
-<a href="{{ percept.url }}" class="btn btn-xs btn-default"><i class="fa fa-picture-o"></i></a>
+<a href="{{ percept.url }}" class="btn btn-xs btn-default" data-lightbox="{% if lightbox %}{{ lightbox }}{% else %}{{ percept.title|default(percept.id, True) }}{% endif %}"><i class="fa fa-picture-o"></i></a>
 {% elif percept.kind == 'link' %}
 <a class="btn btn-xs btn-default" href="{{ percept.url }}">
   <i class="fa fa-link"></i>
@@ -74,7 +74,7 @@
   <div class="row">
     {% for pa in attachments["linkedpicture"] %}
     <div class="col-sm-{{ attachments['linkedpicture']|gallery_col_width }}">
-      {{ percept(pa.percept, icon=icon)}}
+      {{ percept(pa.percept, icon=icon, lightbox=thought.id)}}
     </div>
     {% endfor %}
   </div>
