@@ -321,7 +321,7 @@ def invite_members(movement_id):
     form = InviteMembersForm()
     if form.validate_on_submit():
         for handle in form.handles:
-            if send_movement_invitation(handle, movement, message=form.message):
+            if send_movement_invitation(handle, movement, personal_message=form.message):
                 app.logger.info("Invited {} to {}".format(handle, movement))
                 invited.append(handle)
             else:
