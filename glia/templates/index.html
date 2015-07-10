@@ -6,42 +6,8 @@
 
 {% block content %}
 <div class="row" id="rk-index">
-  <div class="rk-toc panel panel-default col-sm-3 col-sm-push-8">
-    {% if top_posts.count() > 0 %}
-      <div class="panel-body">
-        <h3>Top Thought</h3>
-        <hr />
-      </div>
-
-      <ul class="list-group rk-toc-movements">
-        {% for thought in top_posts %}
-          {% if thought|authorize("read") %}
-            <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
-          {% endif %}
-        {% endfor %}
-      </ul> <!-- ./ movement list -->
-    {% endif %}
-
-    {% if more_movements[:]|length() > 0 %}
-      <div class="panel-body">
-        <h3>Discover Movements</h3>
-        <hr />
-      </div>
-      <ul class="list-group">
-      {% for movement in more_movements %}
-      <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item">{{ id_macros.movement(movement, nolink=True) }} {{ movement.description|default("", True) }}</li></a>
-      {% endfor %}
-      </ul>
-    {% endif %}
-
-    <div class="panel-body">
-    <a role="button" class="btn btn-primary" href="{{ url_for('web.movements') }}">Start Your Movement Today</a>
-    </div>
-
-  </div> <!-- ./rktik-toc -->
-
   {% if blog_list|length > 0 %}
-    <div class="rk-frontpage col-sm-7 col-sm-pull-2">
+    <div class="rk-frontpage col-sm-7 col-sm-push-1">
 
     {{ helper_macros.intro(global_login_form) }}
 
@@ -103,6 +69,40 @@
   {% else %}
   <h1>Join some Movements!</h1>
   {% endif %}
+
+  <div class="rk-toc panel panel-default col-sm-3 col-sm-push-1">
+    {% if top_posts.count() > 0 %}
+      <div class="panel-body">
+        <h3>Top Thought</h3>
+        <hr />
+      </div>
+
+      <ul class="list-group rk-toc-movements">
+        {% for thought in top_posts %}
+          {% if thought|authorize("read") %}
+            <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
+          {% endif %}
+        {% endfor %}
+      </ul> <!-- ./ movement list -->
+    {% endif %}
+
+    {% if more_movements[:]|length() > 0 %}
+      <div class="panel-body">
+        <h3>Discover Movements</h3>
+        <hr />
+      </div>
+      <ul class="list-group">
+      {% for movement in more_movements %}
+      <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item">{{ id_macros.movement(movement, nolink=True) }} {{ movement.description|default("", True) }}</li></a>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="panel-body">
+    <a role="button" class="btn btn-primary" href="{{ url_for('web.movements') }}">Start Your Movement Today</a>
+    </div>
+
+  </div> <!-- ./rktik-toc -->
 
 </div> <!-- ./ index -->
 {% endblock %}
