@@ -16,6 +16,7 @@ $(document).ready(function() {
        'delay': { show: 450, hide: 300 }
   });
 
+  {% if thought.parent %}
   $('#rk-thought-context-length').editable({
     autotext: 'always',
     type: 'text',
@@ -44,6 +45,7 @@ $(document).ready(function() {
     placement: 'bottom',
     disabled: {% if thought.author == active_persona %}false{% else %}true{% endif %}
   });
+  {% endif %}
 });
 {% endblock %}
 
@@ -125,7 +127,9 @@ $(document).ready(function() {
       <div class="panel-body" style=>
         <p>Thought by {{ id_macros.identity(thought.author) }} {{thought.created|localtime|naturaltime}}.</p>
 
+        {% if thought.parent %}
         <p><a href="#" id="rk-thought-context-length"></a></p>
+        {% endif %}
 
         {% if thought.state >= 0 %}
         <p><i class="fa fa-eye"></i> This Thought is available</p>
