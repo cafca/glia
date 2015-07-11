@@ -14,9 +14,10 @@ $(document).ready(function(){
     PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
 
-    $('.rk-tooltip').tooltip({
-           'delay': { show: 450, hide: 300 }
-      });
+    $('body').tooltip({
+        selector: '.rk-tooltip',
+        delay: { show: 450, hide: 300 }
+    });
 
     lightbox.option({
       'resizeDuration': 200

@@ -1,3 +1,4 @@
+@import "./variables.less";
 
 //
 // COLORS
@@ -640,5 +641,24 @@ only screen and (min-resolution: 2dppx) {
         margin-bottom: 2em;
         border-top: 2px solid @medium;
         padding-top: 1em;
+    }
+}
+
+//
+// SIGNUP PAGE
+//
+
+@media (min-width: @screen-md-min) {
+    .rk-signup-intro {
+        .rk-welcome {
+            float: right;
+            width: 80%;
+            margin-right: -100%;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin: 10px 0 5px;
+        }
     }
 }

@@ -1,3 +1,5 @@
+{% import "macros/helpers.html" as helper_macros %}
+
 {% extends "base.html" %}
 
 {% block extra_styles %}
@@ -9,29 +11,34 @@
 {% endblock %}
 
 {% block script %}
-$("#rk-colorpicker").spectrum({
-  showPaletteOnly: true,
-  showPalette:true,
-  flat: true,
-  showInput: true,
-  color: '#0B3954',
-  palette: [
-    {% for color in allowed_colors %}
-    '#{{ color }}',
-    {% endfor %}
-  ]
-});
+$(document).ready(function() {
+  $("#rk-colorpicker").spectrum({
+    showPaletteOnly: true,
+    showPalette:true,
+    flat: true,
+    showInput: true,
+    color: '#0B3954',
+    palette: [
+      {% for color in allowed_colors %}
+      '#{{ color }}',
+      {% endfor %}
+    ]
+  });
 
-$(".rk-signup-form").submit(function() {
-  $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+  $(".rk-signup-form").submit(function() {
+    $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+  });
 });
-
 
 {% endblock %}
 
 {% block content %}
 <div class="row">
-<div class="col-md-4 col-md-push-4">
+<div class="rk-signup col-md-4 col-md-push-4">
+
+<div class="rk-signup-intro">
+  {{ helper_macros.intro(global_login_form, hide_actions=True) }}
+</div>
 
 {% if mma %}
 <h1>Sign up for the <em>{{mma.movement.username}}</em> movement</h1>
