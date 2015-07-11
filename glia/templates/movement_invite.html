@@ -5,6 +5,12 @@
 {% import "macros/movement.html" as movement_macros %}
 {% import "macros/identity.html" as id_macros %}
 
+{% block script %}
+$(document).ready(function() {
+  $("#rk-invitation-code").focus(function() { $(this).select() });
+  $("#rk-invitation-code").mouseup(function(e) { e.preventDefault(); });
+});
+{% endblock %}
 
 {% block content %}
 
@@ -27,6 +33,13 @@
       {% endif %}
 
       <div class="panel-body">
+        <h3>Send them this link</h3>
+        {% if invitation_code %}
+        <div class="form-group">
+          <input class="form-control" type="text" value="{{ url_for('web.signup', invitation_code=invitation_code, _external=True) }}" id="rk-invitation-code"/>
+        </div>
+        {% endif %}
+        <h3>Or send them an email invitation</h3>
         <div class="form-group">
           {% if form.invites.errors %}
           <label for="invites" />{% for error in form.invites.errors %}{{error}}{% endfor %}</label>
@@ -45,6 +58,7 @@
 
           <input type="text" name="message" id="message" class="form-control" placeholder="Hey guys, just inviting you to our new group page." value="{{ form.message.data|default("", True) }}"/>
         </div>
+        <p class="text-warning"><strong><i class="fa fa-exclamation-triangle"></i> Invitations must be redeemed within one week</strong></p>
       </div>
       <div class="panel-footer">
         <a class="btn btn-default" href="{{ url_for('web.movement', id=movement.id) }}">Go to movement</a>

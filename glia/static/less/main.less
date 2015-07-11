@@ -80,6 +80,25 @@ a > .fa:hover {
     }
 }
 
+@media
+only screen and (-webkit-min-device-pixel-ratio: 2),
+only screen and (min--moz-device-pixel-ratio: 2),
+only screen and (-moz-min-device-pixel-ratio: 2),
+only screen and (-o-min-device-pixel-ratio: 2/1),
+only screen and (min-device-pixel-ratio: 2),
+only screen and (min-resolution: 192dpi),
+only screen and (min-resolution: 2dppx) {
+    /* styles for HiDPI displays */
+    .panel-default .panel-heading, .panel-default .panel-footer {
+        background-image: url('/static/img/shattered_@2X.png')
+    }
+}
+
+
+.panel-default .panel-heading, .panel-default .panel-footer {
+    background-image: url('/static/img/shattered.png')
+}
+
 //
 // HEADER
 //
