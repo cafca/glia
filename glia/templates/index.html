@@ -7,8 +7,8 @@
 
 {% block content %}
 <div class="row" id="rk-index">
-  {% if blog_list|length > 0 %}
     <div class="rk-frontpage col-sm-7 col-sm-push-1">
+    {% if blog_list|length > 0 %}
 
     {{ helper_macros.intro(global_login_form) }}
 
@@ -64,10 +64,16 @@
         {% endif %}
       </div> <!-- ./ frontpage item -->
     {% endfor %}
-    </div>
-  {% else %}
-  <h1>Join some Movements!</h1>
-  {% endif %}
+
+    {% else %}
+    <h1>Follow or join some Movements!</h1>
+    <h1>&nbsp;</h1>
+    {% for m in more_movements %}
+      <h2>{{ id_macros.movement(m) }}</h2>
+      <p>{{ m.description|default("No mission specified", True) }}</p>
+    {% endfor %}
+    {% endif %}
+  </div>
 
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-1">
     {% if top_posts.count() > 0 %}
