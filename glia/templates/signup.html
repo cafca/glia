@@ -86,6 +86,9 @@ $(document).ready(function() {
 
   <p>We care about your privacy, and we never spam. By creating an account, you agree to RKTIK's User Agreement and Privacy Policy.</p>
   <button type="submit" class="btn btn-primary rk-singleclick" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Please wait'>Signup now</button>
+  {% if mma %}
+  <a class="btn btn-default" href="{{ url_for('web.login', next=request.url) }}">I have a login</a>
+  {% endif %}
 </form>
 </div>
 </div>
