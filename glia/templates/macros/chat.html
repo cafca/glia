@@ -51,6 +51,21 @@
 </ul>
 
 <div class="panel-footer">
+<p class="rk-chat-privacy text-info small">
+  {% if map.author.kind == "movement" %}
+    {% if map.author.private %}
+    <span class="rk-tooltip" data-toggle="tooltip" data-placement="bottom" title="When members vote your thought to the blog, everyone can read it, but they won't know you originally wrote it."><strong>Private movement:</strong> Only members can read what you write *</span>
+    {% else %}
+    <strong>Public movement:</strong> Everyone can read what you write
+    {% endif %}
+  {% else %}
+    {% if map.author.controlled() %}
+    <strong>Your mindspace:</strong> Only you can read this
+    {% else %}
+    <strong>Private dialogue:</strong> Only you and {{ map.author.username }} can read this
+    {% endif %}
+  {% endif %}
+</p>
 <form class="rk-create" class="form-inline" action="{{ url_for('web.create_thought') }}" method="GET">
   <input type="hidden" name="mindset" value="{{ map.id }}" />
   <div>

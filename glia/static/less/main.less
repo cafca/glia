@@ -266,12 +266,26 @@ only screen and (min-resolution: 2dppx) {
         }
     }
 
+    .rk-chat-privacy {
+        // Pull down into space left of counter
+        margin-bottom: -20px;
+        // Padding to prevent overlap with counter
+        padding-right: 25px;
+    }
+
     .rk-create {
         margin: .5em 0 .5em;
         width: 100%;
+        position: relative;
 
         .rk-create-text {
             width: 80%;
+        }
+
+        .rk-create-counter {
+            position: absolute;
+            right: 0;
+            top: -5px;
         }
 
         button {

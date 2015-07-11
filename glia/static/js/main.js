@@ -14,7 +14,7 @@ $(document).ready(function(){
     PNotify.desktop.permission();
     $('#rk-chat-more-button').button('loading');
 
-    $('.navbar-brand').tooltip({
+    $('.rk-tooltip').tooltip({
            'delay': { show: 450, hide: 300 }
       });
 
