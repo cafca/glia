@@ -317,6 +317,7 @@ def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
     movement = Movement.query.get_or_404(movement_id)
     invited = list()
+    invitation_code = None
 
     form = InviteMembersForm()
     if form.validate_on_submit():
@@ -328,8 +329,21 @@ def invite_members(movement_id):
                 flash("There was an error sending an invitation to {}. Please try again.".format(
                     handle), 'error')
 
+    mma = MovementMemberAssociation(
+        movement=movement,
+        role="invited",
+        active=False,
+        invitation_code=uuid4().hex)
+    db.session.add(mma)
+    try:
+        db.session.commit()
+    except SQLAlchemyError, e:
+        app.logger.exception("Error generating invitation code: {}".format(e))
+    else:
+        invitation_code = mma.invitation_code
+
     return render_template("movement_invite.html",
-        form=form, movement=movement, invited=invited)
+        form=form, movement=movement, invited=invited, invitation_code=invitation_code)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -647,7 +661,7 @@ def signup():
                 if mma.active:
                     flash("This activation code has been used before. You can try joining the movement by clicking the join button below.")
                 else:
-                    flash("You were invited to join this movement. Click the \"Join movement\" button on the bottom of this page to do so.")
+                    flash("You were invited to join this movement. Click the \"Join movement\" button to do so.")
                 return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=mma.invitation_code))
             else:
                 return redirect(url_for("web.index"))
