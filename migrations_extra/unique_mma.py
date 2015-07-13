@@ -9,8 +9,7 @@ from uuid import uuid4
 
 from glia import create_app
 from nucleus.nucleus.database import db
-from nucleus.nucleus.vesicle import Vesicle
-from nucleus.nucleus.models import MovementMemberAssociation, Persona
+from nucleus.nucleus.models import MovementMemberAssociation, Movement, Persona
 
 
 def upgrade(logger):
@@ -18,17 +17,18 @@ def upgrade(logger):
 
     for p in personas:
         app.logger.info("Checking {}".format(p))
-        assocs = MovementMemberAssociation.query \
-            .filter_by(persona=p) \
-            .order_by(MovementMemberAssociation.created.desc())
-        def pm(mma):
-            return " ".join([str(mma.persona), str(mma.movement), str(mma.created)])
-        print pm(assocs[0]), "[keep]"
-        print "\n".join(map(pm, assocs[1:]))
-        for mma in assocs[1:]:
-            db.session.delete(mma)
-    db.session.commit()
+        movements = Movement.query \
+            .join(MovementMemberAssociation) \
+            .filter(MovementMemberAssociation.persona == p)
 
+        for m in movements:
+            assocs = MovementMemberAssociation.query.filter_by(movement=m).filter_by(persona=p).order_by(MovementMemberAssociation.created.desc())
+            print "\tMember of", m.username, assocs.count(), "assocs"
+            for assoc in assocs[1:]:
+                print "\tdelete", assoc
+                db.session.delete(assoc)
+
+    db.session.commit()
 
 
 if __name__ == "__main__":
