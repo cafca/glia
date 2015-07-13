@@ -306,12 +306,6 @@ def edit_thought(id=None):
                         author=current_user.active_persona)
                     db.session.add(pa)
 
-        # Delete attachments
-        for delete_id in request.form.getlist('delete'):
-            app.logger.info("Removing percept {}".format(delete_id))
-            PerceptAssociation.query.filter_by(thought=thought) \
-                .filter_by(percept_id=delete_id).delete()
-
         # Update longform fields
         edited_lf = [(k[9:], v) for k, v in request.form.items() if k.startswith('longform-')]
         for key, lftext in edited_lf:
@@ -325,6 +319,11 @@ def edit_thought(id=None):
                 pa.source = request.form.get('lfsource-'+key)
                 db.session.add(pa)
 
+        # Delete attachments
+        for delete_id in request.form.getlist('delete'):
+            app.logger.info("Removing percept {}".format(delete_id))
+            PerceptAssociation.query.filter_by(thought=thought) \
+                .filter_by(percept_id=delete_id).delete()
 
         # Write to database
         try:
