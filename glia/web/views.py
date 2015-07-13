@@ -14,7 +14,8 @@ from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, \
+    EditThoughtForm, InviteMembersForm
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -268,6 +269,37 @@ def delete_thought(id=None):
             return(redirect(url_for(".thought", id=thought.id)))
 
     return render_template("delete_thought.html", thought=thought, form=form)
+
+
+@app.route('/thought/<id>/edit', methods=["GET", "POST"])
+@login_required
+# @http_auth.login_required
+def edit_thought(id=None):
+    thought = Thought.query.get_or_404(id)
+    form = EditThoughtForm()
+
+    if not thought.authorize("update", current_user.active_persona.id):
+        flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
+        app.logger.error("Tried to edit {}'s Thoughts".format(thought.author))
+        return redirect(request.referrer or url_for('web.index'))
+
+    attachments = thought.attachments
+
+    if form.validate_on_submit():
+        try:
+            db.session.add(thought)
+            db.session.commit()
+        except:
+            app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))
+            db.session.rollback()
+        else:
+            flash("Updated {}".format(thought))
+
+            app.logger.info("Thought {} updated".format(id))
+            return(redirect(url_for("web.thought", id=thought.id)))
+
+    return render_template("edit_thought.html", thought=thought, form=form,
+        attachments=attachments)
 
 
 @app.route('/', methods=["GET"])

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/percept.html" as percept_macros %}
+
+{% block script %}
+$(document).ready(function() {
+  $('.rk-longform-text').simplyCountable({
+      counter:            '#rk-create-counter',
+      countType:          'characters',
+      maxCount:           140,
+      strictMax:          false,
+      countDirection:     'down',
+      safeClass:          'safe',
+      overClass:          'over',
+      thousandSeparator:  ',',
+      onOverCount:        function(count, countable, counter){
+          $(".rk-create-submit").prop("disabled", true);
+          counter.tooltip('show');
+      },
+      onSafeCount:        function(count, countable, counter){
+          $(".rk-create-submit").prop("disabled", false);
+          counter.tooltip('hide');
+      },
+      onMaxCount:         function(count, countable, counter){}
+  });
+
+  $(".rk-new-attachment-toggle").click(function(e) {
+    $(".rk-new-attachment").fadeToggle();
+    e.preventDefault();
+  })
+});
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-sm-6 col-sm-push-3">
+<h1>
+  Edit Thought
+</h1>
+
+<form method="POST" action="{{ url_for('web.edit_thought', id=thought.id) }}" class="rk-longform rk-edit">
+  {{ form.hidden_tag() }}
+  {% if parent %}
+  <p class="lead">In response to:</p>
+  <blockquote style="font-size: 14px;">
+    <div class="panel panel-default">
+      <div class="panel-body">{{ thought_macros.thought_line(parent) }}</div>
+    </div>
+  </blockquote>
+  {% endif %}
+
+  <div class="form-group {% if form.text.errors %}has-error{% endif %}">
+    {% if form.text.errors %}
+    <label for="text">{% for error in form.text.errors %}{{ error }} {% endfor %}</label>
+    {% else %}
+    <label for="text">Title *</label>
+    {% endif %}
+    <span id="rk-create-counter" class="pull-right" data-toggle="tooltip" data-placement="right" data-trigger="manual" data-title="Please make a shorter title"></span>
+    <input class="form-control rk-longform-text" id="text" name="text" placeholder="Title" type="text" value="{{thought.text}}">
+  </div>
+
+  <h2>Edit Attachments <button class="btn btn-primary btn-sm pull-right rk-new-attachment-toggle">Add new attachments</button></h2>
+
+  <div class="rk-new-attachment well">
+    <h3>New Attachment</h3>
+    <div class="form-group {% if form.longform.errors %}has-error{% endif %}">
+      {% if form.longform.errors %}
+      <label for="longform">{% for error in form.longform.errors %}{{ error }} {% endfor %}</label>
+      {% else %}
+      <label for="longform">Text</label>
+      {% endif %}
+      <textarea class="form-control rk-longform-longform" id="longform" name="longform" placeholder="Type away! You can also add links to images or websites."></textarea>
+    </div>
+
+    <div class="form-group {% if form.lfsource.errors %}has-error{% endif %}">
+      {% if form.lfsource.errors %}
+      <label for="lfsource">{% for error in form.lfsource.errors %}{{ error }} {% endfor %}</label>
+      {% else %}
+      <label for="lfsource">Source</label>
+      {% endif %}
+      {{ form.lfsource(class_="form-control rk-longform-source", placeholder="Optional link to a source or name of the author") }}
+    </div>
+  </div>
+
+
+  {% for ak in attachments.keys() if attachments[ak]|length > 0 %}
+    <p><strong>{{ak.upper()}}</strong></p>
+    <ul class="list-unstyled rk-edit-attachments">
+    {% for at in attachments[ak] %}
+      <li>
+        {% if at.percept.kind == "text" %}
+          <textarea class="form-control rk-longform-longform" id="longform" name="longform" placeholder="Type away! You can also add links to images or websites.">{{ at.percept.text }}</textarea>
+        {% else %}
+          {{ percept_macros.percept(at.percept, lightbox=thought.id) }}
+        {% endif %}
+        <div class="checkbox text-danger">
+          <label>
+            <input type="checkbox" value="">
+            Remove
+          </label>
+        </div>
+      </li>
+    {% endfor %}
+    </ul>
+  {% endfor %}
+
+  <div class="pull-right">
+  <a class="btn btn-default rk-create-cancel" href="{{ url_for('web.thought', id=thought.id) }}">Cancel</a>
+  <input type="submit" class="btn btn-primary rk-create-submit rk-singleclick" value="Update" \>
+  </div>
+</form>
+</div>
+</div>
+{% endblock %}

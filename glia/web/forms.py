@@ -112,6 +112,18 @@ class CreateThoughtForm(Form):
         return rv
 
 
+class EditThoughtForm(CreateThoughtForm):
+    parent = HiddenField()
+    mindset = HiddenField()
+    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
+    longform = TextAreaField('Add more detail')
+    lfsource = TextField('Source of longform (eg. website URL)', [validators.Length(max=128)])
+
+    def validate(self):
+        rv = CreateThoughtForm.validate(self)
+        return rv
+
+
 class CreateReplyForm(CreateThoughtForm):
     def validate(self):
         rv = CreateThoughtForm.validate(self)
