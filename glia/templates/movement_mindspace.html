@@ -78,7 +78,7 @@ $(document).ready(function() {
         {% if not current_user.is_anonymous() %}
         <a class="btn btn-small btn-default pull-right" href="{{ url_for('web.invite_members', movement_id=movement.id) }}"><i class="fa fa-envelope-o"></i> Invite</a>
         {% endif %}
-        <h4>{{ movement.member_count }} Members</h4>
+        <h4>{{ movement.member_count() }} Members</h4>
       </div>
       <div class="panel-body hidden-xs">
       {% for mma in member_selection %}
