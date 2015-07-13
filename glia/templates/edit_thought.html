@@ -90,12 +90,22 @@ $(document).ready(function() {
     {% for at in attachments[ak] %}
       <li>
         {% if at.percept.kind == "text" %}
-          <textarea class="form-control rk-longform-longform" id="longform" name="longform" placeholder="Type away! You can also add links to images or websites.">{{ at.percept.text }}</textarea>
+          <div class="form-group">
+            <textarea class="form-control rk-longform-longform" name="longform-{{at.percept.id}}" placeholder="Type away! You can also add links to images or websites.">{{ at.percept.text }}</textarea>
+          </div>
+          <div class="form-group">
+            <input class="form-control rk-longform-source" id="lfsource" name="lfsource-{{at.percept.id}}" placeholder="Optional link to a source or name of the author" type="text" value="{{ at.percept.source }}">
+            {% if "longform-"+at.percept.id in form %}
+              {% for error in form["longform-"+at.percept.id].errors %}
+                <p class="text-warning">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+          </div>
         {% else %}
           {{ percept_macros.percept(at.percept, lightbox=thought.id) }}
         {% endif %}
-        <div class="checkbox text-danger">
-          <label>
+        <div class="checkbox text-danger">&nbsp;
+          <label class="pull-right">
             <input type="checkbox" name="delete" value="{{at.percept.id}}">
             Remove
           </label>

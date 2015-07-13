@@ -312,6 +312,20 @@ def edit_thought(id=None):
             PerceptAssociation.query.filter_by(thought=thought) \
                 .filter_by(percept_id=delete_id).delete()
 
+        # Update longform fields
+        edited_lf = [(k[9:], v) for k, v in request.form.items() if k.startswith('longform-')]
+        for key, lftext in edited_lf:
+            oldp = TextPercept.query.get(key)
+            newp = TextPercept.get_or_create(lftext, source=request.form.get('lfsource-'+key))
+            if oldp != newp:
+                app.logger.info("Changed attachment from {} to {}".format(oldp, newp))
+                pa = PerceptAssociation.query.filter_by(
+                    thought=thought).filter_by(percept=oldp).first()
+                pa.percept = newp
+                pa.source = request.form.get('lfsource-'+key)
+                db.session.add(pa)
+
+
         # Write to database
         try:
             db.session.commit()

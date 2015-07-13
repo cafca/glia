@@ -71,7 +71,7 @@ $(document).ready(function() {
         <div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
           <span class="rk-thought-title">
             <h2>
-            {{ thought_macros.upvote(thought) }}
+              {{ thought_macros.upvote(thought) }}
               {{ thought_macros.label_badges(labels) }}
               {{ thought.text|mentions(thought) }}
             </h2>
