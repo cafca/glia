@@ -14,7 +14,8 @@ from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, \
+    EditThoughtForm, InviteMembersForm
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -27,10 +28,11 @@ from glia.web.helpers import send_validation_email, \
     valid_redirect, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.helpers import process_attachments
 from nucleus.nucleus.models import Persona, User, Movement, \
     Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
-    Mindspace, Blog, Dialogue
+    Mindspace, Blog, Dialogue, TextPercept
 
 #
 # UTILITIES
@@ -268,6 +270,76 @@ def delete_thought(id=None):
             return(redirect(url_for(".thought", id=thought.id)))
 
     return render_template("delete_thought.html", thought=thought, form=form)
+
+
+@app.route('/thought/<id>/edit', methods=["GET", "POST"])
+@login_required
+# @http_auth.login_required
+def edit_thought(id=None):
+    thought = Thought.query.get_or_404(id)
+    form = EditThoughtForm()
+
+    if not thought.authorize("update", current_user.active_persona.id):
+        flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
+        app.logger.error("Tried to edit {}'s Thoughts".format(thought.author))
+        return redirect(request.referrer or url_for('web.index'))
+
+    attachments = thought.attachments
+
+    if form.validate_on_submit():
+        thought.text = form.text.data
+        db.session.add(thought)
+
+        # Append new attachments from longform field
+        if form.longform.data and len(form.longform.data) > 0:
+            lftext, percepts = process_attachments(form.longform.data)
+            app.logger.info("Extracted {} percepts from longform".format(len(percepts)))
+
+            lftext_percept = TextPercept.get_or_create(lftext,
+                source=form.lfsource.data)
+            percepts.add(lftext_percept)
+
+            for p in percepts:
+                if PerceptAssociation.query.filter_by(thought=thought) \
+                        .filter_by(percept=p).count() == 0:
+                    pa = PerceptAssociation(thought=thought, percept=p,
+                        author=current_user.active_persona)
+                    db.session.add(pa)
+
+        # Delete attachments
+        for delete_id in request.form.getlist('delete'):
+            app.logger.info("Removing percept {}".format(delete_id))
+            PerceptAssociation.query.filter_by(thought=thought) \
+                .filter_by(percept_id=delete_id).delete()
+
+        # Update longform fields
+        edited_lf = [(k[9:], v) for k, v in request.form.items() if k.startswith('longform-')]
+        for key, lftext in edited_lf:
+            oldp = TextPercept.query.get(key)
+            newp = TextPercept.get_or_create(lftext, source=request.form.get('lfsource-'+key))
+            if oldp != newp:
+                app.logger.info("Changed attachment from {} to {}".format(oldp, newp))
+                pa = PerceptAssociation.query.filter_by(
+                    thought=thought).filter_by(percept=oldp).first()
+                pa.percept = newp
+                pa.source = request.form.get('lfsource-'+key)
+                db.session.add(pa)
+
+
+        # Write to database
+        try:
+            db.session.commit()
+        except:
+            app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))
+            db.session.rollback()
+        else:
+            flash("Updated {}".format(thought))
+
+            app.logger.info("Thought {} updated".format(id))
+            return(redirect(url_for("web.thought", id=thought.id)))
+
+    return render_template("edit_thought.html", thought=thought, form=form,
+        attachments=attachments)
 
 
 @app.route('/', methods=["GET"])

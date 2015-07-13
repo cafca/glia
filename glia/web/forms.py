@@ -4,7 +4,8 @@ from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
 from flask.ext.login import current_user
 from flask_wtf import Form
-from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators, BooleanField
+from wtforms import TextField, TextAreaField, HiddenField, PasswordField, \
+    validators, BooleanField, SelectMultipleField
 
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.models import User, Thought, Persona
@@ -109,6 +110,17 @@ class CreateThoughtForm(Form):
                     be found.".format(self.parent.data))
                 self.parent.errors.append("Can't find the post you are \
                     replying to. Please try reloading the page.")
+        return rv
+
+
+class EditThoughtForm(Form):
+    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
+    longform = TextAreaField('Add more detail')
+    lfsource = TextField('Source of longform (eg. website URL)', [validators.Length(max=128)])
+    delete_attachments = SelectMultipleField("Delete attachments")
+
+    def validate(self):
+        rv = Form.validate(self)
         return rv
 
 

@@ -71,7 +71,7 @@ $(document).ready(function() {
         <div class="rk-thought rk-thought-lead rk-thought-{{ thought.id }}">
           <span class="rk-thought-title">
             <h2>
-            {{ thought_macros.upvote(thought) }}
+              {{ thought_macros.upvote(thought) }}
               {{ thought_macros.label_badges(labels) }}
               {{ thought.text|mentions(thought) }}
             </h2>
@@ -140,6 +140,12 @@ $(document).ready(function() {
       <div class="panel-footer">
         <div class="form-inline">
           {{ thought_macros.repost_button(thought) }}
+
+          {% if thought.authorize("update", active_persona.id) %}
+            <a class="btn btn-default" href="{{ url_for('web.edit_thought', id=thought.id) }}"><i class="fa fa-pencil"></i>
+ Edit</a>
+          {% endif %}
+
           {% if thought.authorize("delete", active_persona.id) %}
             {% if thought.state >= 0 %}
               <a class="btn btn-default" href="{{ url_for('.delete_thought', id=thought.id) }}">
