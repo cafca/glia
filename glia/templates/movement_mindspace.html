@@ -4,6 +4,7 @@
 {% import "macros/thought.html" as thought_macros %}
 {% import "macros/movement.html" as movement_macros %}
 {% import "macros/identity.html" as id_macros %}
+{% import "macros/helpers.html" as helper_macros %}
 "
 
 {% block script %}
@@ -50,21 +51,7 @@ $(document).ready(function() {
 
         {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
 
-        {% if movement.active_member() %}
-          <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">
-            <i class="fa fa-fw fa-users"></i> Leave Movement
-          </button>
-        {% else %}
-          <div class="btn-group">
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-              <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="#" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}">Join as <em>{{ current_user.active_persona.username }}</em></a></li>
-              <li><a href="{{ url_for('web.create_persona', for_movement=movement.id) }}">Join with a new username</a></li>
-            </ul>
-          </div>
-        {% endif %}
+        {{ id_macros.member_toggle(movement, current_user.active_persona, reload=True) }}
         </div>
 
         <dl class="dl-horizontal dl-sm">

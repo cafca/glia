@@ -363,15 +363,22 @@ $(document).ready(function(){
                 })
         });
 
-        $("#rk-movement-member").click(function() {
+        $(".rk-movement-member").click(function() {
             logged_in();
             $(this).button('loading');
-            $.post($("#rk-movement-member").data("href"))
+            var $caller = $(this);
+            $.post($(this).data("href"))
                 .done(function (data) {
-                    location.reload();
+                    if ($caller.data('reload-me') == "prettyplease") {
+                        location.reload();
+                    } else {
+                        $(".rk-join-" + $caller.data("movement-id")).toggle();
+                        $(".rk-leave-" + $caller.data("movement-id")).toggle();
+                    }
                 })
                 .error(function(data) {
                     console.log(data);
+                    $caller.button('reset');
                     notification("Error", data.responseJSON["message"]);
                     $("#rk-movement-member").button('reset');
                 })
