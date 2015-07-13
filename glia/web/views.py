@@ -28,10 +28,11 @@ from glia.web.helpers import send_validation_email, \
     valid_redirect, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.helpers import process_attachments
 from nucleus.nucleus.models import Persona, User, Movement, \
     Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
-    Mindspace, Blog, Dialogue
+    Mindspace, Blog, Dialogue, TextPercept
 
 #
 # UTILITIES
@@ -286,8 +287,33 @@ def edit_thought(id=None):
     attachments = thought.attachments
 
     if form.validate_on_submit():
+        thought.text = form.text.data
+        db.session.add(thought)
+
+        # Append new attachments from longform field
+        if form.longform.data and len(form.longform.data) > 0:
+            lftext, percepts = process_attachments(form.longform.data)
+            app.logger.info("Extracted {} percepts from longform".format(len(percepts)))
+
+            lftext_percept = TextPercept.get_or_create(lftext,
+                source=form.lfsource.data)
+            percepts.add(lftext_percept)
+
+            for p in percepts:
+                if PerceptAssociation.query.filter_by(thought=thought) \
+                        .filter_by(percept=p).count() == 0:
+                    pa = PerceptAssociation(thought=thought, percept=p,
+                        author=current_user.active_persona)
+                    db.session.add(pa)
+
+        # Delete attachments
+        for delete_id in request.form.getlist('delete'):
+            app.logger.info("Removing percept {}".format(delete_id))
+            PerceptAssociation.query.filter_by(thought=thought) \
+                .filter_by(percept_id=delete_id).delete()
+
+        # Write to database
         try:
-            db.session.add(thought)
             db.session.commit()
         except:
             app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))

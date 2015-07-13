@@ -96,13 +96,15 @@ $(document).ready(function() {
         {% endif %}
         <div class="checkbox text-danger">
           <label>
-            <input type="checkbox" value="">
+            <input type="checkbox" name="delete" value="{{at.percept.id}}">
             Remove
           </label>
         </div>
       </li>
     {% endfor %}
     </ul>
+  {% else %}
+  <p class="lead">No attachments found.</p>
   {% endfor %}
 
   <div class="pull-right">
