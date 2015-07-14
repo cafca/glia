@@ -1,5 +1,5 @@
 {% macro percept(percept, icon=True, truncate=True, size="small", lightbox=None) %}
-{% cache 60*10 percept.id, icon, truncate, size, lightbox %}
+{% cache 60*10, percept.id, icon.__repr__(), truncate.__repr__(), size, lightbox %}
 <!-- PERCEPT: {{percept.kind}} {{percept.id}} -->
 {% if percept.kind == 'linkedpicture' %}
 <span class="rk-image">
