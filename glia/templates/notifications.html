@@ -58,26 +58,26 @@ $(document).ready(function() {
         <p><em>For all your Personas</em></p>
       </div>
       <div class="panel-body">
-        <p><strong>Reactions</strong></p>
-        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+        <p><strong>Personal</strong></p>
+        <div class="checkbox catchall-bind">
           <label>
             {{ form.email_react_private() }}
             When I receive a private message
           </label>
         </div>
-        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+        <div class="checkbox catchall-bind">
           <label>
             {{ form.email_react_reply() }}
             When someone replies to my thoughts
           </label>
         </div>
-        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+        <div class="checkbox catchall-bind">
           <label>
             {{ form.email_react_mention() }}
             When someone mentions me
           </label>
         </div>
-        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+        <div class="checkbox catchall-bind">
           <label>
             {{ form.email_react_follow() }}
             When someone follows me
@@ -86,13 +86,13 @@ $(document).ready(function() {
       </div>
       <div class="panel-body">
         <p><strong>System &amp; Security</strong></p>
-        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+        <div class="checkbox catchall-bind">
           <label>
             {{ form.email_system_security() }}
             Important security notices
           </label>
         </div>
-        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+        <div class="checkbox catchall-bind">
           <label>
             {{ form.email_system_features() }}
             When RKTIK gets a cool new feature
