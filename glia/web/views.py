@@ -13,16 +13,16 @@ import traceback
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, \
-    EditThoughtForm, InviteMembersForm
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
-from glia.web.dev_helpers import http_auth
+from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, \
+    EditThoughtForm, InviteMembersForm, EmailPrefsForm
+# from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
     valid_redirect, make_view_cache_key
@@ -310,13 +310,13 @@ def edit_thought(id=None):
         edited_lf = [(k[9:], v) for k, v in request.form.items() if k.startswith('longform-')]
         for key, lftext in edited_lf:
             oldp = TextPercept.query.get(key)
-            newp = TextPercept.get_or_create(lftext, source=request.form.get('lfsource-'+key))
+            newp = TextPercept.get_or_create(lftext, source=request.form.get('lfsource-' + key))
             if oldp != newp:
                 app.logger.info("Changed attachment from {} to {}".format(oldp, newp))
                 pa = PerceptAssociation.query.filter_by(
                     thought=thought).filter_by(percept=oldp).first()
                 pa.percept = newp
-                pa.source = request.form.get('lfsource-'+key)
+                pa.source = request.form.get('lfsource-' + key)
                 db.session.add(pa)
 
         # Delete attachments
@@ -563,8 +563,8 @@ def movements(id=None):
     return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
-@app.route('/notifications')
-@app.route('/notifications/page-<page>')
+@app.route('/notifications', methods=["GET", "POST"])
+@app.route('/notifications/page-<page>', methods=["GET", "POST"])
 @login_required
 # @http_auth.login_required
 def notifications(page=1):
@@ -573,8 +573,29 @@ def notifications(page=1):
         .order_by(Notification.modified.desc()) \
         .paginate(page, 25)
 
+    form = EmailPrefsForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.email_react_private = form.data['email_react_private']
+        current_user.email_react_reply = form.data['email_react_reply']
+        current_user.email_react_mention = form.data['email_react_mention']
+        current_user.email_react_follow = form.data['email_react_follow']
+        current_user.email_system_security = form.data['email_system_security']
+        current_user.email_system_features = form.data['email_system_features']
+        current_user.email_catchall = form.data['email_catchall']
+
+        try:
+            db.session.add(current_user)
+            db.session.commit()
+        except SQLAlchemyError:
+            app.logger.exception("Error saving email prefs")
+            flash("Error updating email preferences. Please try again.")
+        else:
+            flash("Email preferences updated")
+
+    catchall = True if current_user.email_catchall else False
+
     return(render_template('notifications.html',
-        notifications=notifications))
+        notifications=notifications, form=form, catchall=catchall))
 
 
 @app.route('/persona/<id>/')

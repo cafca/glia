@@ -28,6 +28,16 @@ def is_safe_url(target):
         ref_url.netloc == test_url.netloc
 
 
+class EmailPrefsForm(Form):
+    email_react_private = BooleanField("When I receive a private message")
+    email_react_reply = BooleanField("When someone replies to my thoughts")
+    email_react_mention = BooleanField("When someone mentions me")
+    email_react_follow = BooleanField("When someone follows me")
+    email_system_security = BooleanField("Important security notices")
+    email_system_features = BooleanField("When RKTIK gets a cool new feature")
+    email_catchall = BooleanField("Don't send any emails at all. Emails are disgusting!")
+
+
 class RedirectForm(Form):
     next = HiddenField()
 

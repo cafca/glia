@@ -2,9 +2,33 @@
 
 {% import "macros/helpers.html" as helper_macros %}
 
+{% block script %}
+$(document).ready(function() {
+  function toggle_checkboxes() {
+    $(".catchall-bind").each(function() {
+      $(this).toggleClass("disabled");
+      if ($(this).find("input").attr('disabled') != "disabled") {
+        $(this).find("input").attr('disabled', true);
+      } else {
+        $(this).find("input").removeAttr("disabled");
+      }
+    });
+  }
+
+  {% if catchall %}
+  toggle_checkboxes();
+  {% endif %}
+
+  $("#email_catchall").click(function() {
+    toggle_checkboxes();
+  });
+
+});
+{% endblock %}
+
 
 {% block content %}
-<div class="col-sm-6 col-sm-push-3">
+<div class="col-md-6 col-md-push-1">
   <h1>
     Notifications for {{ current_user.active_persona.username }}
     {% if notifications.page != 1 %}
@@ -25,4 +49,68 @@
   {{ helper_macros.paginate(notifications) }}
 </div>
 
+<div class="col-md-4 col-md-push-2">
+  <div class="panel panel-default">
+    <form method="POST" action="{{ request.path }}">
+      {{ form.hidden_tag() }}
+      <div class="panel-heading">
+        <h2>Email Preferences</h2>
+        <p><em>For all your Personas</em></p>
+      </div>
+      <div class="panel-body">
+        <p><strong>Reactions</strong></p>
+        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+          <label>
+            {{ form.email_react_private() }}
+            When I receive a private message
+          </label>
+        </div>
+        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+          <label>
+            {{ form.email_react_reply() }}
+            When someone replies to my thoughts
+          </label>
+        </div>
+        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+          <label>
+            {{ form.email_react_mention() }}
+            When someone mentions me
+          </label>
+        </div>
+        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+          <label>
+            {{ form.email_react_follow() }}
+            When someone follows me
+          </label>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p><strong>System &amp; Security</strong></p>
+        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+          <label>
+            {{ form.email_system_security() }}
+            Important security notices
+          </label>
+        </div>
+        <div class="checkbox catchall-bind{% if catchall %} disabled{% endif %}">
+          <label>
+            {{ form.email_system_features() }}
+            When RKTIK gets a cool new feature
+          </label>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="checkbox">
+          <label>
+            {{ form.email_catchall() }}
+            Don't send any emails at all. Emails are disgusting!
+          </label>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button type="submit" class="btn btn-default">Save Settings</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
