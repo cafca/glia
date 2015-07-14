@@ -512,12 +512,11 @@ def movement_mindspace(id):
         flash("Only members can access the mindspace of '{}'".format(movement.username))
         return redirect(url_for("web.movement_blog", id=movement.id))
 
-    thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
-    thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
-    top_posts = []
+    thought_selection = Thought.query \
+        .filter(Thought.id.in_(movement.mindspace_top_thought()))
+    top_posts = list()
 
-    for i in range(min([15, len(thought_selection)])):
-        candidate = thought_selection.pop(0)
+    for candidate in thought_selection:
         candidate.promote_target = None if candidate in movement.blog \
             else movement
         if candidate.upvote_count() > 0:

@@ -21,7 +21,9 @@ def inject_repost_mindsets():
         rv.append(current_user.active_persona.blog)
 
         # Is a movement member
-        rv = rv + Mindset.query.join(Movement, Movement.mindspace_id == Mindset.id).join(Mma).filter(Mma.persona == current_user.active_persona).all()
+        rv = rv + Mindset.query \
+            .join(Movement, Movement.mindspace_id == Mindset.id) \
+            .filter(Movement.id.in_([m["id"] for m in current_user.active_persona.movements()])).all()
 
     return dict(
         repost_mindsets=rv
