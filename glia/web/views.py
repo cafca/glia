@@ -495,10 +495,6 @@ def movement_blog(id, page=1):
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
 def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -583,10 +579,6 @@ def notifications(page=1):
 
 @app.route('/persona/<id>/')
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
 def persona(id):
     persona = Persona.query.get_or_404(id)
 
@@ -780,9 +772,6 @@ def signup_validation(id, signup_code):
 
 @app.route('/tag/<name>/')
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT
-)
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
@@ -793,10 +782,6 @@ def tag(name):
 
 @app.route('/thought/<id>/')
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
 def thought(id=None):
     thought = Thought.query.get_or_404(id)
 
