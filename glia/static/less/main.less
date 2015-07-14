@@ -1,3 +1,4 @@
+@import "./variables.less";
 
 //
 // COLORS
@@ -80,6 +81,25 @@ a > .fa:hover {
     }
 }
 
+@media
+only screen and (-webkit-min-device-pixel-ratio: 2),
+only screen and (min--moz-device-pixel-ratio: 2),
+only screen and (-moz-min-device-pixel-ratio: 2),
+only screen and (-o-min-device-pixel-ratio: 2/1),
+only screen and (min-device-pixel-ratio: 2),
+only screen and (min-resolution: 192dpi),
+only screen and (min-resolution: 2dppx) {
+    /* styles for HiDPI displays */
+    .panel-default .panel-heading, .panel-default .panel-footer {
+        background-image: url('/static/images/shattered_@2X.png')
+    }
+}
+
+
+.panel-default .panel-heading, .panel-default .panel-footer {
+    background-image: url('/static/images/shattered.png')
+}
+
 //
 // HEADER
 //
@@ -153,6 +173,10 @@ a > .fa:hover {
     .rk-unread {
         background-color: @light;
     }
+}
+
+.rk-email-prefs {
+    margin-top: 2em;
 }
 
 .rk-blog-header {
@@ -247,12 +271,26 @@ a > .fa:hover {
         }
     }
 
+    .rk-chat-privacy {
+        // Pull down into space left of counter
+        margin-bottom: -20px;
+        // Padding to prevent overlap with counter
+        padding-right: 25px;
+    }
+
     .rk-create {
         margin: .5em 0 .5em;
         width: 100%;
+        position: relative;
 
         .rk-create-text {
             width: 80%;
+        }
+
+        .rk-create-counter {
+            position: absolute;
+            right: 0;
+            top: -5px;
         }
 
         button {
@@ -283,7 +321,7 @@ a > .fa:hover {
 //
 
 .rk-movement-info {
-    btn-default { margin-bottom: 1em; }
+    background-color: #f5f5f5;
 }
 
 .rk-movement-box {
@@ -467,6 +505,10 @@ a > .fa:hover {
     .panel-body {
         background-color: white;
     }
+
+    .btn {
+        margin-bottom: 5px;
+    }
 }
 
 .rk-thought-line {
@@ -547,6 +589,30 @@ a > .fa:hover {
     border: none;
 }
 
+.rk-textpercept-panel .panel-body {
+    border-bottom: 1px solid #eee;
+}
+
+.rk-textpercept-panel .panel-body:last-child {
+    border-bottom: none;
+}
+
+.rk-reading-time {
+    padding-left: 5px;
+}
+
+.rk-edit {
+    .rk-edit-attachments {
+        background-color: #fafafa;
+        border: 1px solid #eee;
+        padding: 5px;
+    }
+
+    .rk-new-attachment {
+        display: none;
+    }
+}
+
 //
 // PERCEPTS
 //
@@ -607,5 +673,24 @@ a > .fa:hover {
         margin-bottom: 2em;
         border-top: 2px solid @medium;
         padding-top: 1em;
+    }
+}
+
+//
+// SIGNUP PAGE
+//
+
+@media (min-width: @screen-md-min) {
+    .rk-signup-intro {
+        .rk-welcome {
+            float: right;
+            width: 80%;
+            margin-right: -100%;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin: 10px 0 5px;
+        }
     }
 }

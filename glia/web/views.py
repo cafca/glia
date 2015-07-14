@@ -13,24 +13,26 @@ import traceback
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
-    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, InviteMembersForm
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
-from glia.web.dev_helpers import http_auth
+from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
+    DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, \
+    EditThoughtForm, InviteMembersForm, EmailPrefsForm
+# from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
     valid_redirect, make_view_cache_key
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.helpers import process_attachments
 from nucleus.nucleus.models import Persona, User, Movement, \
     Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
-    Mindspace, Blog, Dialogue
+    Mindspace, Blog, Dialogue, TextPercept
 
 #
 # UTILITIES
@@ -270,6 +272,75 @@ def delete_thought(id=None):
     return render_template("delete_thought.html", thought=thought, form=form)
 
 
+@app.route('/thought/<id>/edit', methods=["GET", "POST"])
+@login_required
+# @http_auth.login_required
+def edit_thought(id=None):
+    thought = Thought.query.get_or_404(id)
+    form = EditThoughtForm()
+
+    if not thought.authorize("update", current_user.active_persona.id):
+        flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
+        app.logger.error("Tried to edit {}'s Thoughts".format(thought.author))
+        return redirect(request.referrer or url_for('web.index'))
+
+    attachments = thought.attachments
+
+    if form.validate_on_submit():
+        thought.text = form.text.data
+        db.session.add(thought)
+
+        # Append new attachments from longform field
+        if form.longform.data and len(form.longform.data) > 0:
+            lftext, percepts = process_attachments(form.longform.data)
+            app.logger.info("Extracted {} percepts from longform".format(len(percepts)))
+
+            lftext_percept = TextPercept.get_or_create(lftext,
+                source=form.lfsource.data)
+            percepts.add(lftext_percept)
+
+            for p in percepts:
+                if PerceptAssociation.query.filter_by(thought=thought) \
+                        .filter_by(percept=p).count() == 0:
+                    pa = PerceptAssociation(thought=thought, percept=p,
+                        author=current_user.active_persona)
+                    db.session.add(pa)
+
+        # Update longform fields
+        edited_lf = [(k[9:], v) for k, v in request.form.items() if k.startswith('longform-')]
+        for key, lftext in edited_lf:
+            oldp = TextPercept.query.get(key)
+            newp = TextPercept.get_or_create(lftext, source=request.form.get('lfsource-' + key))
+            if oldp != newp:
+                app.logger.info("Changed attachment from {} to {}".format(oldp, newp))
+                pa = PerceptAssociation.query.filter_by(
+                    thought=thought).filter_by(percept=oldp).first()
+                pa.percept = newp
+                pa.source = request.form.get('lfsource-' + key)
+                db.session.add(pa)
+
+        # Delete attachments
+        for delete_id in request.form.getlist('delete'):
+            app.logger.info("Removing percept {}".format(delete_id))
+            PerceptAssociation.query.filter_by(thought=thought) \
+                .filter_by(percept_id=delete_id).delete()
+
+        # Write to database
+        try:
+            db.session.commit()
+        except:
+            app.logger.error("Error setting publish state of {}\n{}".format(thought, traceback.format_exc()))
+            db.session.rollback()
+        else:
+            flash("Updated {}".format(thought))
+
+            app.logger.info("Thought {} updated".format(id))
+            return(redirect(url_for("web.thought", id=thought.id)))
+
+    return render_template("edit_thought.html", thought=thought, form=form,
+        attachments=attachments)
+
+
 @app.route('/', methods=["GET"])
 # @http_auth.login_required
 @cache.cached(
@@ -317,6 +388,7 @@ def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
     movement = Movement.query.get_or_404(movement_id)
     invited = list()
+    invitation_code = None
 
     form = InviteMembersForm()
     if form.validate_on_submit():
@@ -328,8 +400,21 @@ def invite_members(movement_id):
                 flash("There was an error sending an invitation to {}. Please try again.".format(
                     handle), 'error')
 
+    mma = MovementMemberAssociation(
+        movement=movement,
+        role="invited",
+        active=False,
+        invitation_code=uuid4().hex)
+    db.session.add(mma)
+    try:
+        db.session.commit()
+    except SQLAlchemyError, e:
+        app.logger.exception("Error generating invitation code: {}".format(e))
+    else:
+        invitation_code = mma.invitation_code
+
     return render_template("movement_invite.html",
-        form=form, movement=movement, invited=invited)
+        form=form, movement=movement, invited=invited, invitation_code=invitation_code)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -410,10 +495,6 @@ def movement_blog(id, page=1):
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
 def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -427,12 +508,11 @@ def movement_mindspace(id):
         flash("Only members can access the mindspace of '{}'".format(movement.username))
         return redirect(url_for("web.movement_blog", id=movement.id))
 
-    thought_selection = movement.mindspace.index.filter(Thought.state >= 0)
-    thought_selection = sorted(thought_selection, key=Thought.hot, reverse=True)
-    top_posts = []
+    thought_selection = Thought.query \
+        .filter(Thought.id.in_(movement.mindspace_top_thought()))
+    top_posts = list()
 
-    for i in range(min([15, len(thought_selection)])):
-        candidate = thought_selection.pop(0)
+    for candidate in thought_selection:
         candidate.promote_target = None if candidate in movement.blog \
             else movement
         if candidate.upvote_count() > 0:
@@ -483,8 +563,8 @@ def movements(id=None):
     return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
-@app.route('/notifications')
-@app.route('/notifications/page-<page>')
+@app.route('/notifications', methods=["GET", "POST"])
+@app.route('/notifications/page-<page>', methods=["GET", "POST"])
 @login_required
 # @http_auth.login_required
 def notifications(page=1):
@@ -493,16 +573,33 @@ def notifications(page=1):
         .order_by(Notification.modified.desc()) \
         .paginate(page, 25)
 
+    form = EmailPrefsForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.email_react_private = form.data['email_react_private']
+        current_user.email_react_reply = form.data['email_react_reply']
+        current_user.email_react_mention = form.data['email_react_mention']
+        current_user.email_react_follow = form.data['email_react_follow']
+        current_user.email_system_security = form.data['email_system_security']
+        current_user.email_system_features = form.data['email_system_features']
+        current_user.email_catchall = form.data['email_catchall']
+
+        try:
+            db.session.add(current_user)
+            db.session.commit()
+        except SQLAlchemyError:
+            app.logger.exception("Error saving email prefs")
+            flash("Error updating email preferences. Please try again.")
+        else:
+            flash("Email preferences updated")
+
+    catchall = True if current_user.email_catchall else False
+
     return(render_template('notifications.html',
-        notifications=notifications))
+        notifications=notifications, form=form, catchall=catchall))
 
 
 @app.route('/persona/<id>/')
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
 def persona(id):
     persona = Persona.query.get_or_404(id)
 
@@ -647,7 +744,7 @@ def signup():
                 if mma.active:
                     flash("This activation code has been used before. You can try joining the movement by clicking the join button below.")
                 else:
-                    flash("You were invited to join this movement. Click the \"Join movement\" button on the bottom of this page to do so.")
+                    flash("You were invited to join this movement. Click the \"Join movement\" button to do so.")
                 return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=mma.invitation_code))
             else:
                 return redirect(url_for("web.index"))
@@ -696,9 +793,6 @@ def signup_validation(id, signup_code):
 
 @app.route('/tag/<name>/')
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT
-)
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
@@ -709,10 +803,6 @@ def tag(name):
 
 @app.route('/thought/<id>/')
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
 def thought(id=None):
     thought = Thought.query.get_or_404(id)
 

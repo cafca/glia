@@ -20,7 +20,10 @@ window.admin_id = "{{ movement.admin_id }}";
     <div class="jumbotron rk-blog-header" style="background-color: #{{ movement.color }};">
       <h1>{{ movement.username }}</h1>
       <p>{{ movement.description }}</p>
-      {{ id_macros.follow_toggle(movement, current_user.active_persona, size="lg") }}
+      {{ id_macros.member_toggle(movement, current_user.active_persona) }}
+      {% if movement in current_user.active_persona.blogs_followed %}
+        {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
+      {% endif %}
     </div>
 
     {{ movement_macros.nav(movement, "Blog") }}
@@ -63,21 +66,8 @@ window.admin_id = "{{ movement.admin_id }}";
           <div class="col-sm-4">
             <div class="form-group">
 
-            {% if movement.active_member() %}
-              <button class="btn btn-default" type="submit" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>
-                <i class="fa fa-fw fa-users"></i> Leave Movement
-              </button>
-            {% elif (not movement.private or request.args.get('invitation_code', default=None)) %}
-            <div class="btn-group">
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>
-              </button>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="#" id="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id, invitation_code=code) }}">Join as <em>{{ current_user.active_persona.username }}</em></a></li>
-                <li><a href="{{ url_for('web.create_persona', for_movement=movement.id, invitation_code=code) }}">Join with a new username</a></li>
-              </ul>
-            </div>
-            {% endif %}
+            {{ id_macros.member_toggle(movement, current_user.active_persona) }}
+
             </div>
           </div>
 

@@ -21,7 +21,9 @@ def inject_repost_mindsets():
         rv.append(current_user.active_persona.blog)
 
         # Is a movement member
-        rv = rv + Mindset.query.join(Movement, Movement.mindspace_id == Mindset.id).join(Mma).filter(Mma.persona == current_user.active_persona).all()
+        rv = rv + Mindset.query \
+            .join(Movement, Movement.mindspace_id == Mindset.id) \
+            .filter(Movement.id.in_([m["id"] for m in current_user.active_persona.movements()])).all()
 
     return dict(
         repost_mindsets=rv
@@ -38,12 +40,7 @@ def inject_navbar_movements():
     if current_user.is_anonymous():
         movements = Movement.top_movements()
     else:
-        user_movements = Movement.query \
-            .join(Mma) \
-            .filter_by(persona=current_user.active_persona)
-
-        movements = [dict(id=m.id, username=m.username)
-            for m in user_movements]
+        movements = current_user.active_persona.movements()
 
     return dict(nav_movements=movements)
 

@@ -71,7 +71,7 @@
       {% if extra_text %}
         <p>{{ extra_text }}</p>
       {% endif %}
-      <p><em>{{ movement.member_count }} member{% if movement.member_count > 1 %}s{% endif %}</em></p>
+      <p><em>{{ movement.member_count() }} member{% if movement.member_count() != 1 %}s{% endif %}</em></p>
     </div>
   </div>
 

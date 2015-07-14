@@ -4,7 +4,8 @@ from urlparse import urlparse, urljoin
 from flask import request, url_for, redirect
 from flask.ext.login import current_user
 from flask_wtf import Form
-from wtforms import TextField, TextAreaField, HiddenField, PasswordField, validators, BooleanField
+from wtforms import TextField, TextAreaField, HiddenField, PasswordField, \
+    validators, BooleanField, SelectMultipleField
 
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.models import User, Thought, Persona
@@ -25,6 +26,16 @@ def is_safe_url(target):
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and \
         ref_url.netloc == test_url.netloc
+
+
+class EmailPrefsForm(Form):
+    email_react_private = BooleanField("When I receive a private message")
+    email_react_reply = BooleanField("When someone replies to my thoughts")
+    email_react_mention = BooleanField("When someone mentions me")
+    email_react_follow = BooleanField("When someone follows me")
+    email_system_security = BooleanField("Important security notices")
+    email_system_features = BooleanField("When RKTIK gets a cool new feature")
+    email_catchall = BooleanField("Don't send any emails at all. Emails are disgusting!")
 
 
 class RedirectForm(Form):
@@ -109,6 +120,17 @@ class CreateThoughtForm(Form):
                     be found.".format(self.parent.data))
                 self.parent.errors.append("Can't find the post you are \
                     replying to. Please try reloading the page.")
+        return rv
+
+
+class EditThoughtForm(Form):
+    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
+    longform = TextAreaField('Add more detail')
+    lfsource = TextField('Source of longform (eg. website URL)', [validators.Length(max=128)])
+    delete_attachments = SelectMultipleField("Delete attachments")
+
+    def validate(self):
+        rv = Form.validate(self)
         return rv
 
 

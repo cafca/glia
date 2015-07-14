@@ -332,7 +332,10 @@ def async_toggle_movement_membership(movement_id):
     else:
         rv = None
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        app.logger.exception("Error toggling membership of {} in {}".format(current_user.active_persona, movement))
 
     return jsonify({
         "movement_id": movement.id,

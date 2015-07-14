@@ -1,4 +1,5 @@
 {% macro percept(percept, icon=True, truncate=True, size="small", lightbox=None) %}
+{% cache 60*10, percept.id, icon.__repr__(), truncate.__repr__(), size, lightbox|default("None", True) %}
 <!-- PERCEPT: {{percept.kind}} {{percept.id}} -->
 {% if percept.kind == 'linkedpicture' %}
 <span class="rk-image">
@@ -26,22 +27,31 @@
 {% elif percept.kind == 'text' %}
 <span class="rk-text">
   {% if truncate %}
-  <p class="pull-right"><small>
-    <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
-  </small></p>
-  {{ percept.text|truncate(length=400)|markdown|striptags}}
-  {% else %}
-  <p>
-    <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
-    {% if percept.source %}
-    <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
+    {% if percept.reading_time().seconds > 0 %}
+      <p class="pull-right rk-reading-time"><small>
+        <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
+      </small></p>
     {% endif %}
-  </p>
-  {{ percept.text|markdown}}
+
+    {{ percept.text|truncate(length=400)|markdown|striptags}}
+  {% else %}
+    <p class="rk-reading-time">
+      {% if percept.reading_time().seconds > 0 %}
+        <i class="fa fa-file-text-o"></i>
+        Read {{ percept.reading_time()|naturaldelta }}
+      {% endif %}
+
+      {% if percept.source %}
+      <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
+      {% endif %}
+    </p>
+
+    {{ percept.text|markdown}}
   {% endif %}
 </span>
 {% endif %}
 
+{% endcache %}
 {% endmacro %}
 
 
@@ -92,7 +102,7 @@
 
   {% if attachments["text"]|length != 0 %}
   <!-- Text Percepts -->
-  <div class="row panel panel-default">
+  <div class="row panel panel-default rk-textpercept-panel">
     {% for pa in attachments["text"] %}
     <div class="col-sm-12 panel-body">
       {{ percept(pa.percept, icon=True, truncate=truncate)}}
