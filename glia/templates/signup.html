@@ -28,6 +28,18 @@ $(document).ready(function() {
   $(".rk-signup-form").submit(function() {
     $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
   });
+
+  $('.input_helper').popover({
+    container: 'body',
+    trigger: 'focus',
+    placement: function(context, source) {
+      var pos = $(".rk-signup").position();
+      if (pos.left > 200) {
+        return "left";
+      }
+      return "bottom";
+    }
+  });
 });
 
 {% endblock %}
@@ -54,7 +66,7 @@ $(document).ready(function() {
     {% else %}
       <label for="username">What would you like to be called here?</label>
     {% endif %}
-    <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" value="{{form.username.data|default('', True) }}" \>
+    <input type="text" class="form-control input_helper" id="username" name="username" placeholder="Enter username" value="{{form.username.data|default('', True) }}" data-content="You can change this later." \>
   </div>
 
   <div class="form-group {% if form.email.errors %}has-error{% endif %}">
@@ -63,7 +75,7 @@ $(document).ready(function() {
     {% else %}
       <label for="email">Email address (we don't send too many emails)</label>
     {% endif %}
-    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" value="{{form.email.data|default('', True) }}" \>
+    <input type="email" class="form-control input_helper" id="email" name="email" placeholder="Enter email" value="{{form.email.data|default('', True) }}"  data-content="We mostly send emails when a real human being wants to interact with you. You can opt-out with one click from any email you receive."\>
   </div>
 
   <div class="form-group {% if form.password.errors %}has-error{% endif %}">
@@ -72,7 +84,7 @@ $(document).ready(function() {
     {% else %}
       <label for="password">Password</label>
     {% endif %}
-    <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="{{form.password.data|default('', True) }}" \>
+    <input type="password" class="form-control input_helper" id="password" name="password" placeholder="Password" value="{{form.password.data|default('', True) }}" data-content="Give me at least 8 characters."\>
   </div>
 
   <div class="form-group {% if form.color.errors %}has-error{% endif %}">
@@ -81,7 +93,7 @@ $(document).ready(function() {
     {% else %}
       <label for="color">Which is the best color?</label>
     {% endif %}
-    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" value="{{form.color.data|default('', True) }}" /></p>
+    <p><input type='text' name="color" class="form-control" id="rk-colorpicker" value="{{form.color.data|default('', True) }}"/></p>
   </div>
 
   <p>We care about your privacy, and we never spam. By creating an account, you agree to RKTIK's User Agreement and Privacy Policy.</p>
