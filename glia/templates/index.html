@@ -8,84 +8,43 @@
 {% block content %}
 <div class="row" id="rk-index">
     <div class="rk-frontpage col-sm-7 col-sm-push-1">
-    {% if blog_list|length > 0 %}
 
     {{ helper_macros.intro(global_login_form) }}
 
-    {% for source in blog_list %}
+    {% for t in top_main %}
       <div class="rk-frontpage-item">
-        {% if source.ident.kind == "movement" %}
-          {{ movement_macros.nav(source.ident) }}
+        {% if loop.first %}
+          {{ thought_macros.thought_lead(t, controlled_personas) }}
         {% else %}
-        <a href="{{ source.url }}">
-          <h1 class="rk-frontpage-item-title"></i> {{ source.ident.username }}</h1>
-        </a>
-        <p>
-          Personal Blog
-          <span class="pull-right rk-attention" style="color: #aaa;">
-            <i class="fa fa-eye"></i> {{source.ident.attention}}
-          </span>
-        </p>
-        {% endif %}
-
-        <div class="rk-frontpage-item-listing">
-          {% if source.blog|length > 0 %}
-            {% for thought in source.blog %}
-              {% if loop.first %}
-                {{ thought_macros.thought_lead(thought, None) }}
-              {% else %}
-                {{ thought_macros.thought_line(thought, None, no_percepts=True) }}
-              {% endif %}
-            {% endfor %}
-          {% elif source.ident.kind == "movement" %}
-            <p class="lead">This movement's blog is empty.
-              {% if not source.ident.private %}Vote on thoughts in the movement mindspace to promote them to this blog.{% endif %}
-            </p>
-          {% else %}
-            <p class="lead">This Persona's blog is empty. </h2>
-          {% endif %}
-        </div>
-
-        {% if "mindspace" in source %}
-        <div class="rk-frontpage-ident panel panel-default"  style="border-color: #999">
-          <div class="panel-heading" style="background-color: #999">
-            <a href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}"><p>Mind of {{ source.ident.username }}</p></a>
-          </div>
-          <div class="panel-body">
-          {% for t in source["mindspace"] %}
-            {{ thought_macros.thought_line(t, no_percepts=True) }}
-          {% else %}
-            <p class="lead">This movement's mindspace is empty. You can help out by submitting and voting on interesting thoughts.</p>
-            <p><a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=source.ident.mindspace.id) }}">Click here to start now</a></p>
-          {% endfor %}
-            <small>&nbsp;<a class="pull-right" href="{{ url_for('web.movement_mindspace', id=source.ident.id) }}">See more in Mindspace</a></small>
-        </div>
-        </div> <!-- ./ mindspace panel -->
+          {{ thought_macros.thought_line(t, controlled_personas) }}
         {% endif %}
       </div> <!-- ./ frontpage item -->
-    {% endfor %}
-
     {% else %}
-    <h1>Follow or join some Movements!</h1>
-    <h1>&nbsp;</h1>
-    {% for m in more_movements %}
-      <h2>{{ id_macros.movement(m) }}</h2>
-      <p>{{ m.description|default("No mission specified", True) }}</p>
+      <h1>Follow or join some Movements!</h1>
+      <h1>&nbsp;</h1>
+      {% for m in more_movements %}
+        <h2>{{ id_macros.movement(m) }}</h2>
+        <p>{{ m.description|default("No mission specified", True) }}</p>
+      {% endfor %}
     {% endfor %}
-    {% endif %}
   </div>
 
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-1">
-    {% if top_posts.count() > 0 %}
+    {% if top_mindspace and top_mindspace.count() > 0 %}
       <div class="panel-body">
         <h3>Top Thought</h3>
         <hr />
       </div>
 
-      <ul class="list-group rk-toc-movements">
-        {% for thought in top_posts %}
+      <ul class="list-group rk-toc-list">
+        {% for thought in top_mindspace %}
           {% if thought|authorize("read") %}
-            <a href="{{ url_for('web.thought', id=thought.id) }}"><li class="list-group-item">{{ thought.text }}</li></a>
+            <a href="{{ url_for('web.thought', id=thought.id) }}">
+              <li class="list-group-item">
+                {{ thought.text }}
+                 <small>In {{ thought.mindset.author.username }}</small>
+              </li>
+            </a>
           {% endif %}
         {% endfor %}
       </ul> <!-- ./ movement list -->
@@ -101,6 +60,25 @@
       <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item">{{ id_macros.movement(movement, nolink=True) }} {{ movement.description|default("", True) }}</li></a>
       {% endfor %}
       </ul>
+    {% endif %}
+
+    {% if top_mindspace and top_mindspace.count() > 0 %}
+      <div class="panel-body">
+        <h3>Up next</h3>
+        <hr />
+      </div>
+
+      <ul class="list-group rk-toc-list">
+        {% for thought in top_mindspace %}
+          {% if thought|authorize("read") %}
+            <a href="{{ url_for('web.thought', id=thought.id) }}">
+              <li class="list-group-item">
+                {{ thought.text }} <small>In {{ thought.mindset.author.username }}</small>
+              </li>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </ul> <!-- ./ movement list -->
     {% endif %}
 
     <div class="panel-body">

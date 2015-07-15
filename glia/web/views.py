@@ -353,32 +353,33 @@ def index():
 
     # Determine content source
     if current_user.is_anonymous():
-        sources = more_movements = Movement.query \
+        more_movements = Movement.query \
             .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
+        top_main = Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source="blog")))
+        top_mindspace = None
+        top_global = None
     else:
-        sources = current_user.active_persona.blogs_followed
         more_movements = Movement.query \
             .filter(Movement.id.in_(
                 current_user.active_persona.suggested_movements()))
 
-    sources = sorted(sources, key=lambda s: s.attention, reverse=True)
+        mindspaces = set()
+        blogs = set()
+        for ident in current_user.active_persona.blogs_followed:
+            mindspaces.add(ident.mindspace.id)
+            blogs.add(ident.blog.id)
 
-    blog_list = list()
-    for s in sources:
-        source_data = dict()
-        source_data["ident"] = s
-        source_data["blog"] = list(s.blog.index.order_by(Thought.created.desc()).limit(3))
-        source_data["url"] = url_for('web.persona_blog', id=s.id) if isinstance(s, Persona) else s.get_absolute_url()
-        if isinstance(s, Movement) and s.active_member():
-            source_data["mindspace"] = Thought.query.filter(
-                Thought.id.in_(s.mindspace_top_thought(count=3)))
-        blog_list.append(source_data)
-
-    # Collect main page content
-    top_posts = Thought.query.filter(Thought.id.in_(Thought.top_thought()))
+        top_main = Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source=blogs)))
+        top_mindspace = Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source=mindspaces)))
+        top_global = Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source="blog")))
 
     return render_template('index.html', movementform=movementform,
-        blog_list=blog_list, top_posts=top_posts, more_movements=more_movements)
+        top_main=top_main, top_global=top_global, top_mindspace=top_mindspace,
+        more_movements=more_movements)
 
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
