@@ -549,40 +549,6 @@ only screen and (min-resolution: 2dppx) {
 
 .rk-textpercept-panel .panel-body {
     border-bottom: 1px solid #eee;
-
-    .truncate {
-        max-height: 200px;
-        overflow-y: hidden;
-        margin-bottom: 10px;
-
-        .truncate-toggle {
-            position: absolute;
-            bottom: 5px;
-            width: 100%;
-            margin-left: -10px;
-            cursor: pointer;
-            opacity: 0.5;
-        }
-
-        .truncate-toggle:hover {
-            opacity: 1.0;
-        }
-
-        .fa-arrow-circle-up { display: none; }
-        .fa-arrow-circle-down { display: inline-block; }
-
-        &.truncate-disable {
-            max-height: 100%;
-
-            .fa-arrow-circle-up {
-                display: inline-block;
-            }
-
-            .fa-arrow-circle-down {
-                display: none;
-            }
-        }
-    }
 }
 
 .rk-textpercept-panel .panel-body:last-child {
@@ -639,6 +605,40 @@ only screen and (min-resolution: 2dppx) {
 
 .rk-text {
     overflow-wrap: break-word;
+
+    &.truncate {
+        max-height: 200px;
+        overflow-y: hidden;
+        margin-bottom: 10px;
+
+        .truncate-toggle {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            margin-left: -10px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+
+        .truncate-toggle:hover {
+            opacity: 1.0;
+        }
+
+        .fa-arrow-circle-up { display: none; }
+        .fa-arrow-circle-down { display: inline-block; }
+
+        &.truncate-disable {
+            max-height: 100%;
+
+            .fa-arrow-circle-up {
+                display: inline-block;
+            }
+
+            .fa-arrow-circle-down {
+                display: none;
+            }
+        }
+    }
 }
 
 //
