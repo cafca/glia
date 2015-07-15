@@ -228,6 +228,10 @@ $(document).ready(function(){
             }
         });
 
+        $(".truncate-toggle").click(function() {
+            $(this).parent().toggleClass("truncate-disable");
+        });
+
         $(".rk-singleclick").click(function() {$(this).button("loading");});
 
         //

@@ -591,6 +591,35 @@ only screen and (min-resolution: 2dppx) {
 
 .rk-textpercept-panel .panel-body {
     border-bottom: 1px solid #eee;
+
+    .truncate {
+        height: 200px;
+        overflow-y: hidden;
+        margin-bottom: 10px;
+
+        .truncate-toggle {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            margin-left: -10px;
+            cursor: pointer;
+        }
+
+        .fa-arrow-circle-up { display: none; }
+        .fa-arrow-circle-down { display: inline-block; }
+
+        &.truncate-disable {
+            height: 100%;
+
+            .fa-arrow-circle-up {
+                display: inline-block;
+            }
+
+            .fa-arrow-circle-down {
+                display: none;
+            }
+        }
+    }
 }
 
 .rk-textpercept-panel .panel-body:last-child {
