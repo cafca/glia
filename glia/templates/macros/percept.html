@@ -14,9 +14,7 @@
   </div>
   {% else %}
   <a class="rk-link" href="{{ percept.url }}">
-    {% if icon == True %}
-
-    {% endif %}
+    <i class="fa fa-link"></i>
     {% if percept.title %}
     {{ percept.title }}
     {% else %}
@@ -35,12 +33,15 @@
   {{ percept.text|markdown }}
 
   {% if percept.source %}
-    <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
+    <i class="fa fa-link"></i> <em>Source:</em> {{ percept.source|urlize }}
   {% endif %}
+
+  {% if truncate %}
   <div class="truncate-toggle text-center">
     <i class="fa fa-arrow-circle-down"></i>
     <i class="fa fa-arrow-circle-up"></i>
   </div>
+  {% endif %}
 </div>
 {% endif %}
 
@@ -87,7 +88,7 @@
   <ul class="list-unstyled">
     {% for pa in attachments["link"] %}
     <li>
-    {{ percept(pa.percept, icon=True, truncate=truncate)}}
+    {{ percept(pa.percept, icon=icon, truncate=truncate)}}
     </li>
     {% endfor %}
   </ul>
@@ -98,7 +99,7 @@
   <div class="row panel panel-default rk-textpercept-panel">
     {% for pa in attachments["text"] %}
     <div class="col-sm-12 panel-body">
-      {{ percept(pa.percept, icon=True, truncate=truncate)}}
+      {{ percept(pa.percept, icon=icon, truncate=truncate)}}
     </div>
     {% endfor %}
   </div>

@@ -11,14 +11,13 @@
 
     {{ helper_macros.intro(global_login_form) }}
 
+    <div class="thought-listing">
     {% for t in top_main %}
-      <div class="rk-frontpage-item">
         {% if loop.first %}
           {{ thought_macros.thought_lead(t, controlled_personas) }}
         {% else %}
-          {{ thought_macros.thought_line(t, controlled_personas) }}
+          {{ thought_macros.thought_line(t, controlled_personas, truncate=True) }}
         {% endif %}
-      </div> <!-- ./ frontpage item -->
     {% else %}
       <h1>Follow or join some Movements!</h1>
       <h1>&nbsp;</h1>
@@ -27,6 +26,7 @@
         <p>{{ m.description|default("No mission specified", True) }}</p>
       {% endfor %}
     {% endfor %}
+    </div> <!-- ./ frontpage items -->
   </div>
 
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-1">
@@ -42,7 +42,11 @@
             <a href="{{ url_for('web.thought', id=thought.id) }}">
               <li class="list-group-item">
                 {{ thought.text }}
+                {% if thought.mindset %}
                  <small>In {{ thought.mindset.author.username }}</small>
+                {% elif thought.parent %}
+                <small>In reply to {{ thought.parent.author.username }}</small>
+                {% endif %}
               </li>
             </a>
           {% endif %}
@@ -73,7 +77,12 @@
           {% if thought|authorize("read") %}
             <a href="{{ url_for('web.thought', id=thought.id) }}">
               <li class="list-group-item">
-                {{ thought.text }} <small>In {{ thought.mindset.author.username }}</small>
+                {{ thought.text }}
+                {% if thought.mindset %}
+                 <small>In {{ thought.mindset.author.username }}</small>
+                {% elif thought.parent %}
+                <small>In reply to {{ thought.parent.author.username }}</small>
+                {% endif %}
               </li>
             </a>
           {% endif %}
