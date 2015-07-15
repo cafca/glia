@@ -210,6 +210,10 @@ $(document).ready(function(){
                     $('#rk-chat-more-button').button('reset');
                     $(".upvote").unbind("click");
                     $(".upvote").click(function () {request_upvote(this.dataset.id); return false;});
+                    $("#rk-chat-lines .truncate-toggle").unbind("click");
+                    $("#rk-chat-lines .truncate-toggle").click(function() {
+                        $(this).parent().toggleClass("truncate-disable");
+                    });
                 });
             });
     }
