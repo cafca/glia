@@ -60,7 +60,7 @@
         <h3>Discover Movements</h3>
         <hr />
       </div>
-      <ul class="list-group">
+      <ul class="list-group rk-toc-list">
       {% for movement in more_movements %}
       <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item rk-toc-movements">{{ id_macros.movement(movement, nolink=True) }}
       {% if movement.description %}
