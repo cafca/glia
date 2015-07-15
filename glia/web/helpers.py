@@ -72,6 +72,9 @@ def send_email(message):
     Args:
         message (Sendgrid Message): Readily configured message object
 
+    Returns:
+        tuple: (status, message)
+
     Raises:
         SendGridClientError
         SendGridServerError
@@ -81,7 +84,13 @@ def send_email(message):
     sg_user = os.environ.get('SENDGRID_USERNAME') or current_app.config["SENDGRID_USERNAME"]
     sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
     sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
-    return sg.send(message)
+    try:
+        rv = sg.send(message)
+    except Exception, e:
+        logger.exception("Eror sending email: {}".format(e))
+        rv = (None, None)
+
+    return rv
 
 
 def send_external_notifications(notification):
