@@ -19,7 +19,8 @@
           {{ thought_macros.thought_line(t, controlled_personas, truncate=True) }}
         {% endif %}
     {% else %}
-      <h1>Follow or join some Movements!</h1>
+      <h1>Your followed movements all have empty blogs</h1>
+      <p>Maybe you'll find something here:</p>
       <h1>&nbsp;</h1>
       {% for m in more_movements %}
         <h2>{{ id_macros.movement(m) }}</h2>
@@ -61,7 +62,10 @@
       </div>
       <ul class="list-group">
       {% for movement in more_movements %}
-      <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item">{{ id_macros.movement(movement, nolink=True) }} {{ movement.description|default("", True) }}</li></a>
+      <a href="{{ url_for('web.movement', id=movement.id) }}"><li class="list-group-item rk-toc-movements">{{ id_macros.movement(movement, nolink=True) }}
+      {% if movement.description %}
+        <small>{{ movement.description }}</small>
+      {% endif %}</li></a>
       {% endfor %}
       </ul>
     {% endif %}
