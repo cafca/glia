@@ -31,7 +31,7 @@
   </div>
 
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-1">
-    {% if top_global and top_global.count() > 0 %}
+    {% if top_global and top_global|length > 0 %}
       <div class="panel-body">
         <h3>Top Thought</h3>
         <hr />
@@ -70,7 +70,7 @@
       </ul>
     {% endif %}
 
-    {% if top_mindspace and top_mindspace.count() > 0 %}
+    {% if top_mindspace and top_mindspace|length > 0 %}
       <div class="panel-body">
         <h3>Up next</h3>
         <hr />

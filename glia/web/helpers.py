@@ -10,12 +10,17 @@ from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
 
-from nucleus.nucleus.models import Persona, Movement, MovementMemberAssociation
+from nucleus.nucleus.models import Persona, Movement, \
+    MovementMemberAssociation, Thought
 
 from .. import socketio
 
 
 logger = logging.getLogger('web')
+
+# Cached results are fetched from the database by ID, which returns the result
+# list out of order. This lambda function reorders them.
+reorder = lambda l: sorted(l, key=Thought.hot, reverse=True)
 
 
 class UnauthorizedError(Exception):

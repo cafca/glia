@@ -25,7 +25,7 @@ from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
 # from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
-    valid_redirect, make_view_cache_key
+    valid_redirect, make_view_cache_key, reorder
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.helpers import process_attachments
@@ -355,8 +355,8 @@ def index():
     if current_user.is_anonymous():
         more_movements = Movement.query \
             .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
-        top_main = Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source="blog")))
+        top_main = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source="blog"))))
         top_mindspace = None
         top_global = None
     else:
@@ -370,12 +370,12 @@ def index():
             mindspaces.add(ident.mindspace.id)
             blogs.add(ident.blog.id)
 
-        top_main = Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source=blogs)))
-        top_mindspace = Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source=mindspaces)))
-        top_global = Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source="blog")))
+        top_main = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source=blogs))))
+        top_mindspace = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source=mindspaces))))
+        top_global = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source="blog"))))
 
     return render_template('index.html', movementform=movementform,
         top_main=top_main, top_global=top_global, top_mindspace=top_mindspace,
@@ -509,8 +509,8 @@ def movement_mindspace(id):
         flash("Only members can access the mindspace of '{}'".format(movement.username))
         return redirect(url_for("web.movement_blog", id=movement.id))
 
-    thought_selection = Thought.query \
-        .filter(Thought.id.in_(movement.mindspace_top_thought()))
+    thought_selection = reorder(Thought.query \
+        .filter(Thought.id.in_(movement.mindspace_top_thought())))
     top_posts = list()
 
     for candidate in thought_selection:
