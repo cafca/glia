@@ -695,11 +695,21 @@ def signup():
 
         db.session.add(persona)
 
+        # Activate invitation
         if mma and not mma.active:
             mma.persona = persona
             mma.active = True
             mma.role = "member"
             db.session.add(mma)
+
+        # Auto-follow top movements
+        top_movements = Movement.top_movements()
+        app.logger.info("Auto joining {}".format(
+            ", ".join([m["username"] for m in top_movements])))
+        for m_data in top_movements:
+            m = Movement.query.get(m_data["id"])
+            persona.toggle_following(m)
+        cache.delete_memoized(persona.suggested_movements)
 
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),
