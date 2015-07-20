@@ -9,6 +9,7 @@
 """
 import datetime
 import traceback
+import json
 
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
@@ -25,7 +26,7 @@ from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
 # from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
-    valid_redirect, make_view_cache_key, reorder
+    valid_redirect, make_view_cache_key, reorder, generate_graph
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.helpers import process_attachments
@@ -377,9 +378,11 @@ def index():
         top_global = reorder(Thought.query.filter(Thought.id.in_(
             Thought.top_thought(source="blog"))))
 
+    graph_json = json.dumps(generate_graph(top_main))
+
     return render_template('index.html', movementform=movementform,
         top_main=top_main, top_global=top_global, top_mindspace=top_mindspace,
-        more_movements=more_movements)
+        more_movements=more_movements, graph_json=graph_json)
 
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
