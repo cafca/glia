@@ -108,7 +108,10 @@ def create_app(log_info=True):
     app.register_blueprint(api_blueprint)
     app.register_blueprint(web_blueprint)
 
-    setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger])
+    nucleus_logger = logging.getLogger("nucleus")
+
+    setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger,
+        nucleus_logger])
 
     if log_info:
         # Log configuration info
