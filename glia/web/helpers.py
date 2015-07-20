@@ -117,10 +117,7 @@ def send_external_notifications(notification):
 
     # Email notification
     if isinstance(notification.recipient, Persona):
-        if notification.email_pref and getattr(notification.recipient.user,
-            notification.email_pref) is True \
-                and not notification.recipient.user.email_catchall:
-
+        if notification.recipient.user.email_allowed(notification):
             message = sendgrid.Mail()
             message.add_to("{} <{}>".format(
                 notification.recipient.username, notification.recipient.user.email))
@@ -138,9 +135,6 @@ def send_external_notifications(notification):
                 logger.error("Client error sending notification email: {}".format(e))
             except SendGridServerError, e:
                 logger.error("Server error sending notification email: {}".format(e))
-        else:
-            logger.info("{} not sent because of user preference '{}'".format(
-                notification, notification.email_pref))
 
 
 def send_movement_invitation(recipient, movement, personal_message=None):
