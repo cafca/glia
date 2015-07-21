@@ -20,7 +20,13 @@ var color = d3.scale.ordinal()
 //Set up the force layout
 var force = d3.layout.force()
     .gravity(0.1)
-    .linkDistance(10)
+    .linkDistance(function(d) {
+        if (d.kind == 1) {
+            return 50;
+        } else {
+            return 10;
+        }
+    })
     .size([radius*2, radius*2]);
 
 var svg = d3.select(".rk-graph").append("svg")
@@ -49,6 +55,10 @@ var link = svg.selectAll(".link")
     .enter().append("line")
     .attr("class", "link");
 
+link
+    .filter(function(d) {return d.kind == 1; })
+    .attr("class", "link2")
+
 //Do the same with the circles for the nodes
 var node = svg.selectAll(".node")
     .data(graph.nodes)
@@ -63,7 +73,7 @@ var node = svg.selectAll(".node")
             return color(d.group);
         }
     })
-    .attr("class", "node");
+    .attr("class", "node").call(force.drag);;
 
 // Force charge must increase with amount of nodes to keep them
 // from floating out of the boundary

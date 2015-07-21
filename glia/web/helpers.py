@@ -149,6 +149,7 @@ def generate_graph(thoughts):
 
     for m in movements.values():
         rv["nodes"].append(ident_item(m))
+        rv["links"].append({"source": 0, "target": i, "kind": 1})
         node_indexes[m.id] = i
         i += 1
 
