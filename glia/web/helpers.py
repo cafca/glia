@@ -125,7 +125,10 @@ def generate_graph(thoughts):
         if t.author.id not in node_indexes:
             rv["nodes"].append(ident_item(t.author))
             node_indexes[t.author.id] = i
-            del movements[t.author.id]
+            try:
+                del movements[t.author.id]
+            except KeyError:
+                pass
             i += 1
 
         rv["links"].append({"source": node_indexes[t.id],
