@@ -21,7 +21,7 @@ var color = d3.scale.ordinal()
 
 //Set up the force layout
 var force = d3.layout.force()
-    .charge(-120)
+    .charge(-25)
     .gravity(0.2)
     .linkDistance(10)
     .size([radius*2, radius*2]);

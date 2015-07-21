@@ -143,12 +143,13 @@ def generate_graph(thoughts):
         i += 1
 
         for t_blog in m.blog.index:
-            rv["nodes"].append(thought_item(t_blog))
-            node_indexes[t_blog.id] = i
-            i += 1
+            if t_blog.id not in node_indexes:
+                rv["nodes"].append(thought_item(t_blog))
+                node_indexes[t_blog.id] = i
+                i += 1
 
-            rv["links"].append({"source": node_indexes[m.id],
-                "target": node_indexes[t_blog.id]})
+                rv["links"].append({"source": node_indexes[m.id],
+                    "target": node_indexes[t_blog.id]})
 
     return rv
 
