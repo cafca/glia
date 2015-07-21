@@ -5,6 +5,13 @@
 {% import "macros/helpers.html" as helper_macros %}
 {% import "macros/movement.html" as movement_macros %}
 
+{% block extra_scripts %}
+<script type="application/json" id="graph-json">
+  {{ graph_json|safe }}
+</script>
+<script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="row" id="rk-index">
     <div class="rk-frontpage col-sm-7 col-sm-push-1">
@@ -31,6 +38,10 @@
   </div>
 
   <div class="rk-toc panel panel-default col-sm-3 col-sm-push-1">
+    <div class="panel-body hidden-sm text-center">
+      <a href="/"><div class="rk-graph"></div></a>
+      <p class="text-center" id="rk-graph-label">Frontpage</p>
+    </div>
     {% if top_global and top_global|length > 0 %}
       <div class="panel-body">
         <h3>Top Thought</h3>

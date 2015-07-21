@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    glia.helpers
+    ~~~~~
+
+    Implements helper functionality for rendering Rktik web site
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import logging
 import os
 import pytz
@@ -44,6 +53,104 @@ def authorize_filter(obj, action, actor=None):
         actor = current_user.active_persona
 
     return obj.authorize(action, actor.id)
+
+
+def generate_graph(thoughts):
+    """Generates a graph for consumption by the D3 force layout
+
+    frontpage
+        +--+ Thought1 +--+ Thought1_Author
+        |
+        +--+ Thought2 +--+ Thought2-4_Author
+        |                |
+        .    Thought3 +--+
+        .    (not frontpage)
+        .                |
+             Thought4 +--+
+             (not frontpage)
+                                       
+    Args:
+        thoughts (list): List of thought objects
+
+    Returns:
+        dict: Dictionary with keys 'nodes', 'links' at the root level,
+            both containing a list of dicts for each item. Node items have
+            keys 'name' and 'group' (for coloring). Link items have an 'source'
+            and 'target' key, each containing an index for items in the 'nodes'
+            list.
+    """
+    rv = dict(nodes=[], links=[])
+    node_indexes = dict()
+
+    movements = {m.id: m for m in current_user.active_persona.blogs_followed}
+
+    thought_item = lambda t: {
+        "name": "{}<br /><small>by {}</small>".format(
+            t.text.encode('utf-8'), t.author.username.encode('utf-8')),
+        "group": 1,
+        "radius": 2,
+        "url": t.get_absolute_url(),
+        "anim": (5.0 / (t.hot() * 1000 + 1))
+    }
+
+    ident_item = lambda ident: {
+        "name": ident.username,
+        "group": 2,
+        "radius": 4,
+        "url": ident.get_absolute_url(),
+        "color": ident.color
+    }
+
+    rv['nodes'].append({
+        "name": "Frontpage",
+        "group": 0,
+        "radius": 6,
+        "fixed": True,
+        "x": 100,
+        "y": 100
+    })
+    i = 1
+
+    for t in thoughts:
+        rv["nodes"].append(thought_item(t))
+        rv["links"].append({"source": 0,"target": i,})
+
+        node_indexes[t.id] = i
+        i += 1
+
+        if t.author.id not in node_indexes:
+            rv["nodes"].append(ident_item(t.author))
+            node_indexes[t.author.id] = i
+            del movements[t.author.id]
+            i += 1
+
+        rv["links"].append({"source": node_indexes[t.id],
+            "target": node_indexes[t.author.id]})
+
+        for t_blog in t.author.blog.index:
+            if t_blog != t:
+                if t_blog.id not in node_indexes:
+                    rv["nodes"].append(thought_item(t_blog))
+                    node_indexes[t_blog.id] = i
+                    i += 1
+
+                rv["links"].append({"source": node_indexes[t.author.id],
+                    "target": node_indexes[t_blog.id]})
+
+    for m in movements.values():
+        rv["nodes"].append(ident_item(m))
+        node_indexes[m.id] = i
+        i += 1
+
+        for t_blog in m.blog.index:
+            rv["nodes"].append(thought_item(t_blog))
+            node_indexes[t_blog.id] = i
+            i += 1
+
+            rv["links"].append({"source": node_indexes[m.id],
+                "target": node_indexes[t_blog.id]})
+
+    return rv
 
 
 def localtime(value, tzval="UTC"):
