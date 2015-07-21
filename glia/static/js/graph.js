@@ -66,11 +66,9 @@ var node = svg.selectAll(".node")
             return color(d.group);
         }
     })
-    .attr("class", "node")
-    .call(force.drag);
+    .attr("class", "node");
 
 force.charge(-800 / node[0].length);
-force.start();
 
 node
     .filter(function(d) {return d["group"] == 1; })
@@ -114,6 +112,6 @@ force.on("tick", function () {
     });
 });
 
-// force.start();
-// for (var i=0; i<5000; ++i) force.tick();
-// force.stop();
+force.start();
+for (var i=0; i<5000; ++i) force.tick();
+force.stop();
