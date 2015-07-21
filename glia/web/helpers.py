@@ -55,7 +55,7 @@ def authorize_filter(obj, action, actor=None):
     return obj.authorize(action, actor.id)
 
 
-def generate_graph(thoughts):
+def generate_graph(thoughts, idents=None):
     """Generates a graph for consumption by the D3 force layout
 
     frontpage
@@ -71,6 +71,9 @@ def generate_graph(thoughts):
                                        
     Args:
         thoughts (list): List of thought objects
+        idents (list): List of Identity objects that are also added to the graph
+            Defaults to the list of followed movements for logged in users
+            and top movements for anonymous users
 
     Returns:
         dict: Dictionary with keys 'nodes', 'links' at the root level,
@@ -82,11 +85,12 @@ def generate_graph(thoughts):
     rv = dict(nodes=[], links=[])
     node_indexes = dict()
 
-    if current_user.is_anonymous():
-        movements = {m.id: m for m in Movement.query
-            .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))}
-    else:
-        movements = {m.id: m for m in current_user.active_persona.blogs_followed}
+    if not isinstance(idents, dict):
+        if current_user.is_anonymous():
+            idents = {m.id: m for m in Movement.query
+                .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))}
+        else:
+            idents = {m.id: m for m in current_user.active_persona.blogs_followed}
 
     thought_item = lambda t: {
         "name": "{}<br /><small>by {}</small>".format(
@@ -129,7 +133,7 @@ def generate_graph(thoughts):
             rv["nodes"].append(ident_item(t.author))
             node_indexes[t.author.id] = i
             try:
-                del movements[t.author.id]
+                del idents[t.author.id]
             except KeyError:
                 pass
             i += 1
@@ -147,7 +151,7 @@ def generate_graph(thoughts):
                 rv["links"].append({"target": node_indexes[t.author.id],
                     "source": node_indexes[t_blog.id]})
 
-    for m in movements.values():
+    for m in idents.values():
         rv["nodes"].append(ident_item(m))
         rv["links"].append({"source": 0, "target": i, "kind": 1})
         node_indexes[m.id] = i
