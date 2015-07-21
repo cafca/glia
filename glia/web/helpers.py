@@ -151,6 +151,7 @@ def generate_graph(thoughts):
                 rv["links"].append({"source": node_indexes[m.id],
                     "target": node_indexes[t_blog.id]})
 
+    print len(node_indexes)
     return rv
 
 

@@ -21,8 +21,7 @@ var color = d3.scale.ordinal()
 
 //Set up the force layout
 var force = d3.layout.force()
-    .charge(-25)
-    .gravity(0.2)
+    .gravity(0.1)
     .linkDistance(10)
     .size([radius*2, radius*2]);
 
@@ -46,7 +45,6 @@ graph = JSON.parse(graph_json);
 //Creates the graph data structure out of the json data
 force.nodes(graph.nodes)
     .links(graph.links)
-    .start();
 
 //Create all the line svgs but without locations yet
 var link = svg.selectAll(".link")
@@ -70,6 +68,9 @@ var node = svg.selectAll(".node")
     })
     .attr("class", "node")
     .call(force.drag);
+
+force.charge(-800 / node[0].length);
+force.start();
 
 node
     .filter(function(d) {return d["group"] == 1; })
@@ -113,6 +114,6 @@ force.on("tick", function () {
     });
 });
 
-force.start();
-for (var i=0; i<5000; ++i) force.tick();
-force.stop();
+// force.start();
+// for (var i=0; i<5000; ++i) force.tick();
+// force.stop();
