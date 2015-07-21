@@ -82,6 +82,8 @@ def generate_graph(thoughts):
     rv = dict(nodes=[], links=[])
     node_indexes = dict()
 
+    movements = {m.id: m for m in current_user.active_persona.blogs_followed}
+
     rv['nodes'].append({
         "name": "frontpage",
         "group": 0,
@@ -114,6 +116,7 @@ def generate_graph(thoughts):
                 "radius": 4
             })
             node_indexes[t.author.id] = i
+            del movements[t.author.id]
             i += 1
 
         rv["links"].append({
@@ -136,6 +139,29 @@ def generate_graph(thoughts):
                     "source": node_indexes[t.author.id],
                     "target": node_indexes[t_blog.id],
                 })
+
+    for m in movements.values():
+        rv["nodes"].append({
+            "name": m.username,
+            "group": 2,
+            "radius": 4
+        })
+        node_indexes[m.id] = i
+        i += 1
+
+        for t_blog in m.blog.index:
+            rv["nodes"].append({
+                "name": t_blog.text,
+                "group": 1,
+                "radius": 2
+            })
+            node_indexes[t_blog.id] = i
+            i += 1
+
+            rv["links"].append({
+                "source": node_indexes[m.id],
+                "target": node_indexes[t_blog.id]
+            })
 
     return rv
 
