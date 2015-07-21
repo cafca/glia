@@ -106,7 +106,7 @@ def generate_graph(thoughts):
     }
 
     rv['nodes'].append({
-        "name": "Frontpage",
+        "name": "Rktik Mind",
         "group": 0,
         "radius": 6,
         "fixed": True,
@@ -117,7 +117,7 @@ def generate_graph(thoughts):
 
     for t in thoughts:
         rv["nodes"].append(thought_item(t))
-        rv["links"].append({"source": 0,"target": i,})
+        rv["links"].append({"source": 0, "target": i,})
 
         node_indexes[t.id] = i
         i += 1
@@ -141,8 +141,8 @@ def generate_graph(thoughts):
                     node_indexes[t_blog.id] = i
                     i += 1
 
-                rv["links"].append({"source": node_indexes[t.author.id],
-                    "target": node_indexes[t_blog.id]})
+                rv["links"].append({"target": node_indexes[t.author.id],
+                    "source": node_indexes[t_blog.id]})
 
     for m in movements.values():
         rv["nodes"].append(ident_item(m))
@@ -155,8 +155,8 @@ def generate_graph(thoughts):
                 node_indexes[t_blog.id] = i
                 i += 1
 
-                rv["links"].append({"source": node_indexes[m.id],
-                    "target": node_indexes[t_blog.id]})
+                rv["links"].append({"target": node_indexes[m.id],
+                    "source": node_indexes[t_blog.id]})
 
     print len(node_indexes)
     return rv

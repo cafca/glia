@@ -376,21 +376,25 @@ only screen and (min-resolution: 2dppx) {
     .node {
         stroke: #fff;
         stroke-width: 1px;
-
-        text {
-            color: white;
-        }
     }
 
     .link {
-        stroke: #ccc;
-        stroke-opacity: .6;
+        stroke-width: 2px;
+        stroke-dasharray: 2,2;
+        stroke: #fff;
+        animation: stream 2.5s infinite;
     }
 
-    @keyframes shift {
+    @keyframes pulse {
         50% {
-            stroke-width: 3px;
+            stroke-width: 4px;
         }
+    }
+
+    @keyframes stream {
+        0% {stroke-dashoffset: 0px;}
+        50% {stroke-dashoffset: 4px;}
+        100% {stroke-dashoffset: 8px;}
     }
 }
 

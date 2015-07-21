@@ -74,7 +74,7 @@ force.start();
 
 node
     .filter(function(d) {return d["group"] == 1; })
-    .style("animation-name", "shift")
+    .style("animation-name", "pulse")
     .style("animation-iteration-count", "infinite")
     .style("animation-duration", function(d) {
         return d.anim + "s";
