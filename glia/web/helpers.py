@@ -82,7 +82,11 @@ def generate_graph(thoughts):
     rv = dict(nodes=[], links=[])
     node_indexes = dict()
 
-    movements = {m.id: m for m in current_user.active_persona.blogs_followed}
+    if current_user.is_anonymous():
+        movements = {m.id: m for m in Movement.query
+            .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))}
+    else:
+        movements = {m.id: m for m in current_user.active_persona.blogs_followed}
 
     thought_item = lambda t: {
         "name": "{}<br /><small>by {}</small>".format(
