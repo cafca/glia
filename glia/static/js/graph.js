@@ -11,10 +11,8 @@
     :copyright: (c) 2015 by Vincent Ahrend.
 */
 
-//Constants for the SVG
-var radius = 100;
 
-//Set up the colour scale
+var radius = 100;
 var color = d3.scale.ordinal()
     .domain([0, 1, 2, 3, 4, 5, 6])
     .range(['#c81d25','#ffffff','#0b3954','#f5cb5c','#8bb174','#129490','#ef3054'])
@@ -25,7 +23,6 @@ var force = d3.layout.force()
     .linkDistance(10)
     .size([radius*2, radius*2]);
 
-//Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select(".rk-graph").append("svg")
     .attr("width", radius*2)
     .attr("height", radius*2);
@@ -52,7 +49,7 @@ var link = svg.selectAll(".link")
     .enter().append("line")
     .attr("class", "link");
 
-//Do the same with the circles for the nodes - no
+//Do the same with the circles for the nodes
 var node = svg.selectAll(".node")
     .data(graph.nodes)
     .enter().append("circle")
@@ -68,8 +65,11 @@ var node = svg.selectAll(".node")
     })
     .attr("class", "node");
 
+// Force charge must increase with amount of nodes to keep them
+// from floating out of the boundary
 force.charge(-800 / node[0].length);
 
+// Let Thoughts pulse
 node
     .filter(function(d) {return d["group"] == 1; })
     .style("animation-name", "pulse")
@@ -78,18 +78,13 @@ node
         return d.anim + "s";
     });
 
+// Set label on hover
 $(".node").hover(function() {
     var d = $(this).prop("__data__");
     $("#rk-graph-label").html(d["name"]);
     $(".rk-graph").parent().attr("href", d["url"]);
 })
 
-$(".rk-graph").mouseleave(function () {
-    $(".rk-graph-label").html("Frontpage");
-    $(".rk-graph").parent().attr("href", "/");
-})
-
-//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
 force.on("tick", function () {
     link.attr("x1", function (d) {
         return d.source.x;

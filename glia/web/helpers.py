@@ -116,11 +116,14 @@ def generate_graph(thoughts):
     i = 1
 
     for t in thoughts:
-        rv["nodes"].append(thought_item(t))
-        rv["links"].append({"source": 0, "target": i,})
+        if t.id in node_indexes:
+            rv["links"].append({"source": 0, "target": node_indexes[t.id]})
+        else:
+            rv["nodes"].append(thought_item(t))
+            rv["links"].append({"source": 0, "target": i})
 
-        node_indexes[t.id] = i
-        i += 1
+            node_indexes[t.id] = i
+            i += 1
 
         if t.author.id not in node_indexes:
             rv["nodes"].append(ident_item(t.author))
@@ -158,7 +161,6 @@ def generate_graph(thoughts):
                 rv["links"].append({"target": node_indexes[m.id],
                     "source": node_indexes[t_blog.id]})
 
-    print len(node_indexes)
     return rv
 
 
