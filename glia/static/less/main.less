@@ -376,12 +376,27 @@ only screen and (min-resolution: 2dppx) {
     .node {
         stroke: #fff;
         stroke-width: 1px;
+
+        text {
+            color: white;
+        }
     }
 
     .link {
         stroke: #ccc;
         stroke-opacity: .6;
     }
+
+    @keyframes shift {
+        50% {
+            stroke-width: 3px;
+        }
+    }
+}
+
+#rk-graph-label {
+    width: 100%;
+    color: rgba(11, 57, 84, 0.75);
 }
 
 .rk-toc {

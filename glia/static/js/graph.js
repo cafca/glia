@@ -22,6 +22,7 @@ var color = d3.scale.ordinal()
 //Set up the force layout
 var force = d3.layout.force()
     .charge(-120)
+    .gravity(0.2)
     .linkDistance(10)
     .size([radius*2, radius*2]);
 
@@ -32,10 +33,11 @@ var svg = d3.select(".rk-graph").append("svg")
 
 var background = svg
     .append("circle")
+    .attr("class", "background")
     .attr("cx", radius)
     .attr("cy", radius)
     .attr("r", radius)
-    .style("fill", "#082a3d")
+    .style("fill", "#082a3d");
 
 //Read the data from the graph_json element
 var graph_json = document.getElementById('graph-json').innerHTML;
@@ -56,22 +58,37 @@ var link = svg.selectAll(".link")
 var node = svg.selectAll(".node")
     .data(graph.nodes)
     .enter().append("circle")
-    .attr("class", "node")
     .attr("r", function(d) {
         return d.radius;
     })
     .style("fill", function (d) {
-        return color(d.group);
+        if (d.group == 2) {
+            return "#" + d.color;
+        } else {
+            return color(d.group);
+        }
     })
+    .attr("class", "node")
     .call(force.drag);
 
 node
-    .append("text")
-    .attr("dx", 10)
-    .attr("dy", ".35em")
-    .text(function(d) { return d.name })
-    .style("stroke", "white");
+    .filter(function(d) {return d["group"] == 1; })
+    .style("animation-name", "shift")
+    .style("animation-iteration-count", "infinite")
+    .style("animation-duration", function(d) {
+        return d.anim + "s";
+    });
 
+$(".node").hover(function() {
+    var d = $(this).prop("__data__");
+    $("#rk-graph-label").html(d["name"]);
+    $(".rk-graph").parent().attr("href", d["url"]);
+})
+
+$(".rk-graph").mouseleave(function () {
+    $(".rk-graph-label").html("Frontpage");
+    $(".rk-graph").parent().attr("href", "/");
+})
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
 force.on("tick", function () {
@@ -94,12 +111,8 @@ force.on("tick", function () {
         .attr("cy", function (d) {
         return d.y;
     });
-
-
-    d3.selectAll("text").attr("x", function (d) {
-        return d.x;
-    })
-        .attr("y", function (d) {
-        return d.y;
-    });
 });
+
+// force.start();
+// for (var i=0; i<10000; ++i) force.tick();
+// force.stop();

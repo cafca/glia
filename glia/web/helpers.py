@@ -84,8 +84,25 @@ def generate_graph(thoughts):
 
     movements = {m.id: m for m in current_user.active_persona.blogs_followed}
 
+    thought_item = lambda t: {
+        "name": "{}<br /><small>by {}</small>".format(
+            t.text.encode('utf-8'), t.author.username.encode('utf-8')),
+        "group": 1,
+        "radius": 2,
+        "url": t.get_absolute_url(),
+        "anim": (5.0 / (t.hot() * 1000 + 1))
+    }
+
+    ident_item = lambda ident: {
+        "name": ident.username,
+        "group": 2,
+        "radius": 4,
+        "url": ident.get_absolute_url(),
+        "color": ident.color
+    }
+
     rv['nodes'].append({
-        "name": "frontpage",
+        "name": "Frontpage",
         "group": 0,
         "radius": 6,
         "fixed": True,
@@ -95,11 +112,7 @@ def generate_graph(thoughts):
     i = 1
 
     for t in thoughts:
-        rv["nodes"].append({
-            "name": t.text,
-            "group": 1,
-            "radius": 2
-        })
+        rv["nodes"].append(thought_item(t))
 
         rv["links"].append({
             "source": 0,
@@ -110,11 +123,7 @@ def generate_graph(thoughts):
         i += 1
 
         if t.author.id not in node_indexes:
-            rv["nodes"].append({
-                "name": t.author.username,
-                "group": 2,
-                "radius": 4
-            })
+            rv["nodes"].append(ident_item(t.author))
             node_indexes[t.author.id] = i
             del movements[t.author.id]
             i += 1
@@ -127,11 +136,7 @@ def generate_graph(thoughts):
         for t_blog in t.author.blog.index:
             if t_blog != t:
                 if t_blog.id not in node_indexes:
-                    rv["nodes"].append({
-                        "name": t.text,
-                        "group": 1,
-                        "radius": 2
-                    })
+                    rv["nodes"].append(thought_item(t_blog))
                     node_indexes[t_blog.id] = i
                     i += 1
 
@@ -141,20 +146,12 @@ def generate_graph(thoughts):
                 })
 
     for m in movements.values():
-        rv["nodes"].append({
-            "name": m.username,
-            "group": 2,
-            "radius": 4
-        })
+        rv["nodes"].append(ident_item(m))
         node_indexes[m.id] = i
         i += 1
 
         for t_blog in m.blog.index:
-            rv["nodes"].append({
-                "name": t_blog.text,
-                "group": 1,
-                "radius": 2
-            })
+            rv["nodes"].append(thought_item(t_blog))
             node_indexes[t_blog.id] = i
             i += 1
 
