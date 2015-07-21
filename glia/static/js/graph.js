@@ -113,6 +113,6 @@ force.on("tick", function () {
     });
 });
 
-// force.start();
-// for (var i=0; i<10000; ++i) force.tick();
-// force.stop();
+force.start();
+for (var i=0; i<5000; ++i) force.tick();
+force.stop();

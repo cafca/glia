@@ -113,11 +113,7 @@ def generate_graph(thoughts):
 
     for t in thoughts:
         rv["nodes"].append(thought_item(t))
-
-        rv["links"].append({
-            "source": 0,
-            "target": i,
-        })
+        rv["links"].append({"source": 0,"target": i,})
 
         node_indexes[t.id] = i
         i += 1
@@ -128,10 +124,8 @@ def generate_graph(thoughts):
             del movements[t.author.id]
             i += 1
 
-        rv["links"].append({
-            "source": node_indexes[t.id],
-            "target": node_indexes[t.author.id],
-        })
+        rv["links"].append({"source": node_indexes[t.id],
+            "target": node_indexes[t.author.id]})
 
         for t_blog in t.author.blog.index:
             if t_blog != t:
@@ -140,10 +134,8 @@ def generate_graph(thoughts):
                     node_indexes[t_blog.id] = i
                     i += 1
 
-                rv["links"].append({
-                    "source": node_indexes[t.author.id],
-                    "target": node_indexes[t_blog.id],
-                })
+                rv["links"].append({"source": node_indexes[t.author.id],
+                    "target": node_indexes[t_blog.id]})
 
     for m in movements.values():
         rv["nodes"].append(ident_item(m))
@@ -155,10 +147,8 @@ def generate_graph(thoughts):
             node_indexes[t_blog.id] = i
             i += 1
 
-            rv["links"].append({
-                "source": node_indexes[m.id],
-                "target": node_indexes[t_blog.id]
-            })
+            rv["links"].append({"source": node_indexes[m.id],
+                "target": node_indexes[t_blog.id]})
 
     return rv
 
