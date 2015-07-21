@@ -110,7 +110,7 @@ def generate_graph(thoughts, idents=None):
     }
 
     rv['nodes'].append({
-        "name": "Rktik Mind",
+        "name": "Rktik Mind<br /><small>This page</small>",
         "group": 0,
         "radius": 6,
         "fixed": True,
