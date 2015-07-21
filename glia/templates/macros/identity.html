@@ -50,5 +50,7 @@
       <li><a href="{{ url_for('web.create_persona', for_movement=movement.id, invitation_code=code) }}">Join with a new username</a></li>
     </ul>
   </div>
+  {% elif not movement.active_member() %}
+    <small>This movement is private. Ask {{ persona(movement.admin) }} for an invitation.</small>
   {% endif %}
 {% endmacro %}
