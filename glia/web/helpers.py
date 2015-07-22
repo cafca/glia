@@ -19,6 +19,7 @@ from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
 
+from nucleus.nucleus import ExecutionTimer
 from nucleus.nucleus.models import Persona, Movement, \
     MovementMemberAssociation, Thought
 
@@ -82,6 +83,7 @@ def generate_graph(thoughts, idents=None):
             and 'target' key, each containing an index for items in the 'nodes'
             list.
     """
+    timer = ExecutionTimer()
     rv = dict(nodes=[], links=[])
     node_indexes = dict()
 
@@ -166,6 +168,7 @@ def generate_graph(thoughts, idents=None):
                 rv["links"].append({"target": node_indexes[m.id],
                     "source": node_indexes[t_blog.id]})
 
+    timer.stop("Generated mind graph")
     return rv
 
 
