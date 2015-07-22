@@ -82,6 +82,9 @@
         <small>{{ movement.description }}</small>
       {% endif %}</li></a>
       {% endfor %}
+        <a href="{{ url_for('web.movement_list') }}"><li class="list-group-item">
+          <i class="fa fa-caret-right"></i> All movements
+        </li></a>
       </ul>
     {% endif %}
 

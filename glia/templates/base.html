@@ -129,6 +129,9 @@
               <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
             </li>
           {% endfor %}
+          <li>
+            <a href="{{ url_for('web.movement_list') }}"><i class="fa fa-caret-right"></i> All movements</a>
+          </li>
         </ul>
       </div>
     </nav>

@@ -36,12 +36,12 @@
 {% endmacro %}
 
 
-{% macro member_toggle(movement, member, size=None, reload=False) %}
-    <button class="btn btn-default{% if size %} btn-{{size}}{% endif %} rk-leave-{{movement.id}} rk-movement-member" type="submit" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' {% if not movement.active_member() %}style="display: none;"{% endif %} data-movement-id="{{movement.id}}" {% if reload %}data-reload-me="prettyplease"{% endif %}>
+{% macro member_toggle(movement, member, size=None, reload=False, _class=None) %}
+    <button class="btn btn-default{% if size %} btn-{{size}}{% endif %} rk-leave-{{movement.id}} rk-movement-member {{ _class|default("", True) }}" type="submit" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id) }}" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>' {% if not movement.active_member() %}style="display: none;"{% endif %} data-movement-id="{{movement.id}}" {% if reload %}data-reload-me="prettyplease"{% endif %}>
       <i class="fa fa-fw fa-users"></i> Leave Movement
     </button>
   {% if (not movement.private or request.args.get('invitation_code', default=None)) %}
-  <div class="btn-group rk-join-{{movement.id}}" {% if movement.active_member() %}style="display: none;"{% endif %}>
+  <div class="btn-group rk-join-{{movement.id}} {{ _class|default("", True) }}" {% if movement.active_member() %}style="display: none;"{% endif %}>
     <button type="button" class="btn btn-default dropdown-toggle{% if size %} btn-{{size}}{% endif %}" data-toggle="dropdown" aria-expanded="false">
       <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>
     </button>

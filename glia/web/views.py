@@ -497,6 +497,14 @@ def movement_blog(id, page=1):
         thoughts=thought_selection, code=code)
 
 
+@app.route("/movements/")
+def movement_list():
+    """Display a list of all available movements"""
+    movements = Movement.query.order_by(Movement.username).all()
+
+    return render_template("movement_list.html", movements=movements)
+
+
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 # @http_auth.login_required
 def movement_mindspace(id):

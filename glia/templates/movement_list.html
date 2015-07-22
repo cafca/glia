@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% import "macros/movement.html" as movement_macros %}
+{% import "macros/identity.html" as id_macros %}
+
+{% block content %}
+<div class="col-sm-10 col-sm-push-1">
+    <h1>Movements</h1>
+    <div class="row">
+    {% for i in range(4) %}
+        <div class="col-sm-3">
+        {% for m in movements %}
+            {% if (loop.index0 % 4 == i) %}
+                {{ movement_macros.box(m) }}
+                {% if not current_user.is_anonymous() %}
+                <div style="margin: -15px 0 2em 0; min-height: 34px;">
+                    {{ id_macros.member_toggle(m, current_user.active_persona, size="md", _class="pull-right")}}
+                </div>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        </div>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}
