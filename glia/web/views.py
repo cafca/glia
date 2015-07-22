@@ -453,13 +453,13 @@ def login():
 def logout():
     """Logout a user"""
     user = current_user
+    app.logger.debug("{} logging out.".format(user))
     user.authenticated = False
     db.session.add(user)
     db.session.commit()
     logout_user()
     session["active_persona"] = None
-    app.logger.debug("{} logged out.".format(user))
-    return redirect(url_for('.login'))
+    return redirect(url_for('web.login'))
 
 
 @app.route('/movement/<id>/')
