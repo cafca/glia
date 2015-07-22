@@ -14,9 +14,7 @@
   </div>
   {% else %}
   <a class="rk-link" href="{{ percept.url }}">
-    {% if icon == True %}
-
-    {% endif %}
+    <i class="fa fa-link"></i>
     {% if percept.title %}
     {{ percept.title }}
     {% else %}
@@ -25,30 +23,26 @@
   </a>
   {% endif %}
 {% elif percept.kind == 'text' %}
-<span class="rk-text">
-  {% if truncate %}
-    {% if percept.reading_time().seconds > 0 %}
-      <p class="pull-right rk-reading-time"><small>
-        <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
-      </small></p>
-    {% endif %}
-
-    {{ percept.text|truncate(length=400)|markdown|striptags}}
-  {% else %}
-    <p class="rk-reading-time">
-      {% if percept.reading_time().seconds > 0 %}
-        <i class="fa fa-file-text-o"></i>
-        Read {{ percept.reading_time()|naturaldelta }}
-      {% endif %}
-
-      {% if percept.source %}
-      <i class="fa fa-link"></i>  Source {{ percept.source|urlize }}
-      {% endif %}
-    </p>
-
-    {{ percept.text|markdown}}
+<div class="rk-text {% if truncate %}truncate{% endif %}">
+  {% if percept.reading_time().seconds > 0 %}
+    <p class="pull-right rk-reading-time"><small>
+      <i class="fa fa-file-text-o"></i>  Read {{ percept.reading_time()|naturaldelta }}
+    </small></p>
   {% endif %}
-</span>
+
+  {{ percept.text|markdown }}
+
+  {% if percept.source %}
+    <i class="fa fa-link"></i> <em>Source:</em> {{ percept.source|urlize }}
+  {% endif %}
+
+  {% if truncate %}
+  <div class="truncate-toggle text-center">
+    <i class="fa fa-arrow-circle-down"></i>
+    <i class="fa fa-arrow-circle-up"></i>
+  </div>
+  {% endif %}
+</div>
 {% endif %}
 
 {% endcache %}
@@ -94,7 +88,7 @@
   <ul class="list-unstyled">
     {% for pa in attachments["link"] %}
     <li>
-    {{ percept(pa.percept, icon=True, truncate=truncate)}}
+    {{ percept(pa.percept, icon=icon, truncate=truncate)}}
     </li>
     {% endfor %}
   </ul>
@@ -105,7 +99,7 @@
   <div class="row panel panel-default rk-textpercept-panel">
     {% for pa in attachments["text"] %}
     <div class="col-sm-12 panel-body">
-      {{ percept(pa.percept, icon=True, truncate=truncate)}}
+      {{ percept(pa.percept, icon=icon, truncate=truncate)}}
     </div>
     {% endfor %}
   </div>

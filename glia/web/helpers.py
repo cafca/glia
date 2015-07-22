@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    glia.helpers
+    ~~~~~
+
+    Implements helper functionality for rendering Rktik web site
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
 import logging
 import os
 import pytz
@@ -10,12 +19,17 @@ from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
 
-from nucleus.nucleus.models import Persona, Movement, MovementMemberAssociation
+from nucleus.nucleus.models import Persona, Movement, \
+    MovementMemberAssociation, Thought
 
 from .. import socketio
 
 
 logger = logging.getLogger('web')
+
+# Cached results are fetched from the database by ID, which returns the result
+# list out of order. This lambda function reorders them.
+reorder = lambda l: sorted(l, key=Thought.hot, reverse=True)
 
 
 class UnauthorizedError(Exception):
@@ -39,6 +53,120 @@ def authorize_filter(obj, action, actor=None):
         actor = current_user.active_persona
 
     return obj.authorize(action, actor.id)
+
+
+def generate_graph(thoughts, idents=None):
+    """Generates a graph for consumption by the D3 force layout
+
+    frontpage
+        +--+ Thought1 +--+ Thought1_Author
+        |
+        +--+ Thought2 +--+ Thought2-4_Author
+        |                |
+        .    Thought3 +--+
+        .    (not frontpage)
+        .                |
+             Thought4 +--+
+             (not frontpage)
+                                       
+    Args:
+        thoughts (list): List of thought objects
+        idents (list): List of Identity objects that are also added to the graph
+            Defaults to the list of followed movements for logged in users
+            and top movements for anonymous users
+
+    Returns:
+        dict: Dictionary with keys 'nodes', 'links' at the root level,
+            both containing a list of dicts for each item. Node items have
+            keys 'name' and 'group' (for coloring). Link items have an 'source'
+            and 'target' key, each containing an index for items in the 'nodes'
+            list.
+    """
+    rv = dict(nodes=[], links=[])
+    node_indexes = dict()
+
+    if not isinstance(idents, dict):
+        if current_user.is_anonymous():
+            idents = {m.id: m for m in Movement.query
+                .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))}
+        else:
+            idents = {m.id: m for m in current_user.active_persona.blogs_followed}
+
+    thought_item = lambda t: {
+        "name": "{}<br /><small>by {}</small>".format(
+            t.text.encode('utf-8'), t.author.username.encode('utf-8')),
+        "group": 1,
+        "radius": 2,
+        "url": t.get_absolute_url(),
+        "anim": (5.0 / (t.hot() * 1000 + 1))
+    }
+
+    ident_item = lambda ident: {
+        "name": ident.username,
+        "group": 2,
+        "radius": 4,
+        "url": ident.get_absolute_url(),
+        "color": ident.color
+    }
+
+    rv['nodes'].append({
+        "name": "Rktik Mind<br /><small>This page</small>",
+        "group": 0,
+        "radius": 6,
+        "fixed": True,
+        "x": 100,
+        "y": 100
+    })
+    i = 1
+
+    for t in thoughts:
+        if t.id in node_indexes:
+            rv["links"].append({"source": 0, "target": node_indexes[t.id]})
+        else:
+            rv["nodes"].append(thought_item(t))
+            rv["links"].append({"source": 0, "target": i})
+
+            node_indexes[t.id] = i
+            i += 1
+
+        if t.author.id not in node_indexes:
+            rv["nodes"].append(ident_item(t.author))
+            node_indexes[t.author.id] = i
+            try:
+                del idents[t.author.id]
+            except KeyError:
+                pass
+            i += 1
+
+        rv["links"].append({"source": node_indexes[t.id],
+            "target": node_indexes[t.author.id]})
+
+        for t_blog in t.author.blog.index:
+            if t_blog != t:
+                if t_blog.id not in node_indexes:
+                    rv["nodes"].append(thought_item(t_blog))
+                    node_indexes[t_blog.id] = i
+                    i += 1
+
+                rv["links"].append({"target": node_indexes[t.author.id],
+                    "source": node_indexes[t_blog.id]})
+
+    for m in idents.values():
+        rv["nodes"].append(ident_item(m))
+        rv["links"].append({"source": 0, "target": i, "kind": 1})
+        node_indexes[m.id] = i
+        i += 1
+
+        for t_blog in m.blog.index:
+            if t_blog.id not in node_indexes:
+                rv["nodes"].append(thought_item(t_blog))
+                node_indexes[t_blog.id] = i
+                i += 1
+
+                rv["links"].append({"target": node_indexes[m.id],
+                    "source": node_indexes[t_blog.id]})
+
+    return rv
 
 
 def localtime(value, tzval="UTC"):
@@ -72,6 +200,9 @@ def send_email(message):
     Args:
         message (Sendgrid Message): Readily configured message object
 
+    Returns:
+        tuple: (status, message)
+
     Raises:
         SendGridClientError
         SendGridServerError
@@ -81,7 +212,13 @@ def send_email(message):
     sg_user = os.environ.get('SENDGRID_USERNAME') or current_app.config["SENDGRID_USERNAME"]
     sg_pass = os.environ.get('SENDGRID_PASSWORD') or current_app.config["SENDGRID_PASSWORD"]
     sg = SendGridClient(sg_user, sg_pass, raise_errors=True)
-    return sg.send(message)
+    try:
+        rv = sg.send(message)
+    except Exception, e:
+        logger.exception("Eror sending email: {}".format(e))
+        rv = (None, None)
+
+    return rv
 
 
 def send_external_notifications(notification):
@@ -103,10 +240,7 @@ def send_external_notifications(notification):
 
     # Email notification
     if isinstance(notification.recipient, Persona):
-        if notification.email_pref and getattr(notification.recipient.user,
-            notification.email_pref) is True \
-                and not notification.recipient.user.email_catchall:
-
+        if notification.recipient.user.email_allowed(notification):
             message = sendgrid.Mail()
             message.add_to("{} <{}>".format(
                 notification.recipient.username, notification.recipient.user.email))
@@ -124,9 +258,6 @@ def send_external_notifications(notification):
                 logger.error("Client error sending notification email: {}".format(e))
             except SendGridServerError, e:
                 logger.error("Server error sending notification email: {}".format(e))
-        else:
-            logger.info("{} not sent because of user preference '{}'".format(
-                notification, notification.email_pref))
 
 
 def send_movement_invitation(recipient, movement, personal_message=None):

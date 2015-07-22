@@ -9,6 +9,7 @@
 """
 import datetime
 import traceback
+import json
 
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
@@ -25,7 +26,7 @@ from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
 # from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
-    valid_redirect, make_view_cache_key
+    valid_redirect, make_view_cache_key, reorder, generate_graph
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
 from nucleus.nucleus.helpers import process_attachments
@@ -353,32 +354,35 @@ def index():
 
     # Determine content source
     if current_user.is_anonymous():
-        sources = more_movements = Movement.query \
+        more_movements = Movement.query \
             .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
+        top_main = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source="blog"))))
+        top_mindspace = None
+        top_global = None
     else:
-        sources = current_user.active_persona.blogs_followed
         more_movements = Movement.query \
             .filter(Movement.id.in_(
                 current_user.active_persona.suggested_movements()))
 
-    sources = sorted(sources, key=lambda s: s.attention, reverse=True)
+        mindspaces = set()
+        blogs = set()
+        for ident in current_user.active_persona.blogs_followed:
+            mindspaces.add(ident.mindspace.id)
+            blogs.add(ident.blog.id)
 
-    blog_list = list()
-    for s in sources:
-        source_data = dict()
-        source_data["ident"] = s
-        source_data["blog"] = list(s.blog.index.order_by(Thought.created.desc()).limit(3))
-        source_data["url"] = url_for('web.persona_blog', id=s.id) if isinstance(s, Persona) else s.get_absolute_url()
-        if isinstance(s, Movement) and s.active_member():
-            source_data["mindspace"] = Thought.query.filter(
-                Thought.id.in_(s.mindspace_top_thought(count=3)))
-        blog_list.append(source_data)
+        top_main = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source=blogs))))
+        top_mindspace = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source=mindspaces))))
+        top_global = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(source="blog"))))
 
-    # Collect main page content
-    top_posts = Thought.query.filter(Thought.id.in_(Thought.top_thought()))
+    graph_json = json.dumps(generate_graph(top_main))
 
     return render_template('index.html', movementform=movementform,
-        blog_list=blog_list, top_posts=top_posts, more_movements=more_movements)
+        top_main=top_main, top_global=top_global, top_mindspace=top_mindspace,
+        more_movements=more_movements, graph_json=graph_json)
 
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
@@ -493,6 +497,14 @@ def movement_blog(id, page=1):
         thoughts=thought_selection, code=code)
 
 
+@app.route("/movements/")
+def movement_list():
+    """Display a list of all available movements"""
+    movements = Movement.query.order_by(Movement.username).all()
+
+    return render_template("movement_list.html", movements=movements)
+
+
 @app.route('/movement/<id>/mindspace', methods=["GET"])
 # @http_auth.login_required
 def movement_mindspace(id):
@@ -508,8 +520,8 @@ def movement_mindspace(id):
         flash("Only members can access the mindspace of '{}'".format(movement.username))
         return redirect(url_for("web.movement_blog", id=movement.id))
 
-    thought_selection = Thought.query \
-        .filter(Thought.id.in_(movement.mindspace_top_thought()))
+    thought_selection = reorder(Thought.query \
+        .filter(Thought.id.in_(movement.mindspace_top_thought())))
     top_posts = list()
 
     for candidate in thought_selection:
@@ -694,11 +706,21 @@ def signup():
 
         db.session.add(persona)
 
+        # Activate invitation
         if mma and not mma.active:
             mma.persona = persona
             mma.active = True
             mma.role = "member"
             db.session.add(mma)
+
+        # Auto-follow top movements
+        top_movements = Movement.top_movements()
+        app.logger.info("Auto joining {}".format(
+            ", ".join([m["username"] for m in top_movements])))
+        for m_data in top_movements:
+            m = Movement.query.get(m_data["id"])
+            persona.toggle_following(m)
+        cache.delete_memoized(persona.suggested_movements)
 
         notification = Notification(
             text="Welcome to RKTIK, {}!".format(persona.username),

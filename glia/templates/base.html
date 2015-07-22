@@ -129,6 +129,9 @@
               <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
             </li>
           {% endfor %}
+          <li>
+            <a href="{{ url_for('web.movement_list') }}"><i class="fa fa-caret-right"></i> All movements</a>
+          </li>
         </ul>
       </div>
     </nav>
@@ -144,7 +147,7 @@
 
     </div>
 
-    <div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
+     <div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
         {% if current_user.is_anonymous() %}
@@ -197,6 +200,8 @@
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <!-- Less Compiler -->
     <script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/less.js') }}"></script>
+    <!-- D3.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
     <!-- X-Editable -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <!-- PNotify -->

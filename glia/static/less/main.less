@@ -181,6 +181,8 @@ only screen and (min-resolution: 2dppx) {
 
 .rk-blog-header {
     color: darken(white, 1%);
+
+    a {color: white; }
 }
 
 //
@@ -368,58 +370,45 @@ only screen and (min-resolution: 2dppx) {
 // FRONTPAGE-SPECIFIC
 //
 
-.rk-frontpage-item {
-    margin-bottom: 7em;
+.rk-frontpage .rk-thought-lead, .rk-frontpage .rk-thought-line {
+    margin-bottom: 4em;
 }
 
-.rk-frontpage {
+.rk-graph {
+    .node {
+        stroke: #fff;
+        stroke-width: 1px;
+    }
 
-    .rk-frontpage-ident {
-        background-color: #fcfcfc;
-        margin-top: .5em;
+    .link {
+        stroke-width: 2px;
+        stroke-dasharray: 2,2;
+        stroke: #fff;
+        animation: stream 5s infinite;
+    }
 
-        .panel-heading {
-            font-variant: small-caps;
-            padding: 10px 0 7px;
-            border-bottom: none;
+    .link2 {
+        stroke: #999;
+        stroke-width: .5px;
+        stroke-dasharray: 2,2;
+    }
 
-            p {
-                font-size: 14px;
-                color: white;
-                margin: 0 15px;
-                font-variant: normal;
-                font-style: italic;
-            }
-
-            a {
-                color: white;
-            }
-
-            a:hover, a:focus {
-                text-decoration: none;
-            }
-        }
-
-        .panel-body {
-
-            h2 {
-                font-size: 26px;
-            }
-
-            .rk-thought-title h3 {
-                font-size: 14px;
-            }
-
-            .rk-thought-line {
-                margin-bottom: 5px;
-            }
+    @keyframes pulse {
+        50% {
+            stroke-width: 4px;
         }
     }
 
-    .panel .panel {
-        // Reset margin for text panels inside movement panels
-        margin: 0
+    @keyframes stream {
+        0% {stroke-dashoffset: 0px;}
+        50% {stroke-dashoffset: 4px;}
+        100% {stroke-dashoffset: 8px;}
     }
+}
+
+#rk-graph-label {
+    width: 100%;
+    color: rgba(11, 57, 84, 0.75);
 }
 
 .rk-toc {
@@ -453,9 +442,17 @@ only screen and (min-resolution: 2dppx) {
     }
 }
 
-.rk-toc-movements > ul > li {
-    overflow: scroll;
+.rk-toc-list {
     margin-bottom: 0.5em;
+
+    small {
+        display: block;
+        opacity: 0.65;
+    }
+
+    .rk-toc-movements > small { margin-left: 16px; }
+
+    small:hover { text-decoration: none; }
 }
 
 //
@@ -647,6 +644,40 @@ only screen and (min-resolution: 2dppx) {
 
 .rk-text {
     overflow-wrap: break-word;
+
+    &.truncate {
+        max-height: 200px;
+        overflow-y: hidden;
+        margin-bottom: 10px;
+
+        .truncate-toggle {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            margin-left: -10px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+
+        .truncate-toggle:hover {
+            opacity: 1.0;
+        }
+
+        .fa-arrow-circle-up { display: none; }
+        .fa-arrow-circle-down { display: inline-block; }
+
+        &.truncate-disable {
+            max-height: 100%;
+
+            .fa-arrow-circle-up {
+                display: inline-block;
+            }
+
+            .fa-arrow-circle-down {
+                display: none;
+            }
+        }
+    }
 }
 
 //
