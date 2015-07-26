@@ -5,7 +5,7 @@ from flask.ext.login import current_user
 
 from forms import LoginForm
 
-from nucleus.nucleus.models import Mindset, Movement, MovementMemberAssociation as Mma
+from nucleus.nucleus.models import Movement, Mindset
 
 app = Blueprint('web', __name__)
 app.logger = logging.getLogger('web')
@@ -17,13 +17,8 @@ VIEW_CACHE_TIMEOUT = 5
 def inject_repost_mindsets():
     rv = []
     if not current_user.is_anonymous():
-        rv.append(current_user.active_persona.mindspace)
-        rv.append(current_user.active_persona.blog)
-
-        # Is a movement member
-        rv = rv + Mindset.query \
-            .join(Movement, Movement.mindspace_id == Mindset.id) \
-            .filter(Movement.id.in_([m["id"] for m in current_user.active_persona.movements()])).all()
+        rv = Mindset.query.filter(Mindset.id.in_(
+            current_user.active_persona.repost_mindsets()))
 
     return dict(
         repost_mindsets=rv
