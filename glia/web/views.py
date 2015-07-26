@@ -9,7 +9,6 @@
 """
 import datetime
 import traceback
-import json
 
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app
@@ -29,7 +28,7 @@ from glia.web.helpers import send_validation_email, \
     valid_redirect, make_view_cache_key, reorder, generate_graph
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.database import db, cache
-from nucleus.nucleus.helpers import process_attachments
+from nucleus.nucleus.helpers import process_attachments, recent_thoughts
 from nucleus.nucleus.models import Persona, User, Movement, \
     Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \
     PerceptAssociation, Notification, \
@@ -344,10 +343,10 @@ def edit_thought(id=None):
 
 @app.route('/', methods=["GET"])
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
+# @cache.cached(
+#     timeout=VIEW_CACHE_TIMEOUT,
+#     key_prefix=make_view_cache_key
+# )
 def index():
     """Front page"""
     movementform = CreateMovementForm()
@@ -358,7 +357,7 @@ def index():
             .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
         top_main = reorder(Thought.query.filter(Thought.id.in_(
             Thought.top_thought(source="blog"))))
-        top_mindspace = None
+
         top_global = None
     else:
         more_movements = Movement.query \
@@ -373,15 +372,15 @@ def index():
 
         top_main = reorder(Thought.query.filter(Thought.id.in_(
             Thought.top_thought(source=blogs))))
-        top_mindspace = reorder(Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source=mindspaces))))
         top_global = reorder(Thought.query.filter(Thought.id.in_(
             Thought.top_thought(source="blog"))))
 
-    graph_json = json.dumps(generate_graph(top_main))
+    recent = Thought.query.filter(Thought.id.in_(recent_thoughts())) \
+        .order_by(Thought.created.desc()).all()
+    graph_json = generate_graph(top_main)
 
     return render_template('index.html', movementform=movementform,
-        top_main=top_main, top_global=top_global, top_mindspace=top_mindspace,
+        top_main=top_main, top_global=top_global, recent_thoughts=recent,
         more_movements=more_movements, graph_json=graph_json)
 
 
@@ -478,10 +477,10 @@ def movement(id):
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
+# @cache.cached(
+#     timeout=VIEW_CACHE_TIMEOUT,
+#     key_prefix=make_view_cache_key
+# )
 def movement_blog(id, page=1):
     """Display a movement's profile"""
     movement = Movement.query.get_or_404(id)
@@ -648,10 +647,10 @@ def persona(id):
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
 # @http_auth.login_required
-@cache.cached(
-    timeout=VIEW_CACHE_TIMEOUT,
-    key_prefix=make_view_cache_key
-)
+# @cache.cached(
+#     timeout=VIEW_CACHE_TIMEOUT,
+#     key_prefix=make_view_cache_key
+# )
 def persona_blog(id, page=1):
     """Display a persona's blog"""
     if id is None:
