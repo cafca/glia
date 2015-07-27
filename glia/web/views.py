@@ -759,7 +759,7 @@ def signup():
             send_validation_email(user, db)
             login_user(user, remember=True)
 
-            flash("Welcome to RKTIK! Click the link in the activation email we just sent you to be able to reset your account when you loose your password.".format(form.username.data))
+            flash("Welcome to RKTIK! Click the link in the activation email we just sent you to be able to reset your account when you lose your password.".format(form.username.data))
             app.logger.debug("Created new account {} with active Persona {}.".format(user, persona))
 
         rv = url_for('web.index') if mma is None else url_for('web.movement', id=mma.movement.id)
