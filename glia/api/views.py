@@ -69,7 +69,7 @@ def authenticate():
         if not any([current_app.config["DEBUG"] is True, request.headers.get("X-Forwarded-Proto", default=None) == 'https']):
                 url = request.url
                 secure_url = url.replace("http://", "https://")
-                app.logger.info("Redirecting from {} to {}".format(url, secure_url))
+                app.logger.debug("Redirecting from {} to {}".format(url, secure_url))
                 return redirect(secure_url, code=301)
 
         if (request.path == '/v0/soumas/' and request.method == "POST"):
@@ -143,7 +143,7 @@ def find_personas():
     resp = {'personas': list()}
     if result:
         # Compile response
-        app.logger.info("{} Personas found for email-hash {}".format(len(result), email_hash[:8]))
+        app.logger.debug("{} Personas found for email-hash {}".format(len(result), email_hash[:8]))
         for p in result:
             p_dict = p.export(include=[
                 "id",
@@ -155,7 +155,7 @@ def find_personas():
             resp['personas'].append(p_dict)
     else:
         resp["meta"] = {"errors": [ERROR["OBJECT_NOT_FOUND"](email_hash), ]}
-        app.logger.info(
+        app.logger.debug(
             "Persona <{}> not found.".format(email_hash[:8]))
 
     return jsonify(resp)

@@ -85,7 +85,7 @@ def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
     if not current_user.is_active():
-        app.logger.info("Inactive users can't join chat")
+        app.logger.debug("Inactive users can't join chat")
     else:
         if "room_id" not in message:
             message["room_id"] = "base"
@@ -95,7 +95,7 @@ def joined(message):
         db.session.commit()
 
         join_room(message["room_id"])
-        app.logger.info("{} joined movement chat {}".format(current_user.active_persona, message['room_id']))
+        app.logger.debug("{} joined movement chat {}".format(current_user.active_persona, message['room_id']))
         emit('status', {'msg': current_user.active_persona.username + ' has entered the room.'}, room=message["room_id"])
 
         rv = {"nicknames": [], "ids": []}
