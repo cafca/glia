@@ -84,11 +84,15 @@ $(document).ready(function() {
 
     <div class="rk-persona-movements">
       <div class="row">
-      {% for mma in movements %}
-      <div class="col-sm-3">
-        {% set et=mma.role|capitalize + ", joined " + mma.created|localtime|naturaltime %}
-        {{ movement_macros.box(mma.movement, extra_text=et)}}
-      </div>
+      {% for i in range(4) %}
+        <div class="col-sm-3">
+        {% for mma in movements %}
+          {% if loop.index0 % 4 == i %}
+            {% set et=mma.role|capitalize + ", joined " + mma.created|localtime|naturaltime %}
+            {{ movement_macros.box(mma.movement, extra_text=et)}}
+          {% endif %}
+        {% endfor %}
+        </div>
       {% else %}
       <div class="col-sm-6">
       <h4>{{ persona.username}} has not joined any movements yet</h4>
