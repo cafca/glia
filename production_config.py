@@ -34,3 +34,6 @@ SERVER_KEY = RsaPrivateKey.Read(os.environ['SERVER_PRIVATE_KEY'])
 SECRET_KEY = os.environ['GLIA_SECRET_KEY']
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
+
+# Slack webhook is used to send some logging messages to Slack
+SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK", None)

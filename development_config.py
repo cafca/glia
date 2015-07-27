@@ -71,3 +71,9 @@ except IOError:
         ./sendgrid.auth file with contents 'username:password'.""")
 else:
     SENDGRID_USERNAME, SENDGRID_PASSWORD = sg_auth.split(":", 1)
+
+try:
+    with open("slack_webhook.auth", "r") as f:
+        SLACK_WEBHOOK = f.read()
+except IOError:
+    logging.warning("Slack webhook not configured")
