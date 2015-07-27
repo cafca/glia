@@ -44,3 +44,4 @@ jieba==0.36.2
 nltk==3.0.2
 BeautifulSoup==3.2.1
 Pillow==2.8.1
+slack-log-handler==0.2.2

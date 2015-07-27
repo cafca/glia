@@ -18,6 +18,7 @@ from flask.ext.misaka import Misaka
 from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
 from humanize.time import naturaldelta
+from slack_log_handler import SlackLogHandler
 
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 from nucleus.nucleus.database import db, cache
@@ -50,7 +51,7 @@ def create_app(log_info=True):
         if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
             import nucleus.nucleus.models
             import nucleus.nucleus.vesicle
-            app.logger.info("Initializing database")
+            app.logger.warning("Initializing database")
             db.create_all()
 
     # Setup websockets
@@ -108,14 +109,20 @@ def create_app(log_info=True):
     app.register_blueprint(api_blueprint)
     app.register_blueprint(web_blueprint)
 
-    nucleus_logger = logging.getLogger("nucleus")
+    loggers = [app.logger, web_blueprint.logger, api_blueprint.logger,
+        logging.getLogger("nucleus")]
 
-    setup_loggers([app.logger, web_blueprint.logger, api_blueprint.logger,
-        nucleus_logger])
+    setup_loggers(loggers)
+
+    if app.config.get("SLACK_WEBHOOK"):
+        slack_handler = SlackLogHandler(app.config.get("SLACK_WEBHOOK"))
+        slack_handler.setLevel(logging.INFO)
+        for l in loggers:
+            l.addHandler(slack_handler)
 
     if log_info:
         # Log configuration info
-        app.logger.info(
+        app.logger.debug(
             "\n".join(["{:=^80}".format(" GLIA CONFIGURATION "),
                       "{:>12}: {}".format("host", app.config['SERVER_NAME']),
                       "{:>12}: {}".format("database", app.config['SQLALCHEMY_DATABASE_URI']),

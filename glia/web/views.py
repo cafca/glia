@@ -58,7 +58,7 @@ def mark_notifications_read():
         for n in notifications:
             n.unread = False
             db.session.add(n)
-            app.logger.info("Marked {} read".format(n))
+            app.logger.debug("Marked {} read".format(n))
 
         db.session.commit()
 
@@ -147,11 +147,11 @@ def create_persona(for_movement=None):
         else:
             if movement:
                 flash("Your new Persona {} is now a member of {}".format(persona.username, movement.username))
-                app.logger.debug("Created new Persona {} for user {} and joined {}.".format(
+                app.logger.info("Created new Persona {} for user {} and joined {}.".format(
                     persona, current_user, movement))
                 return redirect(url_for("web.movement_mindspace", id=movement.id))
             else:
-                app.logger.debug("Created new Persona {} for user {}.".format(persona, current_user))
+                app.logger.info("Created new Persona {} for user {}.".format(persona, current_user))
                 return redirect(url_for("web.persona", id=persona.id))
     return render_template('create_persona.html',
         form=form, movement=movement, movement_id=for_movement, allowed_colors=ALLOWED_COLORS.keys())
@@ -293,7 +293,7 @@ def edit_thought(id=None):
         # Append new attachments from longform field
         if form.longform.data and len(form.longform.data) > 0:
             lftext, percepts = process_attachments(form.longform.data)
-            app.logger.info("Extracted {} percepts from longform".format(len(percepts)))
+            app.logger.debug("Extracted {} percepts from longform".format(len(percepts)))
 
             lftext_percept = TextPercept.get_or_create(lftext,
                 source=form.lfsource.data)
@@ -714,7 +714,7 @@ def signup():
 
         # Auto-follow top movements
         top_movements = Movement.top_movements()
-        app.logger.info("Auto joining {}".format(
+        app.logger.debug("Auto joining {}".format(
             ", ".join([m["username"] for m in top_movements])))
         for m_data in top_movements:
             m = Movement.query.get(m_data["id"])
