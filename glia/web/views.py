@@ -202,6 +202,8 @@ def create_thought():
             thought = thought_data["instance"]
             thought.posted_from = "web-form"
 
+            thought.toggle_upvote()
+
             db.session.add(thought)
             db.session.add_all(thought_data["notifications"])
 
