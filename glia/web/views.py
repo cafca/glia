@@ -341,6 +341,12 @@ def edit_thought(id=None):
         attachments=attachments)
 
 
+@app.route('/help/privacy', methods=["GET"])
+def help_privacy():
+    """Privacy page"""
+    return render_template("help_privacy.html")
+
+
 @app.route('/', methods=["GET"])
 # @http_auth.login_required
 # @cache.cached(
