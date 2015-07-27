@@ -53,7 +53,7 @@
       </div>
 
       <ul class="list-group rk-toc-list">
-        {% for thought in top_mindspace %}
+        {% for thought in top_global %}
           {% if thought|authorize("read") %}
             <a href="{{ url_for('web.thought', id=thought.id) }}">
               <li class="list-group-item">
