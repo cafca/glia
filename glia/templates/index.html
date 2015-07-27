@@ -41,7 +41,7 @@
     <div class="panel-body hidden-sm text-center">
       <a href="/"><div class="rk-graph"></div></a>
       <p class="text-center" id="rk-graph-label">
-        Rktik Mind
+        Current Position in Rktik Mind
         <br /><small>Hover &amp; click nodes</small>
       </p>
     </div>
@@ -53,7 +53,7 @@
       </div>
 
       <ul class="list-group rk-toc-list">
-        {% for thought in top_mindspace %}
+        {% for thought in top_global %}
           {% if thought|authorize("read") %}
             <a href="{{ url_for('web.thought', id=thought.id) }}">
               <li class="list-group-item">
@@ -88,14 +88,14 @@
       </ul>
     {% endif %}
 
-    {% if top_mindspace and top_mindspace|length > 0 %}
+    {% if recent_thoughts and recent_thoughts|length > 0 %}
       <div class="panel-body">
-        <h3>Up next</h3>
+        <h3>Recent Thoughts</h3>
         <hr />
       </div>
 
       <ul class="list-group rk-toc-list">
-        {% for thought in top_mindspace %}
+        {% for thought in recent_thoughts %}
           {% if thought|authorize("read") %}
             <a href="{{ url_for('web.thought', id=thought.id) }}">
               <li class="list-group-item">

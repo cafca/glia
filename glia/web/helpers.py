@@ -7,6 +7,7 @@
 
     :copyright: (c) 2013 by Vincent Ahrend.
 """
+import json
 import logging
 import os
 import pytz
@@ -20,8 +21,9 @@ from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
 
 from nucleus.nucleus import ExecutionTimer
+from nucleus.nucleus.database import cache
 from nucleus.nucleus.models import Persona, Movement, \
-    MovementMemberAssociation, Thought
+    MovementMemberAssociation, Thought, TOP_THOUGHT_CACHE_DURATION
 
 from .. import socketio
 
@@ -56,6 +58,7 @@ def authorize_filter(obj, action, actor=None):
     return obj.authorize(action, actor.id)
 
 
+@cache.memoize(timeout=TOP_THOUGHT_CACHE_DURATION)
 def generate_graph(thoughts, idents=None):
     """Generates a graph for consumption by the D3 force layout
 
@@ -77,7 +80,7 @@ def generate_graph(thoughts, idents=None):
             and top movements for anonymous users
 
     Returns:
-        dict: Dictionary with keys 'nodes', 'links' at the root level,
+        string: Json dump of a dict with keys 'nodes','links' at the root level
             both containing a list of dicts for each item. Node items have
             keys 'name' and 'group' (for coloring). Link items have an 'source'
             and 'target' key, each containing an index for items in the 'nodes'
@@ -169,7 +172,7 @@ def generate_graph(thoughts, idents=None):
                     "source": node_indexes[t_blog.id]})
 
     timer.stop("Generated mind graph")
-    return rv
+    return json.dumps(rv)
 
 
 def localtime(value, tzval="UTC"):
