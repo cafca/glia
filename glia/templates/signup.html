@@ -96,7 +96,7 @@ $(document).ready(function() {
     <p><input type='text' name="color" class="form-control" id="rk-colorpicker" value="{{form.color.data|default('', True) }}"/></p>
   </div>
 
-  <p>We care about your privacy, and we never spam. By creating an account, you agree to RKTIK's User Agreement and <a href="{{ url_for('web.help_privacy') }}">Privacy Policy</a>.</p>
+  <p>We care about your privacy, and we never spam. By creating an account, you agree to RKTIK's <strong><a href="{{ url_for('web.help', help_page='user_agreement')}}">User Agreement</a></strong> and <strong><a href="{{ url_for('web.help', help_page='privacy') }}">Privacy Policy</a></strong>.</p>
   <button type="submit" class="btn btn-primary rk-singleclick" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i> Please wait'>Signup now</button>
   {% if mma %}
   <a class="btn btn-default" href="{{ url_for('web.login', next=request.url) }}">I have a login</a>

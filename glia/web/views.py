@@ -11,8 +11,9 @@ import datetime
 import traceback
 
 from flask import request, redirect, render_template, flash, url_for, session, \
-    current_app
+    current_app, abort
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from jinja2.exceptions import TemplateNotFound
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -343,10 +344,16 @@ def edit_thought(id=None):
         attachments=attachments)
 
 
-@app.route('/help/privacy', methods=["GET"])
-def help_privacy():
-    """Privacy page"""
-    return render_template("help_privacy.html")
+@app.route('/help/<help_page>', methods=["GET"])
+def help(help_page):
+    """Handler for help pages"""
+    try:
+        rv = render_template("help_{}.html".format(help_page))
+    except TemplateNotFound:
+        app.logger.warning("Request for unavailable help page: '{}'".format(help_page))
+        abort(404)
+    else:
+        return rv
 
 
 @app.route('/', methods=["GET"])
