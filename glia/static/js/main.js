@@ -23,13 +23,7 @@ $(document).ready(function(){
       'resizeDuration': 200
     })
 
-    // Hide truncate toggle when not needed
-    $(".truncate").each(function() {
-        if ($(this)[0].scrollHeight - $(this).height() == 0) {
-            $(this).toggleClass("truncate");
-            $(this).find(".truncate-toggle").hide();
-        }
-    })
+    hide_truncate_toggles();
 
     // Connect personal websocket
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/personas')
@@ -140,6 +134,17 @@ $(document).ready(function(){
 
         }
         scroll();
+        hide_truncate_toggles();
+    }
+
+    function hide_truncate_toggles() {
+        // Hide truncate toggle when not needed
+        $(".truncate").each(function() {
+            if ($(this)[0].scrollHeight - $(this).height() == 0) {
+                $(this).toggleClass("truncate");
+                $(this).find(".truncate-toggle").hide();
+            }
+        })
     }
 
     function logged_in() {
@@ -161,6 +166,7 @@ $(document).ready(function(){
                     request_upvote(this.dataset.id);
                     return false;
                 });
+            hide_truncate_toggles();
         }
     }
 
@@ -223,6 +229,7 @@ $(document).ready(function(){
                         $(this).parent().toggleClass("truncate-disable");
                     });
                 });
+                hide_truncate_toggles();
             });
     }
 
