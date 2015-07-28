@@ -23,6 +23,14 @@ $(document).ready(function(){
       'resizeDuration': 200
     })
 
+    // Hide truncate toggle when not needed
+    $(".truncate").each(function() {
+        if ($(this)[0].scrollHeight - $(this).height() == 0) {
+            $(this).toggleClass("truncate");
+            $(this).find(".truncate-toggle").hide();
+        }
+    })
+
     // Connect personal websocket
     console.log("Connecting " + 'http://' + document.domain + ':' + location.port + '/personas')
     psocket = io.connect('http://' + document.domain + ':' + location.port + '/personas');
