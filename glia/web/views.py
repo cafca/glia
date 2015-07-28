@@ -527,7 +527,7 @@ def movement_mindspace(id):
         flash("Only members can access the mindspace of '{}'".format(movement.username))
         return redirect(url_for("web.movement_blog", id=movement.id))
 
-    thought_selection = reorder(Thought.query \
+    thought_selection = reorder(Thought.query
         .filter(Thought.id.in_(movement.mindspace_top_thought())))
     top_posts = list()
 
@@ -621,13 +621,19 @@ def notifications(page=1):
 # @http_auth.login_required
 def persona(id):
     persona = Persona.query.get_or_404(id)
+    convs = None
+    followed = None
+
+    cp = current_user.active_persona
 
     if current_user.is_anonymous():
         chat = None
-    elif persona == current_user.active_persona:
-        chat = current_user.active_persona.mindspace
+    elif persona == cp:
+        chat = cp.mindspace
+        convs = cp.conversation_list()
+        followed = cp.blogs_followed
     else:
-        chat = Dialogue.get_chat(persona, current_user.active_persona)
+        chat = Dialogue.get_chat(persona, cp)
         if inspect(chat).persistent is False:
             app.logger.info('Storing {} in database'.format(chat))
             # chat object is newly created
@@ -641,14 +647,16 @@ def persona(id):
 
                 app.logger.error(
                     "Error creating dialogue between {} and {}\n{}".format(
-                        current_user.active_persona, persona, e))
+                        cp, persona, e))
                 chat = None
 
     movements = MovementMemberAssociation.query \
         .filter_by(active=True) \
-        .filter_by(persona_id=persona.id)
+        .filter_by(persona_id=persona.id) \
+        .all()
 
-    return(render_template('persona.html', chat=chat, persona=persona, movements=movements))
+    return(render_template('persona.html', chat=chat, persona=persona,
+        movements=movements, conversations=convs, followed=followed))
 
 
 @app.route('/anonymous/blog/', methods=["GET"])

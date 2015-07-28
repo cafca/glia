@@ -97,13 +97,15 @@ def generate_graph(thoughts, idents=None):
         else:
             idents = {m.id: m for m in current_user.active_persona.blogs_followed}
 
+    anim_duration = lambda hot: max([(5.0 / (hot * 1000 + 1)), 0.33])
+
     thought_item = lambda t: {
         "name": "{}<br /><small>by {}</small>".format(
             t.text.encode('utf-8'), t.author.username.encode('utf-8')),
         "group": 1,
         "radius": 2,
         "url": t.get_absolute_url(),
-        "anim": (5.0 / (t.hot() * 1000 + 1))
+        "anim": anim_duration(t.hot())
     }
 
     ident_item = lambda ident: {

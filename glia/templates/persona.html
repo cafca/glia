@@ -14,7 +14,7 @@ window.admin_id = "{{ persona.id }}";
 
 $(document).ready(function() {
   {% if persona == active_persona %}
-  $('.rk-persona-identity .rk-username').editable({
+  $('.rk-persona-identity > h1 > .rk-username').editable({
     type: 'text',
     pk: '{{persona.id}}',
     name: 'username',
@@ -47,12 +47,33 @@ $(document).ready(function() {
         <h3 class="panel-title">{{ persona.username }} Personal Mindspace
         <small><em>Only you can see messages in here</em></small></h3>
         {% else %}
-        <h3 class="panel-title">Chat with {{ persona.username }} in private</h3>
+        <h3 class="panel-title">Private conversation with {{ persona.username }}</h3>
         {% endif %}
       </div>
 
       {{ chat_macros.chat(chat) }}
-    </div> <!-- ./ panel -->
+    </div> <!-- ./ chat -->
+
+    {% if conversations and conversations|length > 0 %}
+    <div class="rk-toc panel panel-default">
+      <div class="panel-body">
+        <h3><i class="fa fa-envelope-o"></i> Your Conversations</h3>
+        <hr />
+      </div>
+      <ul class="rk-toc-list list-group">
+        {% for c in conversations %}
+          <a href="{{ url_for('web.persona', id=c.persona_id) }}">
+            <li class="list-group-item">
+              {{ c.persona_username }}
+              {% if c.modified %}
+              <small>{{ c.modified|localtime|naturaltime }}</small>
+              {% endif %}
+            </li>
+          </a>
+        {% endfor %}
+      </ul>
+    </div> <!-- ./ conversations -->
+    {% endif %}
   {% endif %}
   </div> <!-- ./ chat column -->
 
@@ -66,6 +87,14 @@ $(document).ready(function() {
         <h1>{{ id_macros.persona(persona, nolink=True) }}</h1>
         <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
         {{ id_macros.follow_toggle(persona, current_user.active_persona) }}
+        {% if followed %}
+        <p>
+          Following
+          {% for ident in followed %}
+            <span style="margin-right: .5em;">{{ id_macros.identity(ident)}}</span>
+          {% endfor %}
+        </p>
+        {% endif %}
       </div>
 
       <div class="col-sm-3 rk-persona-meta">
@@ -83,7 +112,9 @@ $(document).ready(function() {
     </div>
 
     <div class="rk-persona-movements">
+      <h2>Member of</h2>
       <div class="row">
+      {% if movements|length > 0 %}
       {% for i in range(4) %}
         <div class="col-sm-3">
         {% for mma in movements %}
@@ -93,6 +124,7 @@ $(document).ready(function() {
           {% endif %}
         {% endfor %}
         </div>
+      {% endfor %}
       {% else %}
       <div class="col-sm-6">
       <h4>{{ persona.username}} has not joined any movements yet</h4>
@@ -100,7 +132,7 @@ $(document).ready(function() {
       <p>Go ahead and recommend joining one of yours in the chat on the right!</p>
       {% endif %}
       </div>
-      {% endfor %}
+      {% endif %}
       </div>
     </div>
   </div>
