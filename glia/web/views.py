@@ -344,13 +344,13 @@ def edit_thought(id=None):
         attachments=attachments)
 
 
-@app.route('/help/<help_page>', methods=["GET"])
-def help(help_page):
+@app.route('/help/<page>', methods=["GET"])
+def help(page):
     """Handler for help pages"""
     try:
-        rv = render_template("help_{}.html".format(help_page))
+        rv = render_template("help_{}.html".format(page))
     except TemplateNotFound:
-        app.logger.warning("Request for unavailable help page: '{}'".format(help_page))
+        app.logger.warning("Request for unavailable help page: '{}'".format(page))
         abort(404)
     else:
         return rv

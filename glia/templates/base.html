@@ -159,6 +159,28 @@
 
       {% block content %}{% endblock %}
 
+      <div class="footer row">
+        <div class="col-sm-2 col-sm-offset-2">
+          <h5>Hello</h5>
+          <p>Rktik is made with love. We hope you like it.</p>
+          <p>If you need to get in contact with someone at Rktik, write an email to <a href="mailto:info@rktik.com">info@rktik.com</a> or see additional contact information <a href="{{ url_for('web.help', page='imprint') }}" rel="nofollow">here</a></p>
+        </div>
+        <div class="col-sm-2">
+          <h5>About</h5>
+          <p>Rktik is inspired by work in the Cognitive Networks Group at Osnabrück University and its <em>Souma</em> prototype implementation.</p>
+        </div>
+        <div class="col-sm-2">
+          <h5>Help</h5>
+          <p><a href="http://www.rktik.com/thought/5a59e2c190b74cf896e00bb3c8d764a4/">Frequently Asked Questions</a></p>
+        </div>
+        <div class="col-sm-2">
+          <h5>Legal Information</h5>
+          <p><a href="{{ url_for('web.help', page='impressum') }}" rel="nofollow">Imprint</a></p>
+          <p><a href="{{ url_for('web.help', page='privacy') }}" rel="nofollow">Privacy Policy</a></p>
+          <p><a href="{{ url_for('web.help', page='user_agreement') }}" rel="nofollow">User Agreement</a></p>
+        </div>
+      </div>
+
     </div>
 
      <div class="modal fade" id="rk-repost" tabindex="-1" role="dialog" aria-labelledby="rk-repost" aria-hidden="true">
