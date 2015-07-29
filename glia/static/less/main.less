@@ -270,23 +270,43 @@ only screen and (min-resolution: 2dppx) {
             margin-right: 5px;
         }
 
-        .author_name {
-            font-weight: bold;
-            color: grey;
-            margin-right: 5px;
+        .list-group-item {
+            padding: 5px;
         }
 
         .rk-chatline > p {
             overflow-wrap: break-word;
+            display: inline;
+        }
+
+        .truncate {
+            max-height: 100px;
+
+            &.truncate-disable {
+                max-height: 100%;
+            }
         }
 
         .rk-chat-percept {
             background-color: #fafafa;
+
+            img {
+                max-height: 80px;
+            }
         }
 
         .rk-system {
             padding: 0 15px;
             background-color: lighten(yellow, 45%);
+        }
+
+        .rk-timestamp {
+            color: #aaa;
+            margin-left: 5px;
+        }
+
+        .rk-username::after {
+            content: ":";
         }
 
         .rk-chatline-meta {
@@ -351,6 +371,7 @@ only screen and (min-resolution: 2dppx) {
 
 .rk-movement-info {
     background-color: #f5f5f5;
+    padding-bottom: 0;
 }
 
 .rk-movement-box {
@@ -682,7 +703,7 @@ only screen and (min-resolution: 2dppx) {
     &.truncate {
         max-height: 200px;
         overflow-y: hidden;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
 
         .truncate-toggle {
             position: absolute;
