@@ -59,9 +59,9 @@
               <li class="list-group-item">
                 {{ thought.text }}
                 {% if thought.mindset %}
-                 <small>In {{ thought.mindset.author.username }}</small>
+                 <small>{{ thought.mindset.author.username }}</small>
                 {% elif thought.parent %}
-                <small>In reply to {{ thought.parent.author.username }}</small>
+                <small>Reply to {{ thought.parent.author.username }}</small>
                 {% endif %}
               </li>
             </a>
@@ -101,9 +101,9 @@
               <li class="list-group-item">
                 {{ thought.text }}
                 {% if thought.mindset %}
-                 <small>In {{ thought.mindset.author.username }}</small>
+                 <small>{{ thought.mindset.name }}</small>
                 {% elif thought.parent %}
-                <small>In reply to {{ thought.parent.author.username }}</small>
+                <small>Reply to {{ thought.parent.author.username }}</small>
                 {% endif %}
               </li>
             </a>
