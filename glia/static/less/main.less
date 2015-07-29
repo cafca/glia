@@ -24,9 +24,41 @@
 //
 
 
-html > body {
+body {
     font-family: Delicious;
     background-color: darken(white, 1%);
+    height: 100%;
+}
+
+.page-wrapper {
+    min-height: 100%;
+    position: relative;
+}
+
+.main-container {
+    padding-bottom: 270px;
+    height: 100%;
+}
+
+footer {
+    background-color: lighten(black, 15%);
+    color: lighten(black, 40%);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 2em 0;
+    height: 220px;
+
+    a,p {
+        color: lighten(black, 50%);
+        font-size: 12px;
+    }
+
+    a:hover, a:focus {color: white;}
+
+    .row {
+        background-color: #262626;
+    }
 }
 
 .flash {
