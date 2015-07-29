@@ -271,12 +271,15 @@ only screen and (min-resolution: 2dppx) {
         }
 
         .list-group-item {
-            padding: 5px;
+            padding: 5px 15px;
+            border-color: #eee;
+            line-height: 22px;
         }
 
         .rk-chatline > p {
             overflow-wrap: break-word;
             display: inline;
+            line-height: 20px;
         }
 
         .truncate {
@@ -289,8 +292,10 @@ only screen and (min-resolution: 2dppx) {
 
         .rk-chat-percept {
             background-color: #fafafa;
+            line-height: 20px;
 
             img {
+                margin: 5px 0;
                 max-height: 80px;
             }
         }
@@ -310,9 +315,11 @@ only screen and (min-resolution: 2dppx) {
         }
 
         .rk-chatline-meta {
-            padding: 0 15px;
-            background-color: @light;
+            padding: 5px 7px;
             color: @dark;
+            margin-bottom: -1px;
+            border-bottom: none;
+            z-index: 1;
             a {
                 color: darken(@dark, 10%);
             }
