@@ -7,7 +7,7 @@
 
 {% macro movement(m, flair=None, nolink=False) %}
 {% if nolink == False %}<a href="{{ url_for('web.movement', id=m.id) }}">{% endif %}
-  <i class="fa fa-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ m.username }}</span>
+  <i class="fa fa-dot-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ m.username }}</span>
 {% if nolink == False %}</a>{% endif %}
 {% if flair %}<span class="label label-default">{{ flair }}</span>{% endif %}
 {% endmacro %}
