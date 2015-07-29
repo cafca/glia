@@ -181,10 +181,14 @@ class LoginForm(RedirectForm):
         user = User.query.filter_by(email=self.email.data).first()
         if user is None:
             self.email.errors.append("No user with that email is registered.")
+            logger.warning("No user found for email '{}'".format(
+                self.email.data))
             return False
 
         if not user.check_password(self.password.data):
             self.password.errors.append("Wrong password.")
+            logger.warning("Invalid password for user {}".format(user))
+            return False
 
         self.user = user
         return True

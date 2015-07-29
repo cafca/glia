@@ -454,9 +454,6 @@ def login():
             session["active_persona"] = form.user.active_persona.id
             app.logger.debug("User {} logged in with {}.".format(current_user, current_user.active_persona))
         return form.redirect(valid_redirect(request.args.get('next'))or url_for('web.index'))
-    elif request.method == "POST":
-        app.logger.error("Invalid password for email '{}'".format(form.email.data))
-        form.password.errors.append("Invalid password.")
     form_action = url_for('web.login', next=valid_redirect(request.args.get('next')))
     return render_template('login.html', form=form, form_action=form_action)
 
