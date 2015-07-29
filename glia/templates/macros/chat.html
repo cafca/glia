@@ -16,16 +16,19 @@
 {% endif %}
 <li class="list-group-item">
   {% if thought|authorize("read") %}
+    <!-- Thought content -->
       {{ thought_macros.upvote(thought) }}
       <span class="rk-chatline">
+        <a class="pull-right rk-timestamp" href="{{ url_for('web.thought', id=thought.id) }}">{{thought.created|localtime|naturaltime}} </a>
+
         {{ id_macros.identity(thought.author) }}
-        <a href="{{ url_for('web.thought', id=thought.id) }}">{{thought.created|localtime|naturaltime}} </a>
+
         {{ thought.text|markdown(autolink=True, no_intra_emphasis=True, space_headers=True, safelink=True, skip_html=True)|mentions(thought) }}
       </span>
-      <div>
       {% for tagp in thought.tags %}<a href="{{ url_for('web.tag', name=tagp.percept.tag.name) }}">#{{ tagp.percept.title }}</a>&nbsp;{% endfor %}
     </li>
 
+    <!-- Percepts -->
     {% for category, percepts in thought.attachments.items() %}
     {% for percept_assoc in percepts %}
     <li class="list-group-item rk-chat-percept">
@@ -77,7 +80,7 @@
   </div>
   <div class="form-group">
     <input class="rk-create-text" name="text" autocomplete="off" class="form-control input-sm" placeholder="Be nice."/>
-    <button id="rk-chat-submit" class="btn btn-sm btn-default rk-create-submit" disabled="disabled" class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Send</button>
+    <button id="rk-chat-submit" class="btn btn-sm btn-primary rk-create-submit" disabled="disabled" class="btn btn-sm rk-chat-button" data-loading-text='<i class="fa fa-circle-o-notch fa-spin"></i>'>Send</button>
   </div>
 </form>
 </div>
