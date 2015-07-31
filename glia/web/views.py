@@ -137,7 +137,8 @@ def create_persona(for_movement=None):
         db.session.add(notification)
 
         if movement:
-            persona.toggle_movement_membership(movement=movement, code=code)
+            persona.toggle_movement_membership(movement=movement,
+                invitation_code=code)
 
         try:
             db.session.commit()
@@ -786,7 +787,7 @@ def signup():
                     flash("This activation code has been used before. You can try joining the movement by clicking the join button below.")
                 else:
                     flash("You were invited to join this movement. Click the \"Join movement\" button to do so.")
-                return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=mma.invitation_code))
+                return redirect(url_for('web.movement', id=mma.movement.id, invitation_code=invitation_code))
             else:
                 return redirect(url_for("web.index"))
 

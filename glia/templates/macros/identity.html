@@ -7,7 +7,7 @@
 
 {% macro movement(m, flair=None, nolink=False) %}
 {% if nolink == False %}<a href="{{ url_for('web.movement', id=m.id) }}">{% endif %}
-  <i class="fa fa-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ m.username }}</span>
+  <i class="fa fa-dot-circle-o" style="color: #{{m.color|default('B8C5D6', True)}}"></i> <span class="rk-username">{{ m.username }}</span>
 {% if nolink == False %}</a>{% endif %}
 {% if flair %}<span class="label label-default">{{ flair }}</span>{% endif %}
 {% endmacro %}
@@ -46,8 +46,8 @@
       <i class="fa fa-fw fa-users"></i> Join Movement <span class="caret"></span>
     </button>
     <ul class="dropdown-menu" role="menu">
-      <li><a href="#" class="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id, invitation_code=code) }}" data-movement-id="{{movement.id}}" {% if reload %}data-reload-me="prettyplease"{% endif %}>Join as <em>{{ member.username }}</em></a></li>
-      <li><a href="{{ url_for('web.create_persona', for_movement=movement.id, invitation_code=code) }}">Join with a new username</a></li>
+      <li><a href="#" class="rk-movement-member" data-href="{{ url_for('.async_toggle_movement_membership', movement_id=movement.id, invitation_code=request.args.get('invitation_code', default=None)) }}" data-movement-id="{{movement.id}}" {% if reload %}data-reload-me="prettyplease"{% endif %}>Join as <em>{{ member.username }}</em></a></li>
+      <li><a href="{{ url_for('web.create_persona', for_movement=movement.id, invitation_code=request.args.get('invitation_code', default=None)) }}">Join with a new username</a></li>
     </ul>
   </div>
   {% elif not movement.active_member() %}
