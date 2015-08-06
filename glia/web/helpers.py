@@ -136,26 +136,26 @@ def generate_graph(thoughts, idents=None):
             node_indexes[t.id] = i
             i += 1
 
-        if t.author.id not in node_indexes:
-            rv["nodes"].append(ident_item(t.author))
-            node_indexes[t.author.id] = i
+        if t.mindset.author.id not in node_indexes:
+            rv["nodes"].append(ident_item(t.mindset.author))
+            node_indexes[t.mindset.author.id] = i
             try:
-                del idents[t.author.id]
+                del idents[t.mindset.author.id]
             except KeyError:
                 pass
             i += 1
 
         rv["links"].append({"source": node_indexes[t.id],
-            "target": node_indexes[t.author.id]})
+            "target": node_indexes[t.mindset.author.id]})
 
-        for t_blog in t.author.blog.index:
+        for t_blog in t.mindset.author.blog.index:
             if t_blog != t:
                 if t_blog.id not in node_indexes:
                     rv["nodes"].append(thought_item(t_blog))
                     node_indexes[t_blog.id] = i
                     i += 1
 
-                rv["links"].append({"target": node_indexes[t.author.id],
+                rv["links"].append({"target": node_indexes[t.mindset.author.id],
                     "source": node_indexes[t_blog.id]})
 
     for m in idents.values():

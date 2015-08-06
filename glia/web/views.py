@@ -365,6 +365,7 @@ def help(page):
 # )
 def index():
     """Front page"""
+    cache.clear()
     movementform = CreateMovementForm()
 
     # Determine content source
@@ -380,14 +381,10 @@ def index():
             .filter(Movement.id.in_(
                 current_user.active_persona.suggested_movements()))
 
-        mindspaces = set()
-        blogs = set()
-        for ident in current_user.active_persona.blogs_followed:
-            mindspaces.add(ident.mindspace.id)
-            blogs.add(ident.blog.id)
+        sources = current_user.active_persona.frontpage_sources()
 
         top_main = reorder(Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source=blogs))))
+            Thought.top_thought(source=sources, filter_blogged=True))))
         top_global = reorder(Thought.query.filter(Thought.id.in_(
             Thought.top_thought(source="blog"))))
 

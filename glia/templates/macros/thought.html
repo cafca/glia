@@ -101,7 +101,7 @@
 
 
 
-{% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote=None, labels=None) %}
+{% macro thought_line(thought, controlled_personas, truncate=True, no_percepts=False, promote=None, labels=None, show_source=False) %}
 {% if thought|authorize("read") %}
 <!-- THOUGHT {{thought.id}} -->
 <div class="rk-thought rk-thought-line rk-thought-{{ thought.id }} clearfix">
@@ -136,6 +136,12 @@
       <a class="btn btn-xs btn-link" href="{{ thought.author.get_absolute_url() }}">
         {{ id_macros.identity(thought.author, nolink=True) }}
       </a>
+
+      {% if show_source %}
+      <a class="btn btn-xs btn-link" href="{{ thought.mindset.get_absolute_url() }}">
+        in {{ thought.mindset.name }}
+      </a>
+      {% endif %}
     </div>
 
     {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
