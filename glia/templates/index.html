@@ -23,7 +23,11 @@
         {% if loop.first %}
           {{ thought_macros.thought_lead(t, controlled_personas) }}
         {% else %}
+          {% if t.mindset.kind == "blog" %}
           {{ thought_macros.thought_line(t, controlled_personas, truncate=True) }}
+          {% else %}
+          {{ thought_macros.thought_line(t, controlled_personas, show_source=True, truncate=True) }}
+          {% endif %}
         {% endif %}
     {% else %}
       <h1>Your followed movements all have empty blogs</h1>
