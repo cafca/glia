@@ -365,7 +365,6 @@ def help(page):
 # )
 def index():
     """Front page"""
-    cache.clear()
     movementform = CreateMovementForm()
 
     # Determine content source
