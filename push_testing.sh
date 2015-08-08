@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "Will push Nucleus to origin"
+read
 cd nucleus &&
 git push &&
 cd - &&
