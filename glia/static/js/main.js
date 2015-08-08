@@ -468,5 +468,11 @@ $(document).ready(function(){
             );
 
         });
+
+        // AMPLITUDE
+
+        $(".rk-activate-persona").click(function() {
+            amplitude.logEvent("activate_persona");
+        })
     });
 });

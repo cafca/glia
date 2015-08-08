@@ -87,7 +87,7 @@
                 </li>
 
               {% else %}
-              <li><a href="{{ url_for('web.activate_persona', id=p.id) }}">
+              <li><a class="rk-activate-persona" href="{{ url_for('web.activate_persona', id=p.id) }}">
                 {{ id_macros.persona(p, nolink=True) }}
                 {% if p.notification_list()|length > 0 %}
                 <span class="badge">{{ p.notification_list()|length }}</span>
