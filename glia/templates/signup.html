@@ -27,6 +27,7 @@ $(document).ready(function() {
 
   $(".rk-signup-form").submit(function() {
     $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+    amplitude.logEvent("signup_form_send");
   });
 
   $('.input_helper').popover({

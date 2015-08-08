@@ -174,7 +174,7 @@ $(document).ready(function(){
         var $form = $(".rk-thought-"+thought_id+" .rk-create");
         $form.css("display", "block");
         $form.find("textarea").focus();
-        amplitude.logEvent("REPLY_OPEN");
+        amplitude.logEvent("reply_open");
     }
 
     function get_chat_height() {
@@ -197,7 +197,7 @@ $(document).ready(function(){
         logged_in();
         console.log("Voting Thought "+thought_id);
         socket.emit('vote_request', {'thought_id': thought_id});
-        amplitude.logEvent("VOTE");
+        amplitude.logEvent("vote");
     }
 
     function notification(title, message) {
@@ -232,7 +232,7 @@ $(document).ready(function(){
                     $("#rk-chat-lines .truncate-toggle").unbind("click");
                     $("#rk-chat-lines .truncate-toggle").click(function() {
                         $(this).parent().toggleClass("truncate-disable");
-                        amplitude.logEvent("TRUNCATE_TOGGLE");
+                        amplitude.logEvent("truncate_toggle");
                     });
                 });
                 hide_truncate_toggles();
@@ -314,9 +314,9 @@ $(document).ready(function(){
                 });
                 clear();
                 event.preventDefault();
-                amplitude.logEvent("CREATE_ASYNC");
+                amplitude.logEvent("create_thought_async");
             }
-            amplitude.logEvent("CREATE");
+            amplitude.logEvent("create_thought");
         });
 
         $('.rk-create-text').each(function(index, obj) {
@@ -339,7 +339,7 @@ $(document).ready(function(){
                         .toggleClass("btn-primary")
                         .toggleClass("btn-default");
                     form.find(".rk-create-extend").toggle("highlight");
-                    amplitude.logEvent("CREATE_OVER_COUNT");
+                    amplitude.logEvent("create_thought_over_count");
                 },
                 onSafeCount:        function(count, countable, counter){
                     form = countable.closest(".rk-create");
@@ -371,7 +371,7 @@ $(document).ready(function(){
             var $top_line = $('#rk-chat-lines li:nth-child(2)');
             data = load_more_chatlines();
             $('#rk-chat-lines').scrollTop($top_line.offset().top - 150);
-            amplitude.logEvent("CHAT_LOAD_MORE");
+            amplitude.logEvent("chat_load_more");
             return false;
         })
 
@@ -388,7 +388,7 @@ $(document).ready(function(){
             $(this).button('loading');
             $.post($(this).data("href"))
                 .done(function (data) {
-                    amplitude.logEvent("TOGGLE_FOLLOWING");
+                    amplitude.logEvent("toggle_following");
                     location.reload();
                 })
                 .error(function(data) {
@@ -403,7 +403,7 @@ $(document).ready(function(){
             var $caller = $(this);
             $.post($(this).data("href"))
                 .done(function (data) {
-                    amplitude.logEvent("TOGGLE_MEMBERSHIP");
+                    amplitude.logEvent("toggle_membership");
                     if ($caller.data('reload-me') == "prettyplease") {
                         location.reload();
                     } else {
@@ -450,7 +450,7 @@ $(document).ready(function(){
             }, function(data) {
                 if (data.status == "success") {
                     notification("Repost", data.responseJSON["message"]);
-                    amplitude.logEvent("REPOST");
+                    amplitude.logEvent("repost");
                 }
             });
             $btn.button('success');
