@@ -1,4 +1,7 @@
 #!/bin/bash
+cd nucleus &&
+git push &&
+cd - &&
 git checkout master &&
 git merge dev &&
 git push heroku master &&
