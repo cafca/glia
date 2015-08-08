@@ -56,7 +56,7 @@ except IOError:
 # Set secret key
 try:
     with open('secret_key', 'rb') as f:
-        SECRET_KEY = f.read()
+        SECRET_KEY = f.read().strip()
 except IOError:
     SECRET_KEY = os.urandom(24)
     with open('secret_key', 'wb') as f:
@@ -65,7 +65,7 @@ except IOError:
 # Get sendgrid credentials
 try:
     with open('sendgrid.auth', 'r') as f:
-        sg_auth = f.read()
+        sg_auth = f.read().strip()
 except IOError:
     logging.warning("""Sendgrid configuration could not be read. Please create
         ./sendgrid.auth file with contents 'username:password'.""")
@@ -74,6 +74,12 @@ else:
 
 try:
     with open("slack_webhook.auth", "r") as f:
-        SLACK_WEBHOOK = f.read()
+        SLACK_WEBHOOK = f.read().strip()
 except IOError:
     logging.warning("Slack webhook not configured")
+
+try:
+    with open("amplitude.auth", "r") as f:
+        AMPLITUDE_API_KEY = f.read().strip()
+except IOError:
+    logging.warning("Amplitude API key not configured")

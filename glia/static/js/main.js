@@ -174,6 +174,7 @@ $(document).ready(function(){
         var $form = $(".rk-thought-"+thought_id+" .rk-create");
         $form.css("display", "block");
         $form.find("textarea").focus();
+        amplitude.logEvent("REPLY_OPEN");
     }
 
     function get_chat_height() {
@@ -196,6 +197,7 @@ $(document).ready(function(){
         logged_in();
         console.log("Voting Thought "+thought_id);
         socket.emit('vote_request', {'thought_id': thought_id});
+        amplitude.logEvent("VOTE");
     }
 
     function notification(title, message) {
@@ -223,10 +225,14 @@ $(document).ready(function(){
                     scroll(0);
                     $('#rk-chat-more-button').button('reset');
                     $(".upvote").unbind("click");
-                    $(".upvote").click(function () {request_upvote(this.dataset.id); return false;});
+                    $(".upvote").click(function () {
+                        request_upvote(this.dataset.id);
+                        return false;
+                    });
                     $("#rk-chat-lines .truncate-toggle").unbind("click");
                     $("#rk-chat-lines .truncate-toggle").click(function() {
                         $(this).parent().toggleClass("truncate-disable");
+                        amplitude.logEvent("TRUNCATE_TOGGLE");
                     });
                 });
                 hide_truncate_toggles();
@@ -308,7 +314,9 @@ $(document).ready(function(){
                 });
                 clear();
                 event.preventDefault();
+                amplitude.logEvent("CREATE_ASYNC");
             }
+            amplitude.logEvent("CREATE");
         });
 
         $('.rk-create-text').each(function(index, obj) {
@@ -331,6 +339,7 @@ $(document).ready(function(){
                         .toggleClass("btn-primary")
                         .toggleClass("btn-default");
                     form.find(".rk-create-extend").toggle("highlight");
+                    amplitude.logEvent("CREATE_OVER_COUNT");
                 },
                 onSafeCount:        function(count, countable, counter){
                     form = countable.closest(".rk-create");
@@ -362,6 +371,7 @@ $(document).ready(function(){
             var $top_line = $('#rk-chat-lines li:nth-child(2)');
             data = load_more_chatlines();
             $('#rk-chat-lines').scrollTop($top_line.offset().top - 150);
+            amplitude.logEvent("CHAT_LOAD_MORE");
             return false;
         })
 
@@ -378,6 +388,7 @@ $(document).ready(function(){
             $(this).button('loading');
             $.post($(this).data("href"))
                 .done(function (data) {
+                    amplitude.logEvent("TOGGLE_FOLLOWING");
                     location.reload();
                 })
                 .error(function(data) {
@@ -392,6 +403,7 @@ $(document).ready(function(){
             var $caller = $(this);
             $.post($(this).data("href"))
                 .done(function (data) {
+                    amplitude.logEvent("TOGGLE_MEMBERSHIP");
                     if ($caller.data('reload-me') == "prettyplease") {
                         location.reload();
                     } else {
@@ -438,6 +450,7 @@ $(document).ready(function(){
             }, function(data) {
                 if (data.status == "success") {
                     notification("Repost", data.responseJSON["message"]);
+                    amplitude.logEvent("REPOST");
                 }
             });
             $btn.button('success');

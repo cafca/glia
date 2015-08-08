@@ -37,3 +37,5 @@ SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
 
 # Slack webhook is used to send some logging messages to Slack
 SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK", None)
+
+AMPLITUDE_API_KEY = os.getenv("AMPLITUDE_API_KEY", None)
