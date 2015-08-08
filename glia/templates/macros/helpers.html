@@ -55,9 +55,9 @@
       </form>
       <!-- Welcome actions -->
       <div class="form-inline" id="rk-welcome-actions">
-        <a class="btn btn-danger" href="{{ url_for('web.signup') }}">Signup now</a>
+        <a class="btn btn-danger" id="rk-welcome-signup" href="{{ url_for('web.signup') }}">Signup now</a>
         <button class="btn btn-default" id="rk-welcome-show-login">I have a login</button>
-        <a class="btn btn-link" href="/thought/5a59e2c190b74cf896e00bb3c8d764a4/">Learn more about Rktik</a>
+        <a class="btn btn-link" id="rk-welcome-learn-more" href="/thought/5a59e2c190b74cf896e00bb3c8d764a4/">Learn more about Rktik</a>
       </div>
     </div>
     {% endif %}

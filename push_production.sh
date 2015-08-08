@@ -1,4 +1,9 @@
 #!/bin/bash
+echo "Will push Nucleus to origin"
+read
+cd nucleus &&
+git push &&
+cd - &&
 git checkout master &&
 git merge dev &&
 git push heroku master &&

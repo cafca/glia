@@ -13,6 +13,7 @@ import os
 import pytz
 import sendgrid
 
+from datetime import datetime, timedelta
 from flask import render_template, request
 from flask.ext.login import current_user
 from hashlib import sha256
@@ -148,7 +149,10 @@ def generate_graph(thoughts, idents=None):
         rv["links"].append({"source": node_indexes[t.id],
             "target": node_indexes[t.mindset.author.id]})
 
-        for t_blog in t.mindset.author.blog.index:
+        additional_not_on_frontpage = t.mindset.author.blog.index \
+            .filter(Thought.created > (datetime.utcnow() - timedelta(days=7)))
+
+        for t_blog in additional_not_on_frontpage:
             if t_blog != t:
                 if t_blog.id not in node_indexes:
                     rv["nodes"].append(thought_item(t_blog))

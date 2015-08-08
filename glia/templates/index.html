@@ -12,6 +12,26 @@
 <script src="{{ url_for('static', filename='js/graph.js') }}"></script>
 {% endblock %}
 
+{% block script %}
+$(document).ready(function() {
+  // Welcome banner
+  $("#rk-welcome-signup").click(function() {
+    amplitude.logEvent("welcome_banner_signup");
+  });
+  $("#rk-welcome-show-login").click(function() {
+    amplitude.logEvent("welcome_banner_login_toggle");
+  });
+  $("#rk-welcome-learn-more").click(function() {
+    amplitude.logEvent("welcome_banner_learn_more");
+  });
+
+  // Graph
+  $(".rk-graph").click(function() {
+    amplitude.logEvent("graph_click", {href: $(this).parent().attr("href")});
+  })
+});
+{% endblock %}
+
 {% block content %}
 <div class="row" id="rk-index">
     <div class="rk-frontpage col-sm-7 col-sm-push-1">
