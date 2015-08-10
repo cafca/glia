@@ -53,12 +53,17 @@
           <!-- Persona/Groups menu -->
           <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
             <ul class="nav navbar-nav">
+              {% if current_user.is_anonymous() %}
+              <p class="navbar-text">
+                <span class="badge" style="background-color: #0b3954">&nbsp;</span>
+              </p>
+              {% else %}
               <li class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                   {% if active_persona.notification_list()|length > 0 %}
                   <span class="badge" style="background-color: #c81d25">{{ active_persona.notification_list()|length }}</span>
                   {% else %}
-                  <span class="badge" style="background-color: #0b3954">{{ active_persona.notification_list()|length }}</span>
+                  <span class="badge" style="background-color: #0b3954">0</span>
                   {% endif %}
                 </a>
 
@@ -80,17 +85,22 @@
                     </li>
                 </ul>
               </li>
+              {% endif %}
+
               <li class="{% if request.path == '/' %}active{% endif %}"><a href="{{ url_for('web.index') }}">
                 Mind
+              </a></li>
+              <li class="{% if request.path == url_for('web.movement_list') %}active{% endif %}">
+                <a href="{{ url_for('web.movement_list') }}">Movements</a>
+              </li>
+              {% if not current_user.is_anonymous() %}
+              <li class="{% if request.path == url_for('web.persona_blog', id=active_persona.id) %}active{% endif %}"><a id="rk-view-blog" href="{{ url_for('web.persona_blog', id=active_persona.id) }}">
+                {{ active_persona.username }} Blog
               </a></li>
               <li class="{% if request.path == url_for('web.notebook') %}active{% endif %}"><a class="rk-view-notebook" href="{{ url_for('web.notebook') }}">
                 Notebook
               </a></li>
-              <li class="{% if request.path == url_for('web.persona_blog', id=active_persona.id) %}active{% endif %}"><a id="rk-view-blog" href="{{ url_for('web.persona_blog', id=active_persona.id) }}">
-                {{ active_persona.username }} Blog
-              </a></li>
-
-
+              {% endif %}
             </ul>
 
             <!-- Toolbox -->
@@ -150,9 +160,6 @@
                 <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
               </li>
             {% endfor %}
-            <li>
-              <a href="{{ url_for('web.movement_list') }}"><i class="fa fa-caret-right"></i> All movements</a>
-            </li>
           </ul>
         </div>
       </nav>
