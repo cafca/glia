@@ -51,7 +51,9 @@ $(document).ready(function() {
       <div class="panel-body rk-movement-info">
         <div class="form-group">
         {% if movement.active_member() %}
-          <a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=movement.mindspace.id) }}">Create Thought</a>
+          <a class="btn btn-primary" href="{{ url_for('web.create_thought', mindset=movement.mindspace.id) }}">
+            <i class="fa fa-pencil-square"></i> Create Thought
+          </a>
         {% endif %}
 
         {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
