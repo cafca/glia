@@ -25,6 +25,8 @@ $(document).ready(function() {
     },
   });
   {% endif %}
+
+  amplitude.logEvent("view_persona, {id: "{{ persona.id }}", username: "{{ persona.username }}"});
 });
 {% endblock %}
 

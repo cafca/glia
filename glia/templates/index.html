@@ -25,6 +25,8 @@ $(document).ready(function() {
     amplitude.logEvent("welcome_banner_learn_more");
   });
 
+  amplitude.logEvent("view_frontpage");
+
   // Graph
   $(".rk-graph").click(function() {
     amplitude.logEvent("graph_click", {href: $(this).parent().attr("href")});

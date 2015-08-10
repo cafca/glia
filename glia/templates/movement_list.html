@@ -3,6 +3,12 @@
 {% import "macros/movement.html" as movement_macros %}
 {% import "macros/identity.html" as id_macros %}
 
+{% block script %}
+$(document).ready(function() {
+  amplitude.logEvent("view_movement_list");
+});
+{% endblock %}
+
 {% block content %}
 <div class="col-sm-10 col-sm-push-1">
     <h1>Movements</h1>

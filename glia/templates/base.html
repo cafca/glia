@@ -288,10 +288,13 @@
 
       amplitude.init('{{ config.get("AMPLITUDE_API_KEY") }}');
 
-      {% if not current_user.is_anonymous() %}
+      {% if current_user.is_anonymous() %}
+      amplitude.setUserProperties({anonymous: true});
+      {% else %}
 
       var userProperties = {};
       userProperties.active_persona = "{{ current_user.active_persona.id }}";
+      userProperties.anonymous = false;
       amplitude.setUserProperties(userProperties);
       amplitude.setUserId('{{ current_user.id }}');
 

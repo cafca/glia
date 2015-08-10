@@ -44,6 +44,12 @@ $(document).ready(function() {
     disabled: {% if thought.author == active_persona %}false{% else %}true{% endif %}
   });
   {% endif %}
+
+  amplitude.logEvent("view_thought", {id: "{{ thought.id }}", title: "{{ thought.text.encode('utf-8') }}"});
+
+  $("#rk-edit-thought-button").click(function() {
+    amplitude.logEvent("edit_thought_view", {id: "{{ thought.id }}", title: "{{ thought.text.encode('utf-8') }}"});
+  });
 });
 {% endblock %}
 
@@ -140,7 +146,7 @@ $(document).ready(function() {
           {{ thought_macros.repost_button(thought) }}
 
           {% if thought.authorize("update", active_persona.id) %}
-            <a class="btn btn-default" href="{{ url_for('web.edit_thought', id=thought.id) }}"><i class="fa fa-pencil"></i>
+            <a id="rk-edit-thought-button" class="btn btn-default" href="{{ url_for('web.edit_thought', id=thought.id) }}"><i class="fa fa-pencil"></i>
  Edit</a>
           {% endif %}
 
