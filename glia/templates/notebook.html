@@ -35,24 +35,8 @@ $(document).ready(function() {
     {% if conversations and conversations|length > 0 %}
     <div class="rk-toc panel panel-default">
       <div class="panel-body">
-        <p>Your notebook is a secret place. Keep your thoughts in it by sending them from this page. You can also repost any other thought in Rktik to your notebook using the repost button. </p>
+        <p>Your notebook is a secret place. Keep your thoughts in it by sending them from this page. You can also repost any other thought in Rktik to your notebook using the repost button.</p>
       </div>
-      <div class="panel-body">
-        <h3><i class="fa fa-envelope-o"></i> Your conversations in Rktik</h3>
-        <hr />
-      </div>
-      <ul class="rk-toc-list list-group">
-        {% for c in conversations %}
-          <a href="{{ url_for('web.persona', id=c.persona_id) }}">
-            <li class="list-group-item">
-              {{ c.persona_username }}
-              {% if c.modified %}
-              <small>{{ c.modified|localtime|naturaltime }}</small>
-              {% endif %}
-            </li>
-          </a>
-        {% endfor %}
-      </ul>
     </div> <!-- ./ conversations -->
     {% endif %}
 
