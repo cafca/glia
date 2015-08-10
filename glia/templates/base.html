@@ -58,7 +58,7 @@
                   {% if active_persona.notification_list()|length > 0 %}
                   <span class="badge" style="background-color: #c81d25">{{ active_persona.notification_list()|length }}</span>
                   {% else %}
-                  <span class="badge" style="background-color: #c81d25">{{ active_persona.notification_list()|length }}</span>
+                  <span class="badge" style="background-color: #0b3954">{{ active_persona.notification_list()|length }}</span>
                   {% endif %}
                 </a>
 
@@ -83,7 +83,7 @@
               <li class="{% if request.path == '/' %}active{% endif %}"><a class="rk-activate-persona" href="{{ url_for('web.index') }}">
                 Mind
               </a></li>
-              <li class="{% if request.path == url_for('web.persona', id=active_persona.id) %}active{% endif %}"><a class="rk-activate-persona" href="{{ url_for('web.persona', id=active_persona.id) }}">
+              <li class="{% if request.path == url_for('web.notebook') %}active{% endif %}"><a class="rk-activate-persona" href="{{ url_for('web.notebook') }}">
                 Notebook
               </a></li>
               <li class="{% if request.path == url_for('web.persona_blog', id=active_persona.id) %}active{% endif %}"><a id="rk-view-blog" href="{{ url_for('web.persona_blog', id=active_persona.id) }}">
@@ -140,7 +140,7 @@
           {% if not current_user.is_anonymous() %}
           <div class="navbar-header">
             <a class="navbar-brand rk-tooltip" data-toggle="tooltip" data-placement="bottom" title="This number measures atention you get. Be nice and submit cool stuff to make it rise.">
-              <i class="fa fa-eye"></i> <strong>{{current_user.active_persona.attention}}</strong>
+              <i class="fa fa-bolt"></i> <strong>{{current_user.active_persona.attention}}</strong>
             </a>
           </div>
           {% endif %}

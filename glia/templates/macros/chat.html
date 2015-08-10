@@ -7,9 +7,9 @@
 {% if thought.parent %}
     <li class="list-group-item rk-chatline-meta">
       {% if thought.parent|authorize("read") %}
-        <em>Comment on</em> {{ thought_macros.short(thought.parent) }}
+        <em>Reaction to</em> {{ thought_macros.short(thought.parent) }}
       {% else %}
-        <em>Comment on private thought</em>
+        <em>Reaction to private thought</em>
       {% endif %}
     </li>
 

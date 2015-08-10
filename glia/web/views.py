@@ -583,6 +583,14 @@ def movements(id=None):
     return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
+@app.route('/notebook', methods=["GET"])
+@login_required
+def notebook():
+    chat = current_user.active_persona.mindspace
+    conversations = current_user.active_persona.conversation_list()
+    return render_template("notebook.html", chat=chat, conversations=conversations)
+
+
 @app.route('/notifications', methods=["GET", "POST"])
 @app.route('/notifications/page-<page>', methods=["GET", "POST"])
 @login_required
@@ -630,7 +638,7 @@ def persona(id):
     if current_user.is_anonymous():
         chat = None
     elif persona == cp:
-        chat = cp.mindspace
+        chat = None
         convs = cp.conversation_list()
         followed = cp.blogs_followed
     else:

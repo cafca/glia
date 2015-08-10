@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% import "macros/chat.html" as chat_macros %}
+{% import "macros/thought.html" as thought_macros %}
+{% import "macros/identity.html" as id_macros with context %}
+{% import "macros/movement.html" as movement_macros %}
+
+{% block script %}
+window.room_id = "{{ chat.id }}";
+window.map_id = "{{ chat.id }}";
+window.admin_id = "{{ current_user.active_persona.id }}";
+
+$(document).ready(function() {
+
+});
+{% endblock %}
+
+{% block content %}
+<section class="row">
+  <div class="col-sm-11 col-sm-offset-1">
+    <h1>Notebook</h1>
+  </div>
+  <div class="rk-persona col-sm-5 col-sm-offset-1">
+    <div class="rk-chat panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ current_user.active_persona.username }} Mindspace
+        <small><em>Only you can see messages in here</em></small></h3>
+      </div>
+
+      {{ chat_macros.chat(chat) }}
+    </div> <!-- ./ chat -->
+  </div> <!-- ./ chat column -->
+
+  <div class="col-sm-4">
+    {% if conversations and conversations|length > 0 %}
+    <div class="rk-toc panel panel-default">
+      <div class="panel-body">
+        <p>Your notebook is a secret place. Keep your thoughts in it by sending them from this page. You can also repost any other thought in Rktik to your notebook using the repost button. </p>
+      </div>
+      <div class="panel-body">
+        <h3><i class="fa fa-envelope-o"></i> Your conversations in Rktik</h3>
+        <hr />
+      </div>
+      <ul class="rk-toc-list list-group">
+        {% for c in conversations %}
+          <a href="{{ url_for('web.persona', id=c.persona_id) }}">
+            <li class="list-group-item">
+              {{ c.persona_username }}
+              {% if c.modified %}
+              <small>{{ c.modified|localtime|naturaltime }}</small>
+              {% endif %}
+            </li>
+          </a>
+        {% endfor %}
+      </ul>
+    </div> <!-- ./ conversations -->
+    {% endif %}
+
+</section>
+
+{% endblock %}
