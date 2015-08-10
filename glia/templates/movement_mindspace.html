@@ -20,6 +20,9 @@ $(document).ready(function() {
        'placement': 'right',
        'title': "When this Thought has received {{ movement.required_votes() }} votes it will be promoted to the movement blog"
   });
+
+  amplitude.logEvent("movement_mindspace_view", {id: "{{ movement.id }}", username: "{{ movement.username }}"});
+
 });
 {% endblock %}
 

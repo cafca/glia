@@ -12,6 +12,10 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.movement_id = "{{  persona.id }}";
 window.admin_id = "{{ persona.id }}";
+
+$(document).ready(function() {
+  amplitude.logEvent("view_persona_blog, {id: "{{ persona.id }}", username: "{{ persona.username }}"});
+});
 {% endblock %}
 
 {% block content %}
