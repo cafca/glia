@@ -11,7 +11,9 @@ window.map_id = "{{ chat.id }}";
 window.admin_id = "{{ current_user.active_persona.id }}";
 
 $(document).ready(function() {
-
+  $(".rk-create").submit(function() {
+    amplitude.logEvent("create_notebook_thought");
+  });
 });
 {% endblock %}
 

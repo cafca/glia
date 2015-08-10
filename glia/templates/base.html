@@ -80,10 +80,10 @@
                     </li>
                 </ul>
               </li>
-              <li class="{% if request.path == '/' %}active{% endif %}"><a class="rk-activate-persona" href="{{ url_for('web.index') }}">
+              <li class="{% if request.path == '/' %}active{% endif %}"><a href="{{ url_for('web.index') }}">
                 Mind
               </a></li>
-              <li class="{% if request.path == url_for('web.notebook') %}active{% endif %}"><a class="rk-activate-persona" href="{{ url_for('web.notebook') }}">
+              <li class="{% if request.path == url_for('web.notebook') %}active{% endif %}"><a class="rk-view-notebook" href="{{ url_for('web.notebook') }}">
                 Notebook
               </a></li>
               <li class="{% if request.path == url_for('web.persona_blog', id=active_persona.id) %}active{% endif %}"><a id="rk-view-blog" href="{{ url_for('web.persona_blog', id=active_persona.id) }}">
@@ -106,7 +106,7 @@
 
                 <ul class="dropdown-menu rk-switch-persona" role="menu">
                   {% for p in current_user.associations|sort(attribute='created') %}
-                    <li><a class="rk-switch-persona" href="{{ url_for('web.activate_persona', id=p.id) }}">{{ id_macros.persona(p, nolink=True) }}
+                    <li><a class="rk-activate-persona" href="{{ url_for('web.activate_persona', id=p.id) }}">{{ id_macros.persona(p, nolink=True) }}
                     {% if p.notification_list()|length > 0 %}
                     <span class="badge" style="background-color: #c81d25">{{ p.notification_list()|length }}</span>
                     {% endif %}

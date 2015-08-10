@@ -474,5 +474,11 @@ $(document).ready(function(){
         $(".rk-activate-persona").click(function() {
             amplitude.logEvent("activate_persona");
         })
+        $(".rk-view-blog").click(function() {
+            amplitude.logEvent("view_personal_blog");
+        })
+        $(".rk-view-notebook").click(function() {
+            amplitude.logEvent("view_notebook");
+        })
     });
 });
