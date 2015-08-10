@@ -21,7 +21,7 @@ window.admin_id = "{{ persona.id }}";
       <h1>{{ persona.username }}</h1>
       <p>Personal Blog</p>
       {{ id_macros.follow_toggle(persona, current_user.active_persona, size="lg") }}
-      <a class="btn btn-lg btn-primary" href="{{ url_for('web.persona', id=persona.id) }}">Visit mindspace</a>
+      <a class="btn btn-lg {% if persona.color != '0b3954' %}btn-primary{% else %}btn-default{% endif %}" href="{{ url_for('web.persona', id=persona.id) }}">Visit mindspace</a>
     </div>
 
     {% for thought in thoughts.items %}
