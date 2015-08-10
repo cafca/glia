@@ -588,7 +588,9 @@ def movements(id=None):
 def notebook():
     chat = current_user.active_persona.mindspace
     conversations = current_user.active_persona.conversation_list()
-    return render_template("notebook.html", chat=chat, conversations=conversations)
+    marked_thoughts = chat.index.filter(Thought._upvotes > 0).order_by(Thought.created.desc())
+    return render_template("notebook.html", chat=chat,
+        conversations=conversations, marked_thoughts=marked_thoughts)
 
 
 @app.route('/notifications', methods=["GET", "POST"])

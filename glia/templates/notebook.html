@@ -32,13 +32,28 @@ $(document).ready(function() {
   </div> <!-- ./ chat column -->
 
   <div class="col-sm-4">
-    {% if conversations and conversations|length > 0 %}
     <div class="rk-toc panel panel-default">
+    {% if marked_thoughts.count() == 0 %}
       <div class="panel-body">
-        <p>Your notebook is a secret place. Keep your thoughts in it by sending them from this page. You can also repost any other thought in Rktik to your notebook using the repost button.</p>
+        <p>Your notebook is a secret place. Keep your thoughts in it to let them grow and mature. You can also repost any other thought in Rktik to your notebook using the repost button.</p>
+        <p>Mark important Thoughts in your notebook by voting on them, they will go here, on the right.</p>
       </div>
-    </div> <!-- ./ conversations -->
+    {% else %}
+      <div class="panel-body rk-marked-thoughts">
+        <h3>Marked Thoughts</h3>
+        <ul class="list-group rk-toc-list">
+        {% for t in marked_thoughts %}
+          <a href="/thought/624e226b328441f0aa57c60f1a4d76b3/">
+            <li class="list-group-item">
+              {{ t.text }}
+               <small>{{ t.created|localtime|naturaltime }}</small>
+            </li>
+          </a>
+        {% endfor %}
+        </ul>
+      </div>
     {% endif %}
+    </div> <!-- ./ conversations -->
 
 </section>
 
