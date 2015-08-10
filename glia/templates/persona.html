@@ -42,7 +42,7 @@ $(document).ready(function() {
     <div class="rk-chat panel panel-default">
       <div class="panel-heading">
         {% if current_user.active_persona == persona %}
-        <h3 class="panel-title">{{ persona.username }} Personal Mindspace
+        <h3 class="panel-title">{{ persona.username }} Personal Notebook
         <small><em>Only you can see messages in here</em></small></h3>
         {% else %}
         <h3 class="panel-title">Private conversation with {{ persona.username }}</h3>
