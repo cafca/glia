@@ -42,7 +42,7 @@ class AnonymousPersona(object):
 
     class active_persona():
         id = None
-        username = "Anonymous"
+        username = "New User"
 
     def get_id(self):
         return None
