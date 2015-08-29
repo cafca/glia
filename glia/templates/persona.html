@@ -41,7 +41,7 @@ $(document).ready(function() {
       </div>
     </div>
     {% else %}
-      {% if chat %}
+      {% if chat != None %}
         <div class="rk-chat panel panel-default">
           <div class="panel-heading">
             {% if current_user.active_persona == persona %}
