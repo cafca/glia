@@ -27,12 +27,12 @@ $(document).ready(function() {
 
   $(".rk-new-attachment-toggle").click(function(e) {
     $(".rk-new-attachment").fadeToggle();
-    amplitude.logEvent("edit_thought_attachment_toggle", {id: "{{ thought.id }}", title: "{{ thought.text.encode('utf-8') }}"});
+    amplitude.logEvent("edit_thought_attachment_toggle", {id: "{{ thought.id }}", title: "{{ thought.text }}"});
     e.preventDefault();
   });
 
   $(".rk-edit").submit(function() {
-    amplitude.logEvent("edit_thought_submit", {id: "{{ thought.id }}", title: "{{ thought.text.encode('utf-8') }}"});
+    amplitude.logEvent("edit_thought_submit", {id: "{{ thought.id }}", title: "{{ thought.text }}"});
   });
 });
 {% endblock %}
