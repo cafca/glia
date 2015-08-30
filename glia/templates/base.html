@@ -307,6 +307,7 @@
 
       var userProperties = {};
       userProperties.active_persona = "{{ current_user.active_persona.id }}";
+      userProperties.active_persona_username = "{{ current_user.active_persona.username }}";
       userProperties.anonymous = false;
       amplitude.setUserProperties(userProperties);
       amplitude.setUserId('{{ current_user.id }}');

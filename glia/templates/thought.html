@@ -45,10 +45,10 @@ $(document).ready(function() {
   });
   {% endif %}
 
-  amplitude.logEvent("view_thought", {id: "{{ thought.id }}", title: "{{ thought.text.encode('utf-8') }}"});
+  amplitude.logEvent("view_thought", {id: "{{ thought.id }}", title: "{{ thought.text }}"});
 
   $("#rk-edit-thought-button").click(function() {
-    amplitude.logEvent("edit_thought_view", {id: "{{ thought.id }}", title: "{{ thought.text.encode('utf-8') }}"});
+    amplitude.logEvent("edit_thought_view", {id: "{{ thought.id }}", title: "{{ thought.text}}"});
   });
 });
 {% endblock %}
