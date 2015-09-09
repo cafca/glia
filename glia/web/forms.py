@@ -106,7 +106,7 @@ class CreatePersonaForm(Form):
 class CreateThoughtForm(Form):
     parent = HiddenField()
     mindset = HiddenField()
-    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
+    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=300)])
     longform = TextAreaField('Add more detail')
     lfsource = TextField('Source of longform (eg. website URL)', [validators.Length(max=128)])
 
@@ -124,7 +124,7 @@ class CreateThoughtForm(Form):
 
 
 class EditThoughtForm(Form):
-    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=140)])
+    text = TextField('Enter text', [validators.Required(), validators.Length(min=1, max=300)])
     longform = TextAreaField('Add more detail')
     lfsource = TextField('Source of longform (eg. website URL)', [validators.Length(max=128)])
     delete_attachments = SelectMultipleField("Delete attachments")
