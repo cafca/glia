@@ -324,7 +324,7 @@ $(document).ready(function(){
             $(obj).simplyCountable({
                 counter:            ":parent:parent .rk-create-counter",
                 countType:          'characters',
-                maxCount:           140,
+                maxCount:           300,
                 strictMax:          false,
                 countDirection:     'down',
                 safeClass:          'safe',

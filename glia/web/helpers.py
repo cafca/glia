@@ -20,6 +20,7 @@ from hashlib import sha256
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload, lazyload
 
 from nucleus.nucleus import ExecutionTimer
 from nucleus.nucleus.database import cache
@@ -94,7 +95,9 @@ def generate_graph(thoughts, idents=None):
     if not isinstance(idents, dict):
         if current_user.is_anonymous():
             idents = {m.id: m for m in Movement.query
-                .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))}
+                .filter(Movement.id.in_(
+                    [m['id'] for m in Movement.top_movements()]))
+                .options(joinedload(Movement.blog))}
         else:
             idents = {m.id: m for m in current_user.active_persona.blogs_followed}
 

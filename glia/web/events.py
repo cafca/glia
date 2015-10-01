@@ -159,6 +159,8 @@ def repost(message):
                 db.session.add(mention)
                 db.session.add(notification)
 
+        parent_thought.update_comment_count(1)
+
         if parent_thought:
             notif = ReplyNotification(parent_thought=parent_thought, author=author,
                 url=url_for('web.thought', id=thought.id))
