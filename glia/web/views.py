@@ -260,8 +260,12 @@ def delete_thought(id=None):
     if form.validate_on_submit():
         if thought.state == -2:
             thought.set_state(0)
+            if thought.parent is not None:
+                thought.parent.update_comment_count(1)
         else:
             thought.set_state(-2)
+            if thought.parent is not None:
+                thought.parent.update_comment_count(-1)
 
         try:
             db.session.add(thought)
