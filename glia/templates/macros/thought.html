@@ -144,7 +144,7 @@
       {% endif %}
     </div>
 
-    {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
+    {% if no_percepts == False and thought.percept_assocs|length > 0 %}
     <!-- Attachments -->
     {{ percept_macros.render_all(thought, truncate=truncate) }}
     {% endif %}
@@ -192,7 +192,7 @@
       {% endif %}
     </div>
 
-    {% if no_percepts == False and thought.percept_assocs.count() > 0 %}
+    {% if no_percepts == False and thought.percept_assocs|length > 0 %}
     <!-- Attachments -->
     {{ percept_macros.render_all(thought, truncate=truncate) }}
     {% endif %}
