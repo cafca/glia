@@ -12,6 +12,7 @@ import os
 
 from blinker import Namespace
 from flask import Flask
+from flask.ext.compress import Compress
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager, current_user
 from flask.ext.misaka import Misaka
@@ -28,6 +29,7 @@ from glia.helpers import inject_mentions, gallery_col_width, sort_hot
 socketio = SocketIO()
 login_manager = LoginManager()
 notification_signals = Namespace()
+compress = Compress()
 
 
 def create_app(log_info=True):
@@ -103,6 +105,9 @@ def create_app(log_info=True):
     # Setup debug toolbar
     toolbar = DebugToolbarExtension()
     toolbar.init_app(app)
+
+    # Setup Gzip compression
+    compress.init_app(app)
 
     from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
