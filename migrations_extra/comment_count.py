@@ -11,7 +11,7 @@ from nucleus.nucleus.models import Thought
 
 
 def upgrade(logger):
-    thoughts = Thought.query.filter_by(kind="thought")
+    thoughts = Thought.query.filter_by(kind="thought").filter(Thought._comment_count == None)
     for t in thoughts:
         logger.info("Updated {} to comment count {}".format(t, t.comment_count()))
         db.session.add(t)
