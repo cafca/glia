@@ -10,6 +10,10 @@
 window.room_id = "{{ movement.blog_id }}";
 window.movement_id = "{{  movement.id }}";
 window.admin_id = "{{ movement.admin_id }}";
+
+$(document).ready(function() {
+  amplitude.logEvent("view_movement_blog, {id: "{{ movement.id }}", username: "{{ movement.username }}"});
+});
 {% endblock %}
 
 {% block content %}

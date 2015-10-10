@@ -53,52 +53,54 @@
           <!-- Persona/Groups menu -->
           <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
             <ul class="nav navbar-nav">
-            <!-- Link movements, sorted by identity, here -->
-            {% for p in current_user.associations|sort(attribute='created') %}
-
-              {% if p == current_user.active_persona %}
-                <li class="active dropdown">
-                  <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                    {{ id_macros.persona(p, nolink=True) }}
-                    {% if p.notification_list()|length > 0 %}
-                    <span class="badge">{{ p.notification_list()|length }}</span>
-                    {% endif %}
-                    <span class="caret"></span>
-                  </a>
-
-                  <ul class="dropdown-menu rk-notifications" role="menu">
-                    {% for notification in p.notification_list() %}
-                      <li class="rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
-                    {% else %}
-                      <li><a href="#">No unread notifications</a></li>
-                    {% endfor %}
-                    <li><a href="{{ url_for('web.notifications') }}"><i class="fa fa-caret-right"></i> All notifications</a></li>
-                    <li role="separator" class="divider visible-xs-block"></li>
-                      {% for m in nav_movements %}
-                        <li class="visible-xs-block{% if movement and movement.id == m.id %} active{% endif %}">
-                          <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
-                        </li>
-                      {% endfor %}
-                      <li class="visible-xs-block">
-                        <a href="{{ url_for('web.movement_list') }}"><i class="fa fa-caret-right"></i> All movements</a>
-                      </li>
-                  </ul>
-
-                </li>
-
+              {% if current_user.is_anonymous() %}
+              <p class="navbar-text">
+                <span class="badge" style="background-color: #0b3954">&nbsp;</span>
+              </p>
               {% else %}
-              <li><a class="rk-activate-persona" href="{{ url_for('web.activate_persona', id=p.id) }}">
-                {{ id_macros.persona(p, nolink=True) }}
-                {% if p.notification_list()|length > 0 %}
-                <span class="badge">{{ p.notification_list()|length }}</span>
-                {% endif %}
-              </a></li>
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                  {% if active_persona.notification_list()|length > 0 %}
+                  <span class="badge" style="background-color: #c81d25">{{ active_persona.notification_list()|length }}</span>
+                  {% else %}
+                  <span class="badge" style="background-color: #0b3954">0</span>
+                  {% endif %}
+                </a>
+
+                <ul class="dropdown-menu rk-notifications" role="menu">
+                  {% for notification in current_user.active_persona.notification_list() %}
+                    <li class="rk-notification-{{notification.domain}}"><a href="{{ notification.url|default('#', True) }}">{{ notification.text }}</a></li>
+                  {% else %}
+                    <li><a href="#">No unread notifications</a></li>
+                  {% endfor %}
+                  <li><a href="{{ url_for('web.notifications') }}"><i class="fa fa-caret-right"></i> All notifications</a></li>
+                  <li role="separator" class="divider visible-xs-block"></li>
+                    {% for m in nav_movements %}
+                      <li class="visible-xs-block{% if movement and movement.id == m.id %} active{% endif %}">
+                        <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
+                      </li>
+                    {% endfor %}
+                    <li class="visible-xs-block">
+                      <a href="{{ url_for('web.movement_list') }}"><i class="fa fa-caret-right"></i> All movements</a>
+                    </li>
+                </ul>
+              </li>
               {% endif %}
 
-            {% endfor %}
-            {% if not current_user.is_anonymous() %}
-              <li><a href="{{ url_for('web.create_persona') }}"web.><i class="fa fa-plus"></i> Add a new Persona</a></li>
-            {% endif %}
+              <li class="{% if request.path == '/' %}active{% endif %}"><a href="{{ url_for('web.index') }}">
+                Mind
+              </a></li>
+              <li class="{% if request.path == url_for('web.movement_list') %}active{% endif %}">
+                <a href="{{ url_for('web.movement_list') }}">Movements</a>
+              </li>
+              {% if not current_user.is_anonymous() %}
+              <li class="{% if request.path == url_for('web.persona_blog', id=active_persona.id) %}active{% endif %}"><a id="rk-view-blog" href="{{ url_for('web.persona_blog', id=active_persona.id) }}">
+                {{ active_persona.username }} Blog
+              </a></li>
+              <li class="{% if request.path == url_for('web.notebook') %}active{% endif %}"><a class="rk-view-notebook" href="{{ url_for('web.notebook') }}">
+                Notebook
+              </a></li>
+              {% endif %}
             </ul>
 
             <!-- Toolbox -->
@@ -106,13 +108,27 @@
               {% if current_user.is_anonymous() %}
               <li><a  href="{{ url_for('web.login') }}">Login &amp; Signup  </a></li>
               {% else %}
-              <li>
-                <a href="{{ url_for('web.persona', id=active_persona.id) }}">Your Mindspace</a>
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                  <i class="fa fa-sign-out"></i> Switch {{ active_persona.username }}
+                  <span class="caret"></span>
+                </a>
+
+                <ul class="dropdown-menu rk-switch-persona" role="menu">
+                  {% for p in current_user.associations|sort(attribute='created') %}
+                    <li><a class="rk-activate-persona" href="{{ url_for('web.activate_persona', id=p.id) }}">{{ id_macros.persona(p, nolink=True) }}
+                    {% if p.notification_list()|length > 0 %}
+                    <span class="badge" style="background-color: #c81d25">{{ p.notification_list()|length }}</span>
+                    {% endif %}
+                    </a></li>
+                  {% endfor %}
+                  <li><a href="{{ url_for('web.create_persona') }}"web.><i class="fa fa-plus"></i> Add a new Persona</a></li>
+                  <li role="separator" class="divider"></li>
+
+                  <li><a href="{{ url_for('.logout') }}">Logout</a></li>
+                </ul>
+
               </li>
-              <li>
-                <a href="{{ url_for('web.persona_blog', id=active_persona.id) }}">Your Blog</a>
-              </li>
-              <li><a href="{{ url_for('.logout') }}">Logout</a></li>
               {% endif %}
             </ul>
 
@@ -134,7 +150,7 @@
           {% if not current_user.is_anonymous() %}
           <div class="navbar-header">
             <a class="navbar-brand rk-tooltip" data-toggle="tooltip" data-placement="bottom" title="This number measures atention you get. Be nice and submit cool stuff to make it rise.">
-              <i class="fa fa-eye"></i> <strong>{{current_user.active_persona.attention}}</strong>
+              <i class="fa fa-bolt"></i> <strong>{{current_user.active_persona.attention}}</strong>
             </a>
           </div>
           {% endif %}
@@ -144,9 +160,6 @@
                 <a href="{{ url_for('web.movement', id=m.id) }}">{{m.username}}</a>
               </li>
             {% endfor %}
-            <li>
-              <a href="{{ url_for('web.movement_list') }}"><i class="fa fa-caret-right"></i> All movements</a>
-            </li>
           </ul>
         </div>
       </nav>
@@ -288,10 +301,14 @@
 
       amplitude.init('{{ config.get("AMPLITUDE_API_KEY") }}');
 
-      {% if not current_user.is_anonymous() %}
+      {% if current_user.is_anonymous() %}
+      amplitude.setUserProperties({anonymous: true});
+      {% else %}
 
       var userProperties = {};
       userProperties.active_persona = "{{ current_user.active_persona.id }}";
+      userProperties.active_persona_username = "{{ current_user.active_persona.username }}";
+      userProperties.anonymous = false;
       amplitude.setUserProperties(userProperties);
       amplitude.setUserId('{{ current_user.id }}');
 

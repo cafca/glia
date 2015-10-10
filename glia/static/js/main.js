@@ -290,6 +290,7 @@ $(document).ready(function(){
 
         $('.rk-create').submit(function(event) {
             logged_in();
+            var amplitudeProps = {}
 
             var $btn = $(this).find('.rk-create-submit');
             var $text = $(this).find('.rk-create-text').val();
@@ -314,16 +315,16 @@ $(document).ready(function(){
                 });
                 clear();
                 event.preventDefault();
-                amplitude.logEvent("create_thought_async");
+                amplitudeProps.async = true;
             }
-            amplitude.logEvent("create_thought");
+            amplitude.logEvent("create_thought", amplitudeProps);
         });
 
         $('.rk-create-text').each(function(index, obj) {
             $(obj).simplyCountable({
                 counter:            ":parent:parent .rk-create-counter",
                 countType:          'characters',
-                maxCount:           140,
+                maxCount:           300,
                 strictMax:          false,
                 countDirection:     'down',
                 safeClass:          'safe',
@@ -473,6 +474,12 @@ $(document).ready(function(){
 
         $(".rk-activate-persona").click(function() {
             amplitude.logEvent("activate_persona");
+        })
+        $(".rk-view-blog").click(function() {
+            amplitude.logEvent("view_personal_blog");
+        })
+        $(".rk-view-notebook").click(function() {
+            amplitude.logEvent("view_notebook");
         })
     });
 });

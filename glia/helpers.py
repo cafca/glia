@@ -42,7 +42,7 @@ class AnonymousPersona(object):
 
     class active_persona():
         id = None
-        username = "Anonymous"
+        username = "New User"
 
     def get_id(self):
         return None
@@ -101,7 +101,7 @@ def inject_mentions(eval_ctx, text, thought, nolink=False):
     env = Environment(loader=PackageLoader('glia', 'templates'))
     env.globals['url_for'] = url_for
     template = env.get_template('macros/identity.html')
-    mentions = [pa.percept for pa in thought.percept_assocs.all() if pa.percept.kind == "mention"]
+    mentions = [pa.percept for pa in thought.percept_assocs if pa.percept.kind == "mention"]
 
     for mention in mentions:
         if mention.identity.kind == "persona":

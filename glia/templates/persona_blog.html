@@ -12,6 +12,10 @@ window.user_id = "{{ current_user.active_persona.id }}";
 window.user_name = "{{  current_user.active_persona.username }}";
 window.movement_id = "{{  persona.id }}";
 window.admin_id = "{{ persona.id }}";
+
+$(document).ready(function() {
+  amplitude.logEvent("view_persona_blog, {id: "{{ persona.id }}", username: "{{ persona.username }}"});
+});
 {% endblock %}
 
 {% block content %}
@@ -21,7 +25,10 @@ window.admin_id = "{{ persona.id }}";
       <h1>{{ persona.username }}</h1>
       <p>Personal Blog</p>
       {{ id_macros.follow_toggle(persona, current_user.active_persona, size="lg") }}
-      <a class="btn btn-lg btn-primary" href="{{ url_for('web.persona', id=persona.id) }}">Visit mindspace</a>
+      {% if persona == active_persona %}
+      <a class="btn btn-lg {% if persona.color != '0b3954' %}btn-primary{% else %}btn-default{% endif %}" href="{{ url_for('web.create_thought', mindset=persona.blog_id) }}"><i class="fa fa-pencil-square"></i> Create Thought</a>
+      {% endif %}
+      <a class="btn btn-lg {% if persona.color != '0b3954' %}btn-primary{% else %}btn-default{% endif %}" href="{{ url_for('web.persona', id=persona.id) }}">Visit mindspace</a>
     </div>
 
     {% for thought in thoughts.items %}

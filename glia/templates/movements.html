@@ -9,22 +9,27 @@
 {% endblock %}
 
 {% block script %}
-$("#rk-colorpicker").spectrum({
-  showPaletteOnly: true,
-  showPalette:true,
-  flat: true,
-  showInput: true,
-  color: '#0B3954',
-  palette: [
-    {% for color in allowed_colors %}
-    '#{{ color }}',
-    {% endfor %}
-  ]
-});
+$(document).ready(function) {
+  $("#rk-colorpicker").spectrum({
+    showPaletteOnly: true,
+    showPalette:true,
+    flat: true,
+    showInput: true,
+    color: '#0B3954',
+    palette: [
+      {% for color in allowed_colors %}
+      '#{{ color }}',
+      {% endfor %}
+    ]
+  });
 
-$(".rk-movement-form").submit(function() {
-  $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
-});
+  amplitude.logEvent("create_movement_view");
+
+  $(".rk-movement-form").submit(function() {
+    $("#rk-colorpicker").val($("#rk-colorpicker").spectrum("get").toHex());
+    amplitude.logEvent("create_movement_submit");
+  });
+}
 {% endblock %}
 
 {% block content %}

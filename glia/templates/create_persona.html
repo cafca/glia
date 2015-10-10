@@ -35,7 +35,7 @@ $(".rk-signup-form").submit(function() {
 
 {% if movement %}
 <h1>Join movement <strong>{{ id_macros.movement(movement) }}</strong> as a new Persona</h1>
-{% else %}
+{% elif not current_user.is_anonymous() %}
 <h1>Add a new Persona to your account</h1>
 {% endif %}
 

@@ -20,4 +20,6 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 SESSION_EXPIRATION_TIME = datetime.timedelta(minutes=15)
 
+SEND_FILE_MAX_AGE_DEFAULT = 43200
+
 TIMEZONE = 'Europe/Berlin'

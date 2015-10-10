@@ -13,10 +13,12 @@ import traceback
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app, abort
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from flask.ext.sqlalchemy import get_debug_queries
 from jinja2.exceptions import TemplateNotFound
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import joinedload
 
 from . import app, VIEW_CACHE_TIMEOUT
 from .. import socketio
@@ -258,8 +260,12 @@ def delete_thought(id=None):
     if form.validate_on_submit():
         if thought.state == -2:
             thought.set_state(0)
+            if thought.parent is not None:
+                thought.parent.update_comment_count(1)
         else:
             thought.set_state(-2)
+            if thought.parent is not None:
+                thought.parent.update_comment_count(-1)
 
         try:
             db.session.add(thought)
@@ -382,10 +388,12 @@ def index():
 
         sources = current_user.active_persona.frontpage_sources()
 
-        top_main = reorder(Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source=sources, filter_blogged=True))))
-        top_global = reorder(Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source="blog"))))
+        top_main = reorder(Thought.query.filter(
+            Thought.id.in_(
+                Thought.top_thought(source=sources, filter_blogged=True))
+        ).options(joinedload('author').joinedload('percept_assocs')))
+
+        top_global = None
 
     recent = Thought.query.filter(Thought.id.in_(recent_thoughts())) \
         .order_by(Thought.created.desc()).all()
@@ -532,8 +540,9 @@ def movement_mindspace(id):
         .filter(Thought.id.in_(movement.mindspace_top_thought())))
     top_posts = list()
 
+    blog_index = [t.id for t in movement.blog.index]
     for candidate in thought_selection:
-        candidate.promote_target = None if candidate in movement.blog \
+        candidate.promote_target = None if candidate.id in blog_index \
             else movement
         if candidate.upvote_count() > 0:
             top_posts.append(candidate)
@@ -583,6 +592,16 @@ def movements(id=None):
     return render_template("movements.html", form=form, allowed_colors=ALLOWED_COLORS.keys())
 
 
+@app.route('/notebook', methods=["GET"])
+@login_required
+def notebook():
+    chat = current_user.active_persona.mindspace
+    conversations = current_user.active_persona.conversation_list()
+    marked_thoughts = chat.index.filter(Thought._upvotes > 0).order_by(Thought.created.desc())
+    return render_template("notebook.html", chat=chat,
+        conversations=conversations, marked_thoughts=marked_thoughts)
+
+
 @app.route('/notifications', methods=["GET", "POST"])
 @app.route('/notifications/page-<page>', methods=["GET", "POST"])
 @login_required
@@ -630,7 +649,7 @@ def persona(id):
     if current_user.is_anonymous():
         chat = None
     elif persona == cp:
-        chat = cp.mindspace
+        chat = None
         convs = cp.conversation_list()
         followed = cp.blogs_followed
     else:
