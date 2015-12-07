@@ -26,6 +26,7 @@ from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.models import Persona
 from glia.helpers import inject_mentions, gallery_col_width, sort_hot
+from worker import scheduler
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -119,7 +120,8 @@ def create_app(log_info=True):
     app.register_blueprint(web_blueprint)
 
     loggers = [app.logger, web_blueprint.logger, api_blueprint.logger,
-        logging.getLogger("nucleus"), logging.getLogger("rq.worker")]
+        logging.getLogger("nucleus"), logging.getLogger("rq.worker"),
+        logging.getLogger('rq_scheduler.scheduler')]
 
     setup_loggers(loggers)
 
