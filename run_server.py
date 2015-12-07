@@ -17,9 +17,6 @@ from socketio.server import SocketIOServer
 
 app = create_app()
 
-# Test line please delete
-
-
 if __name__ == '__main__':
     if app.config['USE_DEBUG_SERVER']:
         # flask development server
