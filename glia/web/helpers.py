@@ -23,7 +23,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload, lazyload
 
 from nucleus.nucleus import ExecutionTimer
-from nucleus.nucleus.database import cache
+from nucleus.nucleus.connections import cache
 from nucleus.nucleus.models import Persona, Movement, \
     MovementMemberAssociation, Thought, TOP_THOUGHT_CACHE_DURATION
 

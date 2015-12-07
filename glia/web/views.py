@@ -30,7 +30,7 @@ from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
     valid_redirect, make_view_cache_key, reorder, generate_graph
 from nucleus.nucleus import ALLOWED_COLORS
-from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.helpers import process_attachments, recent_thoughts
 from nucleus.nucleus.models import Persona, User, Movement, \
     Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \

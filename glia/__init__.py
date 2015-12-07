@@ -22,7 +22,7 @@ from humanize.time import naturaldelta
 from slack_log_handler import SlackLogHandler
 
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
-from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.models import Persona
 from glia.helpers import inject_mentions, gallery_col_width, sort_hot
 

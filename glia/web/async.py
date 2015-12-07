@@ -18,7 +18,7 @@ from glia.web.dev_helpers import http_auth
 from glia.web.helpers import make_view_cache_key
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus import UnauthorizedError
-from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, \
     Identity, FollowerNotification
 
