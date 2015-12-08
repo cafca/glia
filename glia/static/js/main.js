@@ -104,11 +104,6 @@ $(document).ready(function(){
         voting_done = data.votes[0].voting_done;
         console.log("Thought "+thought_id+" now has "+vote_count+" votes.");
 
-        if (author_id == window.user_id) {
-            $(".upvote-"+thought_id).toggleClass("btn-default");
-            $(".upvote-"+thought_id).toggleClass("btn-primary");
-        }
-
         if (voting_done != undefined) {
             $("#rk-promote-"+thought_id+" > span").animate({width: voting_done*100+"%"});
         }
@@ -197,6 +192,10 @@ $(document).ready(function(){
         logged_in();
         console.log("Voting Thought "+thought_id);
         socket.emit('vote_request', {'thought_id': thought_id});
+
+        $(".upvote-"+thought_id).toggleClass("btn-default");
+        $(".upvote-"+thought_id).toggleClass("btn-primary");
+
         amplitude.logEvent("vote");
     }
 
