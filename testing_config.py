@@ -32,7 +32,7 @@ SERVER_NAME = SERVER_HOST
 SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 
 # Flask-RQ setup
-RQ_LOW_URL = os.getenv('REDISTOGO_URL')
+RQ_DEFAULT_URL = os.getenv('REDISTOGO_URL')
 
 # Load server cert
 SERVER_KEY = RsaPrivateKey.Read(os.environ['SERVER_PRIVATE_KEY'])

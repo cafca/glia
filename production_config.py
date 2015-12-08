@@ -28,7 +28,7 @@ SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 CACHE_TYPE = 'spreadsaslmemcachedcache'
 
 # Flask-RQ setup
-RQ_LOW_URL = os.getenv('REDISTOGO_URL')
+RQ_DEFAULT_URL = os.getenv('REDISTOGO_URL')
 
 # Load server cert
 SERVER_KEY = RsaPrivateKey.Read(os.environ['SERVER_PRIVATE_KEY'])
