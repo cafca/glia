@@ -377,28 +377,27 @@ def index():
     if current_user.is_anonymous():
         more_movements = Movement.query \
             .filter(Movement.id.in_([m['id'] for m in Movement.top_movements()]))
+
         top_main = reorder(Thought.query.filter(Thought.id.in_(
-            Thought.top_thought(source="blog"))))
+            Thought.top_thought())))
 
         top_global = None
-        graph_json = generate_graph(top_main)
+        graph_json = generate_graph()
     else:
         more_movements = Movement.query \
             .filter(Movement.id.in_(
                 current_user.active_persona.suggested_movements()))
 
-        sources = current_user.active_persona.frontpage_sources()
-
         top_main = reorder(Thought.query.filter(
             Thought.id.in_(
-                Thought.top_thought(source=sources, filter_blogged=True))
+                Thought.top_thought(persona=current_user.active_persona,
+                    filter_blogged=True))
         ).options(joinedload('author').joinedload('percept_assocs')))
 
         top_global = reorder(Thought.query.filter(Thought.id.in_(
             Thought.top_thought())))
 
-        graph_json = generate_graph(top_main,
-            persona=current_user.active_persona)
+        graph_json = generate_graph(persona=current_user.active_persona)
 
     recent = Thought.query.filter(Thought.id.in_(recent_thoughts())) \
         .order_by(Thought.created.desc()).all()

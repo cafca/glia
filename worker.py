@@ -33,7 +33,7 @@ def periodic_schedule():
             scheduled_time=datetime.utcnow(),
             func=getattr(jobs, job[0]),
             interval=job[1],
-            result_ttl=job[1],
+            result_ttl=job[1] + 5,
             id=jid,
         )
     logging.warning(scheduler.get_jobs())
