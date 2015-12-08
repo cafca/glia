@@ -10,6 +10,8 @@
 
 import datetime
 import functools
+import traceback
+import sys
 
 from flask import request, current_app, url_for
 from flask.ext.login import current_user
@@ -77,6 +79,7 @@ def movement_chat_relay(sender, **data):
 @socketio.on_error(namespace='/movements')
 def chat_error_handler(e):
     app.logger.error('An error has occurred: ' + str(e))
+    traceback.print_exc(file=sys.stderr)
 
 
 @socketio_authenticated_only
