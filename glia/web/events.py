@@ -333,8 +333,3 @@ def vote_request(message):
         }
     else:
         app.logger.debug("Processed vote by {} on {}".format(upvote.author, thought))
-
-        if isinstance(thought.mindset, Mindspace) \
-                and isinstance(thought.mindset.author, Movement):
-            data["votes"][0]["voting_done"] = \
-                thought.mindset.author.voting_done(thought)
