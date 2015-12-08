@@ -54,7 +54,6 @@ def create_app(log_info=True):
     with app.app_context():
         if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
             import nucleus.nucleus.models
-            import nucleus.nucleus.vesicle
             app.logger.warning("Initializing database")
             db.create_all()
 
@@ -114,12 +113,10 @@ def create_app(log_info=True):
     # Setup Gzip compression
     compress.init_app(app)
 
-    from glia.api import app as api_blueprint
     from glia.web import app as web_blueprint
-    app.register_blueprint(api_blueprint)
     app.register_blueprint(web_blueprint)
 
-    loggers = [app.logger, web_blueprint.logger, api_blueprint.logger,
+    loggers = [app.logger, web_blueprint.logger,
         logging.getLogger("nucleus"), logging.getLogger("rq.worker"),
         logging.getLogger('rq_scheduler.scheduler')]
 

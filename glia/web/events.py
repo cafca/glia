@@ -345,7 +345,7 @@ def vote_request(message):
 
         message_vote = {
             "author_id": upvote.author_id,
-            "action": "insert" if len(upvote.vesicles) == 0 else "update",
+            # "action": "insert" if len(upvote.vesicles) == 0 else "update",
             "object_id": upvote.id,
             "object_type": "Upvote",
             "recipients": thought.author.contacts.all() + [thought.author, ]

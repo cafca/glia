@@ -6,7 +6,6 @@ from datetime import datetime
 
 from rq import Worker, Queue, Connection
 from rq_scheduler import Scheduler
-from rq_gevent_worker import GeventWorker
 
 INTERVAL = 60.0
 listen = ['high', 'default', 'low']
@@ -25,6 +24,8 @@ def periodic_schedule():
     """Enqueue in rq all periodically executed jobs"""
     from nucleus.nucleus import jobs
 
+    logging.warning("Setting up periodical jobs:\n- {}".format("\n- ".join(j[0] for j in jobs.periodical)))
+
     for job in jobs.periodical:
         jid = jobs.job_id("periodical", job[0])
         if jid in scheduler:
@@ -37,7 +38,6 @@ def periodic_schedule():
             result_ttl=job[1] + 5,
             id=jid,
         )
-    logging.warning(scheduler.get_jobs())
 
 
 if __name__ == '__main__':
