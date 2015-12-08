@@ -6,6 +6,7 @@ from datetime import datetime
 
 from rq import Worker, Queue, Connection
 from rq_scheduler import Scheduler
+from rq_gevent_worker import GeventWorker
 
 INTERVAL = 60.0
 listen = ['high', 'default', 'low']
@@ -40,12 +41,8 @@ def periodic_schedule():
 
 
 if __name__ == '__main__':
-    from glia import create_app
+    with Connection(conn):
+        worker = Worker(map(Queue, listen))
+        worker.work()
 
-    app = create_app()
-    with app.app_context():
-        with Connection(conn):
-            worker = Worker(map(Queue, listen))
-            worker.work()
-
-        scheduler.run()
+    scheduler.run()
