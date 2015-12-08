@@ -16,8 +16,6 @@ if not redis_url:
     raise RuntimeError('Set up Redis To Go first.')
 conn = redis.from_url(redis_url)
 
-logging.warning("Loading Redis at '{}'".format(redis_url))
-
 scheduler = Scheduler(connection=conn, interval=INTERVAL)
 
 
