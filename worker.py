@@ -27,14 +27,11 @@ def periodic_schedule():
 
     for job in jobs.periodical:
         jid = jobs.job_id("periodical", job[0])
-        if jid in scheduler:
-            scheduler.cancel(jid)
 
         scheduler.schedule(
             scheduled_time=datetime.utcnow(),
             func=getattr(jobs, job[0]),
             interval=job[1],
-            result_ttl=job[1] + 5,
             id=jid,
         )
 
