@@ -2,16 +2,13 @@ import os
 import redis
 import logging
 
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from rq import Worker, Queue, Connection
 from rq_scheduler import Scheduler
 
-INTERVAL = 15.0
+INTERVAL = 60.0
 listen = ['high', 'default', 'low']
-job_ids = [
-    "periodic-refresh_attention_cache",
-]
 
 
 redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
@@ -27,20 +24,19 @@ def periodic_schedule():
     """Enqueue in rq all periodically executed jobs"""
     from nucleus.nucleus import jobs
 
-    for jid in job_ids:
+    for job in jobs.periodical:
+        jid = jobs.job_id("periodical", job[0])
         if jid in scheduler:
-            logging.warning("Cancelling " + jid)
             scheduler.cancel(jid)
 
-        logging.warning("Scheduling " + jid)
         scheduler.schedule(
-            scheduled_time=datetime.utcnow() + timedelta(seconds=5),
-            func=jobs.refresh_attention_cache,
-            interval=10,
-            result_ttl=0,
+            scheduled_time=datetime.utcnow(),
+            func=getattr(jobs, job[0]),
+            interval=job[1],
+            result_ttl=job[1],
             id=jid,
         )
-        logging.warning(scheduler.get_jobs())
+    logging.warning(scheduler.get_jobs())
 
 
 if __name__ == '__main__':

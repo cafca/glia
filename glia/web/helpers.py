@@ -61,7 +61,7 @@ def authorize_filter(obj, action, actor=None):
 
 
 @cache.memoize(timeout=TOP_THOUGHT_CACHE_DURATION)
-def generate_graph(thoughts, idents=None):
+def generate_graph(thoughts, persona=None):
     """Generates a graph for consumption by the D3 force layout
 
     frontpage
@@ -77,9 +77,9 @@ def generate_graph(thoughts, idents=None):
                                        
     Args:
         thoughts (list): List of thought objects
-        idents (list): List of Identity objects that are also added to the graph
-            Defaults to the list of followed movements for logged in users
-            and top movements for anonymous users
+        persona (Persona): Optional persona object whose followed blogs
+            are added to the graph even if their posts are not on the
+            frontpage
 
     Returns:
         string: Json dump of a dict with keys 'nodes','links' at the root level
@@ -92,14 +92,13 @@ def generate_graph(thoughts, idents=None):
     rv = dict(nodes=[], links=[])
     node_indexes = dict()
 
-    if not isinstance(idents, dict):
-        if current_user.is_anonymous():
-            idents = {m.id: m for m in Movement.query
-                .filter(Movement.id.in_(
-                    [m['id'] for m in Movement.top_movements()]))
-                .options(joinedload(Movement.blog))}
-        else:
-            idents = {m.id: m for m in current_user.active_persona.blogs_followed}
+    if persona:
+        idents = {m.id: m for m in persona.blogs_followed}
+    else:
+        idents = {m.id: m for m in Movement.query
+            .filter(Movement.id.in_(
+                [m['id'] for m in Movement.top_movements()]))
+            .options(joinedload(Movement.blog))}
 
     anim_duration = lambda hot: max([(5.0 / (hot * 1000 + 1)), 0.33])
 

@@ -33,7 +33,7 @@ AUTH_ENABLED = False
 # POSTGRESQL SETUP
 # Create database with psql:
 # >> CREATE DATABASE glia_dev ENCODING 'utf8';
-SQLALCHEMY_DATABASE_URI = "postgresql://localhost/glia_dev"
+SQLALCHEMY_DATABASE_URI = "postgresql://localhost/glia_dump"
 
 SQLALCHEMY_RECORD_QUERIES = False
 

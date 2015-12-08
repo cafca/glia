@@ -381,6 +381,7 @@ def index():
             Thought.top_thought(source="blog"))))
 
         top_global = None
+        graph_json = generate_graph(top_main)
     else:
         more_movements = Movement.query \
             .filter(Movement.id.in_(
@@ -393,11 +394,14 @@ def index():
                 Thought.top_thought(source=sources, filter_blogged=True))
         ).options(joinedload('author').joinedload('percept_assocs')))
 
-        top_global = None
+        top_global = reorder(Thought.query.filter(Thought.id.in_(
+            Thought.top_thought())))
+
+        graph_json = generate_graph(top_main,
+            persona=current_user.active_persona)
 
     recent = Thought.query.filter(Thought.id.in_(recent_thoughts())) \
         .order_by(Thought.created.desc()).all()
-    graph_json = generate_graph(top_main)
 
     return render_template('index.html', movementform=movementform,
         top_main=top_main, top_global=top_global, recent_thoughts=recent,
