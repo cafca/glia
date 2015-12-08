@@ -193,6 +193,14 @@ $(document).ready(function(){
         console.log("Voting Thought "+thought_id);
         socket.emit('vote_request', {'thought_id': thought_id});
 
+        var old_val = parseInt($(".upvote-count-"+thought_id).text());
+
+        if ($(".upvote-"+thought_id).first().hasClass("btn-primary") == true) {
+            $(".upvote-count-"+thought_id).text(old_val - 1);
+        } else {
+            $(".upvote-count-"+thought_id).text(old_val + 1);
+        }
+
         $(".upvote-"+thought_id).toggleClass("btn-default");
         $(".upvote-"+thought_id).toggleClass("btn-primary");
 

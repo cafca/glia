@@ -333,26 +333,8 @@ def vote_request(message):
         }
     else:
         app.logger.debug("Processed vote by {} on {}".format(upvote.author, thought))
-        data = {
-            "votes": [{
-                "thought_id": thought.id,
-                "vote_count": thought.upvote_count(),
-                "author_id": upvote.author_id
-            }]
-        }
 
         if isinstance(thought.mindset, Mindspace) \
                 and isinstance(thought.mindset.author, Movement):
             data["votes"][0]["voting_done"] = \
                 thought.mindset.author.voting_done(thought)
-
-        message_vote = {
-            "author_id": upvote.author_id,
-            # "action": "insert" if len(upvote.vesicles) == 0 else "update",
-            "object_id": upvote.id,
-            "object_type": "Upvote",
-            "recipients": thought.author.contacts.all() + [thought.author, ]
-        }
-
-        local_model_changed.send(upvote, message=message_vote)
-        emit('vote', data, broadcast=True)
