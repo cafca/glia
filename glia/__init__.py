@@ -16,15 +16,17 @@ from flask.ext.compress import Compress
 from flask.ext.socketio import SocketIO
 from flask.ext.login import LoginManager, current_user
 from flask.ext.misaka import Misaka
+from flask.ext.rq import RQ
 from flask_debugtoolbar import DebugToolbarExtension
 from humanize import naturaltime
 from humanize.time import naturaldelta
 from slack_log_handler import SlackLogHandler
 
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
-from nucleus.nucleus.database import db, cache
+from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.models import Persona
 from glia.helpers import inject_mentions, gallery_col_width, sort_hot
+from worker import scheduler
 
 socketio = SocketIO()
 login_manager = LoginManager()
@@ -55,6 +57,9 @@ def create_app(log_info=True):
             import nucleus.nucleus.vesicle
             app.logger.warning("Initializing database")
             db.create_all()
+
+    # Setup rq / redis
+    RQ(app)
 
     # Setup websockets
     socketio.init_app(app)
@@ -103,8 +108,8 @@ def create_app(log_info=True):
     app.jinja_env.add_extension('jinja2.ext.do')
 
     # Setup debug toolbar
-    toolbar = DebugToolbarExtension()
-    toolbar.init_app(app)
+    # toolbar = DebugToolbarExtension()
+    # toolbar.init_app(app)
 
     # Setup Gzip compression
     compress.init_app(app)
@@ -115,7 +120,8 @@ def create_app(log_info=True):
     app.register_blueprint(web_blueprint)
 
     loggers = [app.logger, web_blueprint.logger, api_blueprint.logger,
-        logging.getLogger("nucleus")]
+        logging.getLogger("nucleus"), logging.getLogger("rq.worker"),
+        logging.getLogger('rq_scheduler.scheduler')]
 
     setup_loggers(loggers)
 

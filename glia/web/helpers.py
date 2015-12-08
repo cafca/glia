@@ -23,7 +23,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload, lazyload
 
 from nucleus.nucleus import ExecutionTimer
-from nucleus.nucleus.database import cache
+from nucleus.nucleus.connections import cache
 from nucleus.nucleus.models import Persona, Movement, \
     MovementMemberAssociation, Thought, TOP_THOUGHT_CACHE_DURATION
 
@@ -61,7 +61,7 @@ def authorize_filter(obj, action, actor=None):
 
 
 @cache.memoize(timeout=TOP_THOUGHT_CACHE_DURATION)
-def generate_graph(thoughts, idents=None):
+def generate_graph(persona=None):
     """Generates a graph for consumption by the D3 force layout
 
     frontpage
@@ -76,10 +76,8 @@ def generate_graph(thoughts, idents=None):
              (not frontpage)
                                        
     Args:
-        thoughts (list): List of thought objects
-        idents (list): List of Identity objects that are also added to the graph
-            Defaults to the list of followed movements for logged in users
-            and top movements for anonymous users
+        persona (Persona): If a persona is given, that persona's frontpage
+            contents and subscribed sources are included in the graph.
 
     Returns:
         string: Json dump of a dict with keys 'nodes','links' at the root level
@@ -92,14 +90,17 @@ def generate_graph(thoughts, idents=None):
     rv = dict(nodes=[], links=[])
     node_indexes = dict()
 
-    if not isinstance(idents, dict):
-        if current_user.is_anonymous():
-            idents = {m.id: m for m in Movement.query
-                .filter(Movement.id.in_(
-                    [m['id'] for m in Movement.top_movements()]))
-                .options(joinedload(Movement.blog))}
-        else:
-            idents = {m.id: m for m in current_user.active_persona.blogs_followed}
+    if persona:
+        idents = {m.id: m for m in persona.blogs_followed}
+        thoughts = Thought.query.filter(Thought.id.in_(
+            Thought.top_thought(persona=persona, filter_blogged=True)))
+    else:
+        idents = {m.id: m for m in Movement.query
+            .filter(Movement.id.in_(
+                [m['id'] for m in Movement.top_movements()]))
+            .options(joinedload(Movement.blog))}
+        thoughts = Thought.query.filter(Thought.id.in_(
+            Thought.top_thought()))
 
     anim_duration = lambda hot: max([(5.0 / (hot * 1000 + 1)), 0.33])
 
@@ -180,7 +181,8 @@ def generate_graph(thoughts, idents=None):
                 rv["links"].append({"target": node_indexes[m.id],
                     "source": node_indexes[t_blog.id]})
 
-    timer.stop("Generated mind graph")
+    timer.stop("Generated mind graph for {}".format(
+        persona if persona else "anonymous users"))
     return json.dumps(rv)
 
 
