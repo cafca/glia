@@ -27,7 +27,7 @@ from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
 # from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
-    valid_redirect, reorder, generate_graph
+    valid_redirect, reorder, generate_graph, Pagination
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.helpers import process_attachments, recent_thoughts
@@ -381,11 +381,6 @@ def help(page):
 
 
 @app.route('/', methods=["GET"])
-# @http_auth.login_required
-# @cache.cached(
-#     timeout=VIEW_CACHE_TIMEOUT,
-#     key_prefix=make_view_cache_key
-# )
 def index():
     """Front page"""
     movementform = CreateMovementForm()
@@ -426,7 +421,6 @@ def index():
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
     movement = Movement.query.get(movement_id)
@@ -464,7 +458,6 @@ def invite_members(movement_id):
 
 
 @app.route('/login', methods=["GET", "POST"])
-# @http_auth.login_required
 def login():
     """Login a user"""
     if not current_user.is_anonymous() and current_user.is_authenticated():
@@ -488,7 +481,6 @@ def login():
 
 @app.route('/logout', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def logout():
     """Logout a user"""
     user = current_user
@@ -502,7 +494,6 @@ def logout():
 
 
 @app.route('/movement/<id>/')
-# @http_auth.login_required
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
     movement = Movement.query.get(id)
@@ -519,11 +510,6 @@ def movement(id):
 
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
-# @http_auth.login_required
-# @cache.cached(
-#     timeout=VIEW_CACHE_TIMEOUT,
-#     key_prefix=make_view_cache_key
-# )
 def movement_blog(id, page=1):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -534,11 +520,12 @@ def movement_blog(id, page=1):
         .filter_by(author_id=movement.id) \
         .filter(Thought.state >= 0) \
         .order_by(Thought.created.desc()) \
-        # .paginate(5)
+
+    pagination = Pagination(page, 5, thought_selection)
 
     code = request.args.get("invitation_code", default=None)
     return render_template('movement_blog.html', movement=movement,
-        thoughts=thought_selection, code=code)
+        thoughts=pagination, code=code)
 
 
 @app.route("/movements/")
@@ -550,7 +537,6 @@ def movement_list():
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
-# @http_auth.login_required
 def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -588,7 +574,6 @@ def movement_mindspace(id):
 
 @app.route('/movement/', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def movements(id=None):
     """Create movements"""
     form = CreateMovementForm(id=id)
@@ -631,14 +616,14 @@ def notebook():
 
 
 @app.route('/notifications', methods=["GET", "POST"])
-@app.route('/notifications/page-<page>', methods=["GET", "POST"])
+@app.route('/notifications/page-<int:page>', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def notifications(page=1):
     notifications = current_user.active_persona \
         .notifications \
         .order_by(Notification.modified.desc()) \
-        #.paginate(page, 25)
+
+    pagination = Pagination(page, 25, notifications)
 
     form = EmailPrefsForm(obj=current_user)
     if form.validate_on_submit():
@@ -662,7 +647,7 @@ def notifications(page=1):
     catchall = True if current_user.email_catchall else False
 
     return(render_template('notifications.html',
-        notifications=notifications, form=form, catchall=catchall))
+        notifications=pagination, form=form, catchall=catchall))
 
 
 @app.route('/persona/<id>/')
@@ -713,11 +698,6 @@ def persona(id):
 @app.route('/anonymous/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
-# @http_auth.login_required
-# @cache.cached(
-#     timeout=VIEW_CACHE_TIMEOUT,
-#     key_prefix=make_view_cache_key
-# )
 def persona_blog(id, page=1):
     """Display a persona's blog"""
     if id is None:
@@ -730,14 +710,14 @@ def persona_blog(id, page=1):
     thought_selection = p.blog.index \
         .filter_by(author_id=p.id) \
         .filter(Thought.state >= 0) \
-        .order_by(Thought.created.desc()) \
-        #.paginate(page, 5)
+        .order_by(Thought.created.desc())
 
-    return render_template('persona_blog.html', persona=p, thoughts=thought_selection)
+    pagination = Pagination(page, 5, thought_selection)
+
+    return render_template('persona_blog.html', persona=p, thoughts=pagination)
 
 
 @app.route('/signup', methods=["GET", "POST"])
-# @http_auth.login_required
 def signup():
     """Signup a new user"""
     from uuid import uuid4
@@ -854,7 +834,6 @@ def signup():
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])
-# @http_auth.login_required
 def signup_validation(id, signup_code):
     """Validate a user's email adress"""
 
@@ -882,7 +861,6 @@ def signup_validation(id, signup_code):
 
 
 @app.route('/tag/<name>/')
-# @http_auth.login_required
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
@@ -892,7 +870,6 @@ def tag(name):
 
 
 @app.route('/thought/<id>/')
-# @http_auth.login_required
 def thought(id=None):
     thought = Thought.query.get(id)
     if thought is None:

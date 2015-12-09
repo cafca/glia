@@ -8,7 +8,6 @@
 
   <nav>
     <ul class="pager">
-
       {% if paginator.has_prev %}
         <li class="previous active">
           <a href="{{ url_for(request.endpoint, page=paginator.prev_num, **view_args) }}"><span aria-hidden="true">&larr;</span> Newer</a>

@@ -13,7 +13,6 @@ import redis
 import logging
 
 from datetime import datetime
-
 from rq import Worker, Queue, Connection
 from rq_scheduler import Scheduler
 
