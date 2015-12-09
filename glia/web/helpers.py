@@ -20,12 +20,13 @@ from hashlib import sha256
 from uuid import uuid4
 from sendgrid import SendGridClient, SendGridClientError, SendGridServerError
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import joinedload, lazyload
+from sqlalchemy.orm import joinedload
 
 from nucleus.nucleus import ExecutionTimer
 from nucleus.nucleus.connections import cache
-from nucleus.nucleus.models import Persona, Movement, \
-    MovementMemberAssociation, Thought, TOP_THOUGHT_CACHE_DURATION
+from nucleus.nucleus.identity import Persona, Movement, MovementMemberAssociation
+from nucleus.nucleus.content import Thought
+from nucleus.nucleus import TOP_THOUGHT_CACHE_DURATION
 
 from .. import socketio
 
@@ -47,7 +48,7 @@ def authorize_filter(obj, action, actor=None):
     given Persona
 
     Args:
-        obj (nucleus.models.Serializable): Implements the authorize method
+        obj (nucleus.base.BaseModel): Implements the authorize method
         action (String): One of the actions defined in Nucleus
         actor (Identity): Optional identity to check for
 

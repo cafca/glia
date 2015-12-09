@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    worker.py
+    ~~~~~
+
+    Setup and run worker process
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
+
 import os
 import redis
 import logging
@@ -27,14 +37,11 @@ def periodic_schedule():
 
     for job in jobs.periodical:
         jid = jobs.job_id("periodical", job[0])
-        if jid in scheduler:
-            scheduler.cancel(jid)
 
         scheduler.schedule(
             scheduled_time=datetime.utcnow(),
             func=getattr(jobs, job[0]),
             interval=job[1],
-            result_ttl=job[1] + 5,
             id=jid,
         )
 
