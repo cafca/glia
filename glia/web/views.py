@@ -13,14 +13,13 @@ import traceback
 from flask import request, redirect, render_template, flash, url_for, session, \
     current_app, abort
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from flask.ext.sqlalchemy import get_debug_queries
 from jinja2.exceptions import TemplateNotFound
 from uuid import uuid4
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
-from . import app, VIEW_CACHE_TIMEOUT
+from . import app
 from .. import socketio
 from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
     DeleteThoughtForm, CreateThoughtForm, CreatePersonaForm, \
@@ -28,14 +27,15 @@ from forms import LoginForm, SignupForm, CreateMovementForm, CreateReplyForm, \
 # from glia.web.dev_helpers import http_auth
 from glia.web.helpers import send_validation_email, \
     send_external_notifications, send_movement_invitation, \
-    valid_redirect, make_view_cache_key, reorder, generate_graph
+    valid_redirect, reorder, generate_graph, Pagination
 from nucleus.nucleus import ALLOWED_COLORS
 from nucleus.nucleus.connections import db, cache
 from nucleus.nucleus.helpers import process_attachments, recent_thoughts
-from nucleus.nucleus.models import Persona, User, Movement, \
-    Thought, Mindset, MovementMemberAssociation, Tag, TagPercept, \
-    PerceptAssociation, Notification, \
-    Mindspace, Blog, Dialogue, TextPercept
+from nucleus.nucleus.content import Thought, Tag, TagPercept, \
+    PerceptAssociation, Notification, TextPercept
+from nucleus.nucleus.context import Mindset, Mindspace, Dialogue, Blog
+from nucleus.nucleus.identity import Persona, User, Movement, \
+    MovementMemberAssociation
 
 #
 # UTILITIES
@@ -74,7 +74,9 @@ def mark_notifications_read():
 # @http_auth.login_required
 def activate_persona(id):
     """Activate a Persona and redirect to origin"""
-    p = Persona.query.get_or_404(id)
+    p = Persona.query.get(id)
+    if p is None:
+        abort(404)
     current_user.active_persona = p
     try:
         db.session.add(current_user)
@@ -100,7 +102,9 @@ def create_persona(for_movement=None):
     movement = None
     if for_movement:
         code = request.args.get("invitation_code", default=None)
-        movement = Movement.query.get_or_404(for_movement)
+        movement = Movement.query.get(for_movement)
+        if movement is None:
+            abort(404)
 
     if form.validate_on_submit():
         created_dt = datetime.datetime.utcnow()
@@ -178,7 +182,11 @@ def create_thought():
 
     if "parent" in request.args and request.args['parent'] is not None:
         form.parent.data = request.args['parent']
-    parent = Thought.query.get_or_404(form.parent.data) if form.parent.data else None
+
+    if form.parent.data:
+        parent = Thought.query.get(form.parent.data)
+        if parent is None:
+            abort(404)
 
     if request.args.get("mindset"):
         form.mindset.data = request.args['mindset']
@@ -188,7 +196,10 @@ def create_thought():
         flash("New thoughts needs either a parent or a mindset to live in.")
         app.logger.error("Neither parent nor mindset given {}")
 
-    ms = Mindset.query.get_or_404(form.mindset.data) if form.mindset.data else None
+    if form.mindset.data:
+        ms = Mindset.query.get(form.mindset.data)
+        if ms is None:
+            abort(404)
 
     if form.validate_on_submit():
         try:
@@ -249,8 +260,11 @@ def create_thought():
 @login_required
 # @http_auth.login_required
 def delete_thought(id=None):
-    thought = Thought.query.get_or_404(id)
+    thought = Thought.query.get(id)
     form = DeleteThoughtForm()
+
+    if thought is None:
+        abort(404)
 
     if not thought.authorize("delete", current_user.active_persona.id):
         flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
@@ -286,8 +300,11 @@ def delete_thought(id=None):
 @login_required
 # @http_auth.login_required
 def edit_thought(id=None):
-    thought = Thought.query.get_or_404(id)
+    thought = Thought.query.get(id)
     form = EditThoughtForm()
+
+    if thought is None:
+        abort(404)
 
     if not thought.authorize("update", current_user.active_persona.id):
         flash("You are not allowed to change {}'s Thoughts".format(thought.author.username))
@@ -364,11 +381,6 @@ def help(page):
 
 
 @app.route('/', methods=["GET"])
-# @http_auth.login_required
-# @cache.cached(
-#     timeout=VIEW_CACHE_TIMEOUT,
-#     key_prefix=make_view_cache_key
-# )
 def index():
     """Front page"""
     movementform = CreateMovementForm()
@@ -409,12 +421,14 @@ def index():
 
 @app.route('/movement/<movement_id>/invite', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def invite_members(movement_id):
     """Let movments invite members by username or email adress"""
-    movement = Movement.query.get_or_404(movement_id)
+    movement = Movement.query.get(movement_id)
     invited = list()
     invitation_code = None
+
+    if movement is None:
+        abort(404)
 
     form = InviteMembersForm()
     if form.validate_on_submit():
@@ -444,7 +458,6 @@ def invite_members(movement_id):
 
 
 @app.route('/login', methods=["GET", "POST"])
-# @http_auth.login_required
 def login():
     """Login a user"""
     if not current_user.is_anonymous() and current_user.is_authenticated():
@@ -468,7 +481,6 @@ def login():
 
 @app.route('/logout', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def logout():
     """Logout a user"""
     user = current_user
@@ -482,10 +494,12 @@ def logout():
 
 
 @app.route('/movement/<id>/')
-# @http_auth.login_required
 def movement(id):
     """Redirect user depending on whether he is a member or not"""
-    movement = Movement.query.get_or_404(id)
+    movement = Movement.query.get(id)
+    if movement is None:
+        abort(404)
+
     if not current_user.is_anonymous() and movement.current_role() in ["member", "admin"]:
         rv = redirect(url_for("web.movement_mindspace", id=id))
     else:
@@ -496,24 +510,22 @@ def movement(id):
 
 @app.route('/movement/<id>/blog/', methods=["GET"])
 @app.route('/movement/<id>/blog/page-<int:page>/', methods=["GET"])
-# @http_auth.login_required
-# @cache.cached(
-#     timeout=VIEW_CACHE_TIMEOUT,
-#     key_prefix=make_view_cache_key
-# )
 def movement_blog(id, page=1):
     """Display a movement's profile"""
-    movement = Movement.query.get_or_404(id)
+    movement = Movement.query.get(id)
+    if movement is None:
+        abort(404)
 
     thought_selection = movement.blog.index \
         .filter_by(author_id=movement.id) \
         .filter(Thought.state >= 0) \
         .order_by(Thought.created.desc()) \
-        .paginate(page, 5)
+
+    pagination = Pagination(page, 5, thought_selection)
 
     code = request.args.get("invitation_code", default=None)
     return render_template('movement_blog.html', movement=movement,
-        thoughts=thought_selection, code=code)
+        thoughts=pagination, code=code)
 
 
 @app.route("/movements/")
@@ -525,7 +537,6 @@ def movement_list():
 
 
 @app.route('/movement/<id>/mindspace', methods=["GET"])
-# @http_auth.login_required
 def movement_mindspace(id):
     """Display a movement's profile"""
     movement = Movement.query.get(id)
@@ -563,7 +574,6 @@ def movement_mindspace(id):
 
 @app.route('/movement/', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def movements(id=None):
     """Create movements"""
     form = CreateMovementForm(id=id)
@@ -606,14 +616,14 @@ def notebook():
 
 
 @app.route('/notifications', methods=["GET", "POST"])
-@app.route('/notifications/page-<page>', methods=["GET", "POST"])
+@app.route('/notifications/page-<int:page>', methods=["GET", "POST"])
 @login_required
-# @http_auth.login_required
 def notifications(page=1):
     notifications = current_user.active_persona \
         .notifications \
         .order_by(Notification.modified.desc()) \
-        .paginate(page, 25)
+
+    pagination = Pagination(page, 25, notifications)
 
     form = EmailPrefsForm(obj=current_user)
     if form.validate_on_submit():
@@ -637,15 +647,18 @@ def notifications(page=1):
     catchall = True if current_user.email_catchall else False
 
     return(render_template('notifications.html',
-        notifications=notifications, form=form, catchall=catchall))
+        notifications=pagination, form=form, catchall=catchall))
 
 
 @app.route('/persona/<id>/')
 # @http_auth.login_required
 def persona(id):
-    persona = Persona.query.get_or_404(id)
+    persona = Persona.query.get(id)
     convs = None
     followed = None
+
+    if persona is None:
+        abort(404)
 
     cp = current_user.active_persona
 
@@ -685,29 +698,26 @@ def persona(id):
 @app.route('/anonymous/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/', methods=["GET"])
 @app.route('/persona/<id>/blog/page-<int:page>/', methods=["GET"])
-# @http_auth.login_required
-# @cache.cached(
-#     timeout=VIEW_CACHE_TIMEOUT,
-#     key_prefix=make_view_cache_key
-# )
 def persona_blog(id, page=1):
     """Display a persona's blog"""
     if id is None:
         return redirect(url_for('web.signup'))
 
-    p = Persona.query.get_or_404(id)
+    p = Persona.query.get(id)
+    if p is None:
+        abort(404)
 
     thought_selection = p.blog.index \
         .filter_by(author_id=p.id) \
         .filter(Thought.state >= 0) \
-        .order_by(Thought.created.desc()) \
-        .paginate(page, 5)
+        .order_by(Thought.created.desc())
 
-    return render_template('persona_blog.html', persona=p, thoughts=thought_selection)
+    pagination = Pagination(page, 5, thought_selection)
+
+    return render_template('persona_blog.html', persona=p, thoughts=pagination)
 
 
 @app.route('/signup', methods=["GET", "POST"])
-# @http_auth.login_required
 def signup():
     """Signup a new user"""
     from uuid import uuid4
@@ -824,7 +834,6 @@ def signup():
 
 
 @app.route('/validate/<id>/<signup_code>', methods=["GET"])
-# @http_auth.login_required
 def signup_validation(id, signup_code):
     """Validate a user's email adress"""
 
@@ -852,7 +861,6 @@ def signup_validation(id, signup_code):
 
 
 @app.route('/tag/<name>/')
-# @http_auth.login_required
 def tag(name):
     tag = Tag.query.filter_by(name=name).first()
 
@@ -862,9 +870,10 @@ def tag(name):
 
 
 @app.route('/thought/<id>/')
-# @http_auth.login_required
 def thought(id=None):
-    thought = Thought.query.get_or_404(id)
+    thought = Thought.query.get(id)
+    if thought is None:
+        abort(404)
 
     if not thought.authorize("read", current_user.active_persona.id):
         flash("This Thought is private")

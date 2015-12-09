@@ -1,9 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+    worker.py
+    ~~~~~
+
+    Setup and run worker process
+
+    :copyright: (c) 2013 by Vincent Ahrend.
+"""
+
 import os
 import redis
 import logging
 
 from datetime import datetime
-
 from rq import Worker, Queue, Connection
 from rq_scheduler import Scheduler
 

@@ -30,7 +30,7 @@ $(document).ready(function() {
 {% block content %}
 <div class="col-md-6 col-md-push-1">
   <h1>
-    Notifications for {{ current_user.active_persona.username }}
+    Notifications for {{ active_persona.username }}
     {% if notifications.page != 1 %}
     <small class="pull-right">Page {{notifications.page}}</small>
     {% endif %}

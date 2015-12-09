@@ -5,7 +5,8 @@ from flask.ext.login import current_user
 
 from forms import LoginForm
 
-from nucleus.nucleus.models import Movement, Mindset
+from nucleus.nucleus.identity import Movement
+from nucleus.nucleus.context import Mindset
 
 app = Blueprint('web', __name__)
 app.logger = logging.getLogger('web')
