@@ -44,7 +44,7 @@ $(document).ready(function() {
       {% if chat != None %}
         <div class="rk-chat panel panel-default">
           <div class="panel-heading">
-            {% if current_user.active_persona == persona %}
+            {% if active_persona == persona %}
             <h3 class="panel-title">{{ persona.username }} Personal Notebook
             <small><em>Only you can see messages in here</em></small></h3>
             {% else %}
@@ -88,7 +88,7 @@ $(document).ready(function() {
       <div class="col-sm-6 rk-persona-identity">
         <h1>{{ id_macros.persona(persona, nolink=True) }}</h1>
         <p><em>Member for {{ persona.created|localtime|naturaldelta }}</em></p>
-        {{ id_macros.follow_toggle(persona, current_user.active_persona) }}
+        {{ id_macros.follow_toggle(persona, active_persona) }}
         {% if followed %}
         <p>
           Following

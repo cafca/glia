@@ -22,9 +22,9 @@ $(document).ready(function() {
     <div class="jumbotron rk-blog-header" style="background-color: #{{ movement.color }};">
       <h1>{{ movement.username }}</h1>
       <p>{{ movement.description }}</p>
-      {{ id_macros.member_toggle(movement, current_user.active_persona) }}
-      {% if movement in current_user.active_persona.blogs_followed %}
-        {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
+      {{ id_macros.member_toggle(movement, active_persona) }}
+      {% if movement in active_persona.blogs_followed %}
+        {{ id_macros.follow_toggle(movement, active_persona) }}
       {% endif %}
     </div>
 
@@ -55,7 +55,7 @@ $(document).ready(function() {
         <div class="row">
           <div class="col-sm-4">
             <div class="form-group">
-              {{ id_macros.follow_toggle(movement, current_user.active_persona) }}
+              {{ id_macros.follow_toggle(movement, active_persona) }}
             </div>
           </div>
 
@@ -68,7 +68,7 @@ $(document).ready(function() {
           <div class="col-sm-4">
             <div class="form-group">
 
-            {{ id_macros.member_toggle(movement, current_user.active_persona) }}
+            {{ id_macros.member_toggle(movement, active_persona) }}
 
             </div>
           </div>

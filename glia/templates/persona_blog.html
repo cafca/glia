@@ -8,8 +8,8 @@
 
 {% block script %}
 window.room_id = "{{ persona.blog_id }}";
-window.user_id = "{{ current_user.active_persona.id }}";
-window.user_name = "{{  current_user.active_persona.username }}";
+window.user_id = "{{ active_persona.id }}";
+window.user_name = "{{  active_persona.username }}";
 window.movement_id = "{{  persona.id }}";
 window.admin_id = "{{ persona.id }}";
 
@@ -24,7 +24,7 @@ $(document).ready(function() {
     <div class="jumbotron rk-blog-header" style="background-color: #{{ persona.color }};">
       <h1>{{ persona.username }}</h1>
       <p>Personal Blog</p>
-      {{ id_macros.follow_toggle(persona, current_user.active_persona, size="lg") }}
+      {{ id_macros.follow_toggle(persona, active_persona, size="lg") }}
       {% if persona == active_persona %}
       <a class="btn btn-lg {% if persona.color != '0b3954' %}btn-primary{% else %}btn-default{% endif %}" href="{{ url_for('web.create_thought', mindset=persona.blog_id) }}"><i class="fa fa-pencil-square"></i> Create Thought</a>
       {% endif %}
@@ -56,7 +56,7 @@ $(document).ready(function() {
         <div class="row">
           <div class="col-sm-4">
             <div class="form-group">
-            {{ id_macros.follow_toggle(persona, current_user.active_persona) }}
+            {{ id_macros.follow_toggle(persona, active_persona) }}
             </div>
           </div>
 
