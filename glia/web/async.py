@@ -7,7 +7,7 @@
 
     :copyright: (c) 2015 by Vincent Ahrend.
 """
-from flask import render_template, url_for, jsonify, request
+from flask import render_template, url_for, jsonify, request, abort
 from flask.ext.login import login_required, current_user
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -19,8 +19,10 @@ from glia.web.helpers import make_view_cache_key
 from glia.web.forms import CreatePersonaForm
 from nucleus.nucleus import UnauthorizedError
 from nucleus.nucleus.connections import db, cache
-from nucleus.nucleus.models import Thought, Mindset, Movement, Persona, \
-    Identity, FollowerNotification
+from nucleus.nucleus.content import Thought, FollowerNotification
+from nucleus.nucleus.context import Mindset
+from nucleus.nucleus.identity import Movement, Persona, Identity
+
 
 #
 # UTILITIES
@@ -205,8 +207,10 @@ def async_promote(movement_id):
     if not thought_id:
         raise InvalidUsage("Missing request parameter 'thought_id'")
 
-    thought = Thought.query.get_or_404(thought_id)
-    movement = Movement.query.get_or_404(movement_id)
+    thought = Thought.query.get(thought_id)
+    movement = Movement.query.get(movement_id)
+    if not thought or not movement:
+        abort(404)
 
     if movement.current_role() != "admin":
         raise InvalidUsage("Only the admin may promote a Thought")

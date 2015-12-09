@@ -8,7 +8,8 @@ from wtforms import TextField, TextAreaField, HiddenField, PasswordField, \
     validators, BooleanField, SelectMultipleField
 
 from nucleus.nucleus import ALLOWED_COLORS
-from nucleus.nucleus.models import User, Thought, Persona
+from nucleus.nucleus.content import Thought
+from nucleus.nucleus.identity import User
 
 logger = logging.getLogger('web')
 

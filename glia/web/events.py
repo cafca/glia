@@ -13,7 +13,7 @@ import functools
 import traceback
 import sys
 
-from flask import request, current_app, url_for
+from flask import request, current_app, url_for, abort
 from flask.ext.login import current_user
 from flask.ext.socketio import emit, join_room, leave_room
 from sqlalchemy.exc import SQLAlchemyError
@@ -22,8 +22,10 @@ from . import app
 from .. import socketio, db
 from glia.web.helpers import send_external_notifications
 from nucleus.nucleus.helpers import find_mentions
-from nucleus.nucleus.models import Mindset, Thought, Movement, \
-    Persona, Mention, MentionNotification, ReplyNotification, Mindspace
+from nucleus.nucleus.content import Thought, Mention, MentionNotification, \
+    ReplyNotification
+from nucleus.nucleus.context import Mindset
+from nucleus.nucleus.identity import Movement, Persona
 from nucleus.nucleus import notification_signals, PersonaNotFoundError, \
     UnauthorizedError
 
@@ -313,7 +315,10 @@ def vote_request(message):
         error_message += "Vote event missing parameter. "
 
     if len(error_message) == 0:
-        thought = Thought.query.get_or_404(thought_id)
+        thought = Thought.query.get(thought_id)
+        if thought is None:
+            abort(404)
+
         try:
             upvote = thought.toggle_upvote()
         except PersonaNotFoundError:

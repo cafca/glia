@@ -24,7 +24,6 @@ from slack_log_handler import SlackLogHandler
 
 from .helpers import setup_loggers, ProxiedRequest, AnonymousPersona
 from nucleus.nucleus.connections import db, cache
-from nucleus.nucleus.models import Persona
 from glia.helpers import inject_mentions, gallery_col_width, sort_hot
 from worker import scheduler
 
@@ -53,7 +52,9 @@ def create_app(log_info=True):
     db.init_app(app)
     with app.app_context():
         if not db.engine.dialect.has_table(db.engine.connect(), "persona"):
-            import nucleus.nucleus.models
+            import nucleus.nucleus.content
+            import nucleus.nucleus.context
+            import nucleus.nucleus.identity
             app.logger.warning("Initializing database")
             db.create_all()
 
@@ -79,7 +80,7 @@ def create_app(log_info=True):
 
     @login_manager.user_loader
     def load_user(userid):
-        from nucleus.nucleus.models import User
+        from nucleus.nucleus.identity import User
         return User.query.get(userid)
 
     @app.context_processor
@@ -116,9 +117,13 @@ def create_app(log_info=True):
     from glia.web import app as web_blueprint
     app.register_blueprint(web_blueprint)
 
-    loggers = [app.logger, web_blueprint.logger,
-        logging.getLogger("nucleus"), logging.getLogger("rq.worker"),
-        logging.getLogger('rq_scheduler.scheduler')]
+    loggers = [
+        app.logger,
+        web_blueprint.logger,
+        logging.getLogger("nucleus"),
+        logging.getLogger("rq.worker"),
+        logging.getLogger('rq_scheduler.scheduler')
+    ]
 
     setup_loggers(loggers)
 

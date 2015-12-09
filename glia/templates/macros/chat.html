@@ -62,7 +62,7 @@
     <strong>Public movement:</strong> Everyone can read what you write
     {% endif %}
   {% else %}
-    {% if map.author.controlled() %}
+    {% if map.author == active_persona %}
     <strong>Your notebook:</strong> Only you can read this
     {% else %}
     <strong>Private dialogue:</strong> Only you and {{ map.author.username }} can read this
